@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { call, usePoll } from '@/lib/client';
 import { dateOnly, startOfToday } from '@/lib/time';
 import type { Me, StatusInfo } from '@/lib/types';
@@ -15,6 +15,8 @@ export function Shell({ me, nav, status, children }: {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const [alerts, setAlerts] = useState(0);
+  const [dark, setDark] = useState<boolean | null>(null); // known only in the browser
+  useEffect(() => setDark(isDark()), []);
   const tz = me.company?.timezone ?? 'UTC';
   const seesAlerts = me.role !== 'super_admin';
 
@@ -63,7 +65,9 @@ export function Shell({ me, nav, status, children }: {
         <header className="topbar">
           <button className="iconbtn menubtn" aria-label="Open menu" aria-expanded={open} aria-controls="rail" onClick={() => setOpen(true)}>☰ Menu</button>
           <div className="spacer" />
-          <button className="iconbtn" aria-label="Switch between light and dark theme" onClick={toggleTheme}>◐ Theme</button>
+          {dark !== null && (
+            <button className="iconbtn" onClick={() => setDark(toggleTheme())}>{dark ? '☀ Light' : '☾ Dark'}</button>
+          )}
         </header>
         <main className="content">
           {status && <Banner s={status} tz={tz} isAdmin={me.role === 'company_admin'} />}
@@ -96,9 +100,15 @@ function Banner({ s, tz, isAdmin }: { s: StatusInfo; tz: string; isAdmin: boolea
 }
 
 // Light or dark; with no choice saved the OS setting applies (CSS prefers-color-scheme).
+function isDark() {
+  const t = document.documentElement.dataset.theme;
+  return t ? t === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
+/** Switch theme and return whether it is now dark. */
 function toggleTheme() {
-  const r = document.documentElement;
-  const dark = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
-  r.dataset.theme = dark ? 'light' : 'dark';
-  try { localStorage.setItem('wb-theme', r.dataset.theme); } catch { /* storage blocked: choice lasts this page only */ }
+  const next = isDark() ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem('wb-theme', next); } catch { /* storage blocked: choice lasts this page only */ }
+  return next === 'dark';
 }
