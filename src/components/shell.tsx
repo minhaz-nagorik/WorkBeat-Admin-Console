@@ -63,6 +63,7 @@ export function Shell({ me, nav, status, children }: {
         <header className="topbar">
           <button className="iconbtn menubtn" aria-label="Open menu" aria-expanded={open} aria-controls="rail" onClick={() => setOpen(true)}>☰ Menu</button>
           <div className="spacer" />
+          <button className="iconbtn" aria-label="Switch between light and dark theme" onClick={toggleTheme}>◐ Theme</button>
         </header>
         <main className="content">
           {status && <Banner s={status} tz={tz} isAdmin={me.role === 'company_admin'} />}
@@ -92,4 +93,12 @@ function Banner({ s, tz, isAdmin }: { s: StatusInfo; tz: string; isAdmin: boolea
     return <div className="notice info" role="status"><span><b>Trial:</b> {days === 1 ? '1 day' : `${days} days`} left.</span></div>;
   }
   return null;
+}
+
+// Light or dark; with no choice saved the OS setting applies (CSS prefers-color-scheme).
+function toggleTheme() {
+  const r = document.documentElement;
+  const dark = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  r.dataset.theme = dark ? 'light' : 'dark';
+  try { localStorage.setItem('wb-theme', r.dataset.theme); } catch { /* storage blocked: choice lasts this page only */ }
 }

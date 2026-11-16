@@ -61,3 +61,11 @@ The shell SHALL show the sidebar beside the page from 900 px wide, and below tha
 #### Scenario: A phone-width screen
 - **WHEN** the viewport is 375 px wide
 - **THEN** the sidebar is hidden behind a menu button and the page has no horizontal scroll
+
+### Requirement: The user picks light or dark
+<!-- source: Prototype "navigation" (theme button) · A11 -->
+The top bar SHALL have a theme button that switches between light and dark and remembers the choice in this browser. With no choice saved, the theme MUST follow the operating system setting.
+
+#### Scenario: Switching to light
+- **WHEN** a user whose computer is in dark mode presses the theme button
+- **THEN** the page turns light and stays light after a reload
