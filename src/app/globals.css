@@ -321,3 +321,4 @@ input[type=password] { background: var(--surface); border: 1px solid var(--line)
 dialog.modal { border: 1px solid var(--line); color: var(--fg); padding: 18px; }
 dialog.modal::backdrop { background: rgba(10,15,20,.5); }
 dialog.modal:not([open]) { display: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

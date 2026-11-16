@@ -5,7 +5,7 @@
 
 ## 1. app-shell
 
-- [ ] 1.1 Next.js App Router project, TypeScript strict, Tailwind, shadcn/ui; design tokens from the prototype (light and dark)
+- [x] 1.1 Next.js App Router project, TypeScript strict, Tailwind, shadcn/ui; design tokens from the prototype (light and dark)
 - [x] 1.2 Role navigation and landing pages from `GET /v1/me`; route guard per role
 - [x] 1.3 Header (company or "Internal console"), user and sign-out, alerts count
 - [x] 1.4 Company status banner from `GET /v1/company/status`
@@ -14,7 +14,7 @@
 
 ## 2. api-access
 
-- [ ] 2.1 One server-side API client and a same-origin proxy for browser calls: session cookie to bearer token, envelope parsing, zod schemas written from the backend's `portal-api.md` and `staff-api.md` until `packages/shared` exists
+- [x] 2.1 One server-side API client and a same-origin proxy for browser calls: session cookie to bearer token, envelope parsing, zod schemas written from the backend's `portal-api.md` and `staff-api.md` until `packages/shared` exists
 - [x] 2.2 `401` or expired session signs out; plain messages per code
 - [x] 2.3 Visibility-aware 30 s polling that keeps list state
 - [ ] 2.4 Error reporting and logging scrub tokens, keys and signed URLs

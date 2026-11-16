@@ -28,8 +28,8 @@ export function ConfirmButton({ label, question, action = label, onConfirm }: {
 }
 
 /** Modal dialog on the native <dialog>: focus trap, Escape, focus returns to the opener (A11). */
-export function Modal({ title, open, onClose, children }: {
-  title: string; open: boolean; onClose: () => void; children: React.ReactNode;
+export function Modal({ title, open, onClose, children, wide }: {
+  title: string; open: boolean; onClose: () => void; children: React.ReactNode; wide?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const opener = useRef<HTMLElement | null>(null);
@@ -39,7 +39,7 @@ export function Modal({ title, open, onClose, children }: {
     if (!open && d.open) d.close();
   }, [open]);
   return (
-    <dialog ref={ref} className="modal" aria-labelledby="modal-title" onClose={() => { opener.current?.focus(); onClose(); }}>
+    <dialog ref={ref} className={`modal ${wide ? 'wide' : ''}`} aria-labelledby="modal-title" onClose={() => { opener.current?.focus(); onClose(); }}>
       <div className="mh"><h2 id="modal-title">{title}</h2><button className="iconbtn" aria-label="Close" onClick={() => ref.current?.close()}>✕</button></div>
       {children}
     </dialog>

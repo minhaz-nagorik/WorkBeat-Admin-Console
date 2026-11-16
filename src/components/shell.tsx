@@ -7,6 +7,7 @@ import { dateOnly, startOfToday } from '@/lib/time';
 import type { Me, StatusInfo } from '@/lib/types';
 import type { navFor } from '@/lib/nav';
 import { Logo, Icon } from './icons';
+import { MeProvider } from '@/lib/me';
 
 export function Shell({ me, nav, status, children }: {
   me: Me; nav: ReturnType<typeof navFor>; status: StatusInfo | null; children: React.ReactNode;
@@ -65,7 +66,7 @@ export function Shell({ me, nav, status, children }: {
         </header>
         <main className="content">
           {status && <Banner s={status} tz={tz} isAdmin={me.role === 'company_admin'} />}
-          {children}
+          <MeProvider value={me}>{children}</MeProvider>
         </main>
       </div>
     </div>

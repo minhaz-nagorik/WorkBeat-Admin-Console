@@ -6,6 +6,7 @@ import { useList } from '@/components/list';
 import { Confirm, ConfirmButton, Modal } from '@/components/confirm';
 import { Field } from '@/components/form';
 import type { Me, Role } from '@/lib/types';
+import { initials } from '@/lib/format';
 
 type User = { id: string; name: string; email: string; role: Role; created_at: string };
 type Invite = { id: string; email: string; role: Role; created_at: string; expires_at: string };
@@ -18,7 +19,6 @@ const ROLES: [Role, string][] = [
   ['company_admin', 'Everything, including team, billing and company settings.'],
 ];
 const day = (iso: string) => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-const initials = (n: string) => n.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
 
 export default function Team() {
   const [me, setMe] = useState<Me | null>(null);
