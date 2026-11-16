@@ -31,8 +31,9 @@ export function EmployeeDialog({ open, emp, managers, departments, onClose, onSa
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!f.name.trim()) return setErr({ name: 'Enter a name.' });
+    if (!f.email.trim()) return setErr({ email: 'Enter their work email.' });
     setBusy(true); setErr({});
-    const body = { name: f.name.trim(), email: f.email.trim() || null, department: f.department.trim() || null, manager_user_id: f.manager_user_id || null };
+    const body = { name: f.name.trim(), email: f.email.trim(), department: f.department.trim() || null, manager_user_id: f.manager_user_id || null };
     const r = emp ? await call<Employee>('PATCH', `/v1/employees/${emp.id}`, body) : await call<Employee>('POST', '/v1/employees', body);
     setBusy(false);
     if (r.ok) return onSaved(r.data, !emp);
@@ -50,7 +51,7 @@ export function EmployeeDialog({ open, emp, managers, departments, onClose, onSa
     <Modal title={emp ? `Edit ${emp.name}` : 'Add employee'} open={open} onClose={onClose}>
       <form method="post" className="stack" onSubmit={submit} noValidate>
         <Field id="emp-name" label="Full name" required maxLength={200} autoFocus value={f.name} error={err.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
-        <Field id="emp-email" label="Work email (optional)" type="email" maxLength={254} value={f.email} error={err.email}
+        <Field id="emp-email" label="Work email" type="email" required maxLength={254} value={f.email} error={err.email}
           hint="IT picks this person in WorkBeat Setup, or passes this email to a scripted install." onChange={(e) => setF({ ...f, email: e.target.value })} />
         <div className="grid g2">
           <Field id="emp-dept" label="Department (optional)" maxLength={200} list="emp-dept-list" value={f.department} onChange={(e) => setF({ ...f, department: e.target.value })} />

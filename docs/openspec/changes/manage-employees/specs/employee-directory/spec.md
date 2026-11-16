@@ -31,7 +31,11 @@ For `company_admin` and `manager` the list SHALL show each employee's `presence`
 
 ### Requirement: Company admins add and edit employees
 <!-- source: D47 · backend `employee-directory` · A12 · Prototype "Add employee" -->
-A `company_admin` SHALL add and edit an employee in a dialog with name (required), work email, department (suggesting existing ones) and manager (enabled users with role `manager`), through `POST /v1/employees` or `PATCH /v1/employees/:id`. A `409 CONFLICT` MUST say "Another employee already uses this email". The email hint MUST say IT picks this person in WorkBeat Setup or passes the email to a scripted install.
+A `company_admin` SHALL add and edit an employee in a dialog with name and work email (both required), department (suggesting existing ones) and manager (enabled users with role `manager`), through `POST /v1/employees` or `PATCH /v1/employees/:id`. A `409 CONFLICT` MUST say "Another employee already uses this email". The email hint MUST say IT picks this person in WorkBeat Setup or passes the email to a scripted install.
+
+#### Scenario: No email
+- **WHEN** the admin saves an employee without a work email
+- **THEN** the dialog says the email is needed and sends nothing
 
 #### Scenario: A duplicate email
 - **WHEN** the admin saves an email held by another employee
@@ -42,7 +46,7 @@ A `company_admin` SHALL add and edit an employee in a dialog with name (required
 A `company_admin` SHALL import employees by choosing a CSV file or pasting text in the format `name, email, department, manager email`, with a template download, sent as the raw file with `Content-Type: text/csv` (up to 2 MiB and 5,000 rows). Check MUST preview the rows before Import is enabled; on `422 VALIDATION_FAILED` the dialog MUST list each invalid line number and import nothing; `413 PAYLOAD_TOO_LARGE` MUST say the file is too large. A result MUST show created and skipped counts and the skipped emails.
 
 #### Scenario: One bad line
-- **WHEN** line 7 has no name
+- **WHEN** line 7 has no name or no email
 - **THEN** the dialog names line 7 and no employee is created
 
 #### Scenario: Existing emails

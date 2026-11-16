@@ -50,7 +50,7 @@ export function ImportDialog({ open, onClose, onDone }: { open: boolean; onClose
     const rows = rowsOf(text);
     if (!rows.length) return setErr('Add at least one person.');
     if (rows.length > MAX_ROWS) return setErr('This file is too large. Import at most 2 MB and 5,000 people at a time.');
-    const bad = rows.flatMap((r, i) => (!r[0] || (r[1] && !EMAIL.test(r[1])) ? [i + 1] : []));
+    const bad = rows.flatMap((r, i) => (!r[0] || !EMAIL.test(r[1] ?? '') ? [i + 1] : []));
     if (bad.length) return setErr(lines(bad));
     setErr(null); setChecked(rows);
   }
@@ -88,7 +88,7 @@ export function ImportDialog({ open, onClose, onDone }: { open: boolean; onClose
         </div>
       ) : (
         <div className="stack">
-          <p className="small">One person per line: <span className="mono">name, email, department, manager email</span>. Only the name is required. A header row is fine. Emails already in use are skipped.</p>
+          <p className="small">One person per line: <span className="mono">name, email, department, manager email</span>. Name and email are required. A header row is fine. Emails already in use are skipped.</p>
           <div className="row">
             <button type="button" className="btn sm" onClick={template}>Download template</button>
             <label className="btn sm" htmlFor="imp-file">Choose file…</label>
@@ -123,5 +123,5 @@ export function ImportDialog({ open, onClose, onDone }: { open: boolean; onClose
 
 function lines(n: number[], server = false) {
   const shown = n.slice(0, 20).join(', ') + (n.length > 20 ? ` and ${n.length - 20} more` : '');
-  return `${server ? 'Nothing was imported. ' : ''}Fix ${n.length === 1 ? 'line' : 'lines'} ${shown} (counting people, not the header): each needs a name${server ? ', a valid email used once in the file, and a manager email that belongs to a Manager' : ' and a valid email'}.`;
+  return `${server ? 'Nothing was imported. ' : ''}Fix ${n.length === 1 ? 'line' : 'lines'} ${shown} (counting people, not the header): each needs a name and a valid email${server ? ' used once in the file, and any manager email must belong to a Manager' : ''}.`;
 }
