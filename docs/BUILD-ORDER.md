@@ -5,7 +5,7 @@ work `tasks.md` top to bottom. Open backend gaps: [decisions/open-questions.md](
 
 ```
 Phase 0   Foundation            docs + 10 OpenSpec changes, --strict clean
-Phase 1   The ten changes       0 of 140 tasks
+Phase 1   The ten changes       13 of 140 tasks (change 1 partly, sign-in of change 2)
 ```
 
 ## Phase 0
@@ -14,7 +14,7 @@ Phase 1   The ten changes       0 of 140 tasks
 |---|---|---|
 | 0.1 | `docs/`: rules, decisions A1–A12, design reference and deviations | ✅ |
 | 0.2 | Ten OpenSpec changes: 33 capability deltas, 156 requirements, `--strict` clean | ✅ |
-| 0.3 | `git init`, Vercel project, API base URL per environment | ⬜ |
+| 0.3 | `git init`, API base URL per environment (`API_BASE_URL`, see `.env.example`); Vercel project ⬜ | 🟡 |
 | 0.4 | Backend answers to the gaps in [open-questions.md](decisions/open-questions.md) marked **blocks** (rounds 1 and 2, 16 Nov 2026) | ✅ |
 
 ## Phase 1 — the ten changes
