@@ -7,7 +7,7 @@ super admin is added or removed.
 
 ### Requirement: The staff team is listed
 <!-- source: D41 · backend `staff-accounts` -->
-The Staff team page SHALL call `GET /v1/staff/team` and list each super admin's name, email and whether their authenticator is set up (`mfa_enabled`), the signed-in user marked "You", and each open invitation with its email and expiry.
+The Staff team page SHALL call `GET /v1/staff/team` and list each super admin's name and email, the signed-in user marked "You", and each open invitation with its email and expiry.
 
 #### Scenario: An open invitation
 - **WHEN** an invitation is open
@@ -15,7 +15,7 @@ The Staff team page SHALL call `GET /v1/staff/team` and list each super admin's 
 
 ### Requirement: Staff invite a super admin
 <!-- source: D41 · backend `staff-accounts` -->
-"Invite staff" SHALL send `POST /v1/staff/invitations` with `email`, saying the person must set up MFA to sign in. `409 CONFLICT` MUST read "This person already has an account or an open invitation".
+"Invite staff" SHALL send `POST /v1/staff/invitations` with `email`. `409 CONFLICT` MUST read "This person already has an account or an open invitation".
 
 #### Scenario: Inviting a colleague
 - **WHEN** staff invite `ops@workbeat.io`
@@ -28,18 +28,6 @@ Each open staff invitation SHALL offer Resend, which calls `POST /v1/staff/invit
 #### Scenario: Resending an expired-soon invitation
 - **WHEN** staff click Resend on an open invitation
 - **THEN** a new email is sent and the row shows the new expiry
-
-### Requirement: Staff reset a colleague's lost authenticator
-<!-- source: B23 · backend `staff-accounts` · A7 -->
-Each other super admin's row with `mfa_enabled` true SHALL offer "Reset authenticator", which confirms that the person is signed out and must set up their authenticator app again at next sign-in, then calls `POST /v1/staff/users/:id/mfa/reset`. It MUST NOT be offered on the signed-in user's own row; a `409 CONFLICT` MUST read "You can't reset your own authenticator. Ask another WorkBeat admin".
-
-#### Scenario: A colleague lost their phone
-- **WHEN** staff confirm Reset authenticator for a colleague
-- **THEN** the colleague is signed out and their next sign-in shows the QR code setup
-
-#### Scenario: Own row
-- **WHEN** a super admin views their own row
-- **THEN** no Reset authenticator control is shown
 
 ### Requirement: Staff revoke invitations and remove staff
 <!-- source: backend `staff-accounts` · A7 -->

@@ -13,4 +13,4 @@ export type StatusInfo = {
   trial_ends_at: string | null; expired_at: string | null; blocking_ends_at: string | null;
 };
 
-export type ApiError = { error?: string; code: string; fields?: string[]; attempts_left?: number };
+export type ApiError = { error?: string; code: string; fields?: string[] };

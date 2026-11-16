@@ -23,7 +23,7 @@ context: |
     company_admin  everything in the company, including billing and team
     manager        own team only, read only (reports, screenshots, pauses, rules)
     it_admin       deployment, devices, block list, alerts; employee list without reports
-    super_admin    staff area only; MFA; never employee, device, activity, URL or screenshot data
+    super_admin    staff area only; never employee, device, activity, URL or screenshot data
 
   DESIGN REFERENCE
   docs/design/reference/workbeat-prototype.html. It fixes look, layout and wording; Plan v3.5 and

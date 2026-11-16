@@ -32,5 +32,5 @@
 
 - [x] 5.1 Team list with "You" and open invitations
 - [x] 5.2 Invite, resend, revoke, remove with confirmations
-- [x] 5.3 Reset authenticator for another super admin (`POST /v1/staff/users/:id/mfa/reset`)
-- [ ] 5.4 Tests: no Remove or Reset authenticator on own row; reset `409` message; last-admin `409` message; role test — super admin only
+- [x] ~~5.3 Reset authenticator~~ (removed 16 Nov 2026 with staff MFA)
+- [ ] 5.4 Tests: no Remove on own row; last-admin `409` message; role test — super admin only

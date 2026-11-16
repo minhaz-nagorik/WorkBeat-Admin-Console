@@ -6,11 +6,11 @@
 ## 1. sign-in
 
 - [x] 1.1 Sign-in page calling `POST /v1/auth/login`; session cookie set by the app's server; host branding from `GET /v1/hosts/resolve`
-- [x] 1.2 Staff authenticator: QR set-up from `otpauth_uri` with manual `secret`, code step, `MFA_CODE_INVALID` tries left, expired `mfa_token` back to password; nothing kept outside memory
+- [x] ~~1.2 Staff authenticator~~ (removed 16 Nov 2026: staff sign in with password only): QR set-up from `otpauth_uri` with manual `secret`, code step, `MFA_CODE_INVALID` tries left, expired `mfa_token` back to password; nothing kept outside memory
 - [x] 1.3 Sign-out clearing session and cache; no-store on authenticated pages
 - [x] 1.4 Forgot password, `/reset-password` page (token removed from the address bar), change password in the user menu; `429` countdown from `Retry-After`
 - [x] 1.5 Invitation page: lookup, accept, token removed from the URL, invalid and expired messages
-- [ ] 1.6 Tests: each role lands on its page; wrong password message; change password wrong current and short new; staff blocked until a code is verified; first-time QR set-up; wrong code tries left; expired challenge; reset invalid and expired links; `429` countdown; company user never asked for MFA; Back after sign-out; invitation valid, invalid, expired, weak password
+- [ ] 1.6 Tests: each role lands on its page; wrong password message; change password wrong current and short new; staff sign in with password and land on Companies; reset invalid and expired links; `429` countdown; Back after sign-out; invitation valid, invalid, expired, weak password
 
 ## 2. team-management
 

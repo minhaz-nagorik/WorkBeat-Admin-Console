@@ -10,7 +10,7 @@ import { ConfirmButton, Modal } from '@/components/confirm';
 import { Field } from '@/components/form';
 import { Boundary } from '@/components/staff/common';
 
-type User = { id: string; name: string; email: string; mfa_enabled: boolean; created_at: string };
+type User = { id: string; name: string; email: string; created_at: string };
 type Invite = { id: string; email: string; created_at: string; expires_at: string };
 type Team = { users: User[]; invitations: Invite[] };
 type Row = { kind: 'user'; u: User } | { kind: 'invite'; i: Invite };
@@ -32,11 +32,6 @@ export default function StaffTeam() {
     const r = await call('DELETE', `/v1/staff/users/${u.id}`);
     if (r.ok) { say(true, `${u.name} was removed and signed out.`); return s.reload(); }
     say(false, r.status === 409 ? "You can't remove the last super admin." : message(r.status, r.err.code));
-  }
-  async function resetMfa(u: User) {
-    const r = await call('POST', `/v1/staff/users/${u.id}/mfa/reset`);
-    if (r.ok) { say(true, `${u.name} was signed out and sets up their authenticator at next sign-in.`); return s.reload(); }
-    say(false, r.status === 409 ? "You can't reset your own authenticator. Ask another WorkBeat admin." : message(r.status, r.err.code));
   }
   async function resend(i: Invite) {
     const r = await call<{ expires_at: string }>('POST', `/v1/staff/invitations/${i.id}/resend`);
@@ -62,20 +57,15 @@ export default function StaffTeam() {
           <div className="toolbar">{L.search('Search staff')}</div>
           <div className="tablewrap">
             <table>
-              <thead><tr><th>Name</th><th>Authenticator</th><th>Status</th><th><span className="sr-only">Actions</span></th></tr></thead>
+              <thead><tr><th>Name</th><th>Status</th><th><span className="sr-only">Actions</span></th></tr></thead>
               <tbody>
-                {!L.rows.length ? <tr><td colSpan={4} className="muted">{rows.length ? 'Nobody matches your search.' : 'No one yet.'}</td></tr>
+                {!L.rows.length ? <tr><td colSpan={3} className="muted">{rows.length ? 'Nobody matches your search.' : 'No one yet.'}</td></tr>
                   : L.rows.map((r) => r.kind === 'user' ? (
                     <tr key={r.u.id}>
                       <td><div className="who"><span className="av" aria-hidden="true">{initials(r.u.name)}</span><div>{r.u.name}<div className="small muted">{r.u.email}</div></div></div></td>
-                      <td>{r.u.mfa_enabled ? <span className="pill p-ok">Set up</span> : <span className="pill p-warn">Not set up</span>}</td>
                       <td><span className="pill p-ok">Active</span></td>
                       <td>{r.u.id === me.id ? <span className="small muted">You</span> : (
                         <div className="row">
-                          {r.u.mfa_enabled && (
-                            <ConfirmButton label="Reset authenticator" onConfirm={() => resetMfa(r.u)}
-                              question={`Reset ${r.u.name}'s authenticator? They are signed out and must set up their authenticator app again at next sign-in.`} />
-                          )}
                           <ConfirmButton label="Remove" onConfirm={() => remove(r.u)}
                             question={`Remove ${r.u.name}? They are signed out at once and can't sign in again.`} />
                         </div>
@@ -84,7 +74,6 @@ export default function StaffTeam() {
                   ) : (
                     <tr key={r.i.id}>
                       <td><div className="who"><span className="av" aria-hidden="true">{initials(r.i.email)}</span><div>{r.i.email}<div className="small muted">Expires {day(r.i.expires_at)}</div></div></div></td>
-                      <td className="muted small">After sign-up</td>
                       <td><span className="pill p-warn">Invite sent</span></td>
                       <td><div className="row">
                         <button className="btn sm" onClick={() => resend(r.i)}>Resend</button>
@@ -123,7 +112,7 @@ function InviteDialog({ open, onClose, onSent }: { open: boolean; onClose: () =>
     <Modal title="Invite staff" open={open} onClose={onClose}>
       <form method="post" className="stack" onSubmit={submit}>
         <Field id="staff-invite-email" label="Email" type="email" required autoFocus value={email} error={err.email} onChange={(e) => setEmail(e.target.value)} />
-        <p className="small muted">They get an email with a link to create their account, and must set up an authenticator app (MFA) to sign in.</p>
+        <p className="small muted">They get an email with a link to create their account.</p>
         {err.form && <div className="err" role="alert">{err.form}</div>}
         <div className="mf">
           <button type="button" className="btn" onClick={onClose}>Cancel</button>

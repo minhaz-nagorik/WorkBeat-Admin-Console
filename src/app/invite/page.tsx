@@ -39,7 +39,7 @@ export default function Invite() {
     const r = await call<{ user: Me }>('POST', '/v1/invitations/accept', { token, name: name.trim(), password: pw });
     setBusy(false);
     if (r.ok) {
-      if (inv.role === 'super_admin') return setStaffDone(inv.email); // no session: sign in, then authenticator set-up
+      if (inv.role === 'super_admin') return setStaffDone(inv.email); // no session for staff: they sign in with the new password
       return location.replace('/overview');
     }
     if (r.err.code === 'INVITATION_INVALID') return setInv('invalid');

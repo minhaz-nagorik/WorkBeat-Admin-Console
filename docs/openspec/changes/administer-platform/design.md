@@ -1,7 +1,7 @@
 ## Context
 
 The prototype's staff pages cover companies, licences, custom domains and agent releases. Plan
-v3.5 and the backend add MFA, a staff team, the expired grace period and release withdrawal, and
+v3.5 and the backend add a staff team, the expired grace period and release withdrawal, and
 leave out two prototype controls.
 
 ## Decisions

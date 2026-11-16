@@ -1,17 +1,21 @@
 ## Purpose
 
-How every person gets into WorkBeat Admin: one sign-in page for all roles, an authenticator code for
-WorkBeat staff, sign-out, a forgotten or changed password, and the page an invitation link opens.
+How every person gets into WorkBeat Admin: one sign-in page for all roles with email and password,
+sign-out, a forgotten or changed password, and the page an invitation link opens.
 
 ## ADDED Requirements
 
 ### Requirement: One sign-in page for every role
-<!-- source: D41 · A2 · A10 · backend `user-authentication` -->
-The app SHALL offer one sign-in page with email and password for company users and staff alike, calling `POST /v1/auth/login`. When the answer has `mfa_required` false, the app MUST keep `token` as the session (`api-access`), load `GET /v1/me` and go to the role's landing page (`app-shell`). A `401` MUST show "Email or password is wrong" without saying which.
+<!-- source: D41 · A2 · A10 · backend `user-authentication` · product owner 16 Nov 2026 (no staff MFA) -->
+The app SHALL offer one sign-in page with email and password for company users and staff alike, calling `POST /v1/auth/login`. No role is asked for a second code. On success the app MUST keep `token` as the session (`api-access`), load `GET /v1/me` and go to the role's landing page (`app-shell`). A `401` MUST show "Email or password is wrong" without saying which.
 
 #### Scenario: A company admin signs in
 - **WHEN** a Company Admin enters a valid email and password
 - **THEN** they land on Overview
+
+#### Scenario: A super admin signs in
+- **WHEN** a super admin enters a valid email and password
+- **THEN** they land on Companies and no code is asked for
 
 #### Scenario: A wrong password
 - **WHEN** the password is wrong
@@ -19,7 +23,7 @@ The app SHALL offer one sign-in page with email and password for company users a
 
 ### Requirement: Too many attempts are explained, never locked
 <!-- source: backend `user-authentication` · A12 -->
-A `429 RATE_LIMITED` from any sign-in, MFA, password-reset or invitation call SHALL show "Too many attempts. Try again in N seconds", N from `Retry-After`, and disable the submit button until then. The page MUST NOT say an account is locked.
+A `429 RATE_LIMITED` from any sign-in, password-reset or invitation call SHALL show "Too many attempts. Try again in N seconds", N from `Retry-After`, and disable the submit button until then. The page MUST NOT say an account is locked.
 
 #### Scenario: Rapid retries
 - **WHEN** login answers `429` with `Retry-After: 40`
@@ -32,38 +36,6 @@ On `{slug}.workbeat.io` or an active custom domain the sign-in page SHALL call `
 #### Scenario: A custom domain
 - **WHEN** a user opens `monitor.nagorik.tech`, an active custom domain
 - **THEN** the sign-in page shows "Nagorik Technologies"
-
-### Requirement: Staff set up an authenticator app at first sign-in
-<!-- source: D41 · B23 · backend `staff-accounts` -->
-When login answers `mfa_required` true with `mfa_enrolled` false, the app SHALL call `POST /v1/auth/mfa/enroll` with the `mfa_token`, show `otpauth_uri` as a QR code and `secret` for manual entry, and ask for the first 6-digit code, verified as at every later sign-in. The `mfa_token` and `secret` MUST be kept in memory only, never in a URL or browser storage.
-
-#### Scenario: First staff sign-in
-- **WHEN** a super admin with no authenticator signs in with the right password
-- **THEN** the page shows a QR code, the secret and a code field, and no staff page until a code is verified
-
-### Requirement: Staff enter a code before any staff page
-<!-- source: D41 · B23 · backend `staff-accounts` -->
-When login answers `mfa_required` true with `mfa_enrolled` true, the app SHALL ask for the 6-digit code and call `POST /v1/auth/mfa/verify` with `mfa_token` and `code`. On `200` it MUST keep `token` as the session and land on Companies. Company users MUST NOT be asked for a code.
-
-#### Scenario: An enrolled staff member
-- **WHEN** an enrolled super admin enters their password and then a valid code
-- **THEN** they land on Companies
-
-#### Scenario: A company user
-- **WHEN** an IT Admin signs in
-- **THEN** no code is asked for
-
-### Requirement: A wrong or late code says what to do
-<!-- source: B23 · backend `staff-accounts` · A12 -->
-`401 MFA_CODE_INVALID` SHALL show "That code didn't work. N tries left" from `attempts_left` and clear the field. A `401 UNAUTHENTICATED` on verify or enrol (five wrong codes, or the 10-minute `mfa_token` expired) MUST return to the password step with "Sign in again". A lost authenticator MUST be explained as "Ask another WorkBeat admin to reset your authenticator".
-
-#### Scenario: A mistyped code
-- **WHEN** verify answers `MFA_CODE_INVALID` with `attempts_left` 3
-- **THEN** the page says the code didn't work and 3 tries are left
-
-#### Scenario: Too slow
-- **WHEN** the staff member enters a code 11 minutes after the password
-- **THEN** the page returns to the password step with "Sign in again"
 
 ### Requirement: Sign-out ends the session
 <!-- source: A6 · backend `user-authentication` -->
@@ -117,13 +89,13 @@ The invitation page SHALL call `POST /v1/invitations/lookup` with the link's tok
 - **WHEN** accept returns `422 VALIDATION_FAILED` for the password
 - **THEN** the message shows under the password field and the invitation stays usable
 
-### Requirement: A staff invitation leads to authenticator set-up
-<!-- source: D41 · B23 · backend `staff-accounts` · backend `team-invitations` -->
-For an invitation with role `super_admin` the page SHALL say "You're invited to WorkBeat staff" instead of a company name. Accept answers `201` with no session; the page MUST then open sign-in with the email filled in, so the first sign-in runs authenticator set-up.
+### Requirement: A staff invitation leads to sign-in
+<!-- source: D41 · backend `staff-accounts` · backend `team-invitations` -->
+For an invitation with role `super_admin` the page SHALL say "You're invited to WorkBeat staff" instead of a company name. Accept answers `201` with no session; the page MUST then open sign-in with the email filled in.
 
 #### Scenario: A new staff member accepts
 - **WHEN** a person accepts a staff invitation
-- **THEN** the sign-in page opens with their email, and after the password the QR code set-up is shown
+- **THEN** the sign-in page opens with their email, and their new password signs them in to Companies
 
 ### Requirement: A used or expired invitation says what to do
 <!-- source: backend `team-invitations` · A12 -->

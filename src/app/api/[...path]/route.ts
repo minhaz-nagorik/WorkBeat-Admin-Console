@@ -3,7 +3,7 @@ import { API_BASE, SESSION_COOKIE } from '@/lib/api-server';
 
 // Same-origin proxy: the browser calls /api/v1/..., this adds the bearer token from the cookie.
 // Answers that carry a session token set the cookie and drop the token from the body (A2).
-const SESSION_ROUTES = new Set(['v1/auth/login', 'v1/auth/mfa/verify', 'v1/invitations/accept']);
+const SESSION_ROUTES = new Set(['v1/auth/login', 'v1/invitations/accept']);
 
 async function proxy(req: NextRequest, ctx: { params: Promise<{ path: string[] }> }) {
   const path = (await ctx.params).path.join('/');

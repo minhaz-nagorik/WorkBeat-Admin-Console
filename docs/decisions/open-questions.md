@@ -29,7 +29,7 @@ answered.
 | Q20 | Staff set the global minimum version directly | Agent releases | Derived from `min_supported` only | ✅ answered: derived, read-only |
 | Q21 | Resend a staff invitation | Staff team | Revoke and invite again | agreed, staff API not built |
 | Q22 | Whether screenshots are on, for the notice template (now per employee) | Monitoring notice | Template says screenshots may be taken if turned on for the employee | dropped, not asked |
-| Q23 | Staff MFA routes (enrol, challenge). Staff API and MFA are not built; the API owns sign-in now, so the MFA mechanism is undecided | Sign-in (staff) | Requirement written against "the API's staff MFA routes" | ✅ answered: TOTP built (B23) |
+| Q23 | Staff MFA routes (enrol, challenge). Staff API and MFA are not built; the API owns sign-in now, so the MFA mechanism is undecided | Sign-in (staff) | Requirement written against "the API's staff MFA routes" | ✅ answered: TOTP built (B23); then removed 16 Nov 2026, staff sign in with password only |
 | Q24 | Password reset ("Forgot password") route. The API has login, logout and change password only | Sign-in | No Forgot password link | ✅ answered: reset built (B24) |
 | Q25 | The backend's own openspec still describes Supabase auth and lacks the 16 Nov additions (`POST /v1/auth/*`, `presence`, `health`, `group_by`, `counts`, `GET /v1/agent-versions`, …); they live only in code, `apps/api/README.md` and `docs/integration/admin-requests-response.md` | All | Specs cite "backend reply 16 Nov 2026" | ✅ answered: backend openspec updated, 14/14 valid |
 | Q26 | `key_last4` on `GET /v1/staff/companies` | Staff licences | Last-four column and search left out until present | ✅ answered round 3 |

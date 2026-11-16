@@ -24,5 +24,5 @@ or the backend specs, build the plan (A1). Known deviations:
 | No onboarding checklist | Setup checklist for Admin and IT | Plan-v3.5 §4.5 |
 | Alerts can't be resolved | Admin and IT mark an alert resolved | backend `alerts-feed` |
 | No monitoring notice editor | Company Admin edits the notice text | Plan-v3.5 §4.5, backend `collection-notice` |
-| Staff area has no staff team, MFA, grace period or release withdraw | Add them | D41, D36, backend `staff-accounts`, `agent-releases` |
+| Staff area has no staff team, grace period or release withdraw | Add them | D41, D36, backend `staff-accounts`, `agent-releases` |
 | Edit employee hint: "Devices installed through an MDM link to employees by this email" | Devices are bound when IT picks the employee in WorkBeat Setup | D40, D47 |
