@@ -1,0 +1,1775 @@
+<title>WorkBeat Prototype</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Sora:wght@500;600;700&display=swap">
+<style>
+/* Layout: fixed left rail (product areas grouped by who uses them) + scrolling work area; rail becomes a drawer under 900px. */
+:root {
+  --bg: #F4F6F8; --surface: #FFFFFF; --surface-2: #EBEFF3; --fg: #16202A; --muted: #5A6675; --line: #D9DFE6;
+  --accent: #0B6E5F; --accent-fg: #FFFFFF; --accent-soft: #DCEFEA;
+  --ok: #1D7F48; --ok-soft: #DDF1E5; --warn: #9A6412; --warn-soft: #F8ECD6; --bad: #B3401A; --bad-soft: #F8E1D8;
+  --info: #2457C5; --info-soft: #DFE8FA; --neutral: #8A94A2;
+  --prod: #1D7F48; --neu: #9AA4B1; --unprod: #C4572D;
+  --shadow: 0 1px 2px rgba(16,24,40,.06), 0 4px 16px rgba(16,24,40,.06);
+  --f-display: "Sora", "Segoe UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r: 8px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E1318; --surface: #151C23; --surface-2: #1C252E; --fg: #E4EAF0; --muted: #91A0B0; --line: #29343F;
+  --accent: #39BFA4; --accent-fg: #06221C; --accent-soft: #123A33;
+  --ok: #4CC584; --ok-soft: #133524; --warn: #E2AE55; --warn-soft: #3A2C12; --bad: #F08259; --bad-soft: #42221A;
+  --info: #79A6FF; --info-soft: #1A2948; --neutral: #6E7B8A;
+  --prod: #4CC584; --neu: #6E7B8A; --unprod: #F08259;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0E1318; --surface: #151C23; --surface-2: #1C252E; --fg: #E4EAF0; --muted: #91A0B0; --line: #29343F;
+  --accent: #39BFA4; --accent-fg: #06221C; --accent-soft: #123A33;
+  --ok: #4CC584; --ok-soft: #133524; --warn: #E2AE55; --warn-soft: #3A2C12; --bad: #F08259; --bad-soft: #42221A;
+  --info: #79A6FF; --info-soft: #1A2948; --neutral: #6E7B8A;
+  --prod: #4CC584; --neu: #6E7B8A; --unprod: #F08259;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 4px 16px rgba(0,0,0,.3); color-scheme: dark; }
+
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--f-body); font-size: 14px; line-height: 1.5; }
+* { box-sizing: border-box; }
+h1, h2, h3 { font-family: var(--f-display); margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+h1 { font-size: 22px; font-weight: 600; }
+h2 { font-size: 16px; font-weight: 600; }
+h3 { font-size: 14px; font-weight: 600; }
+p { margin: 0; }
+a { color: var(--accent); }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mono, code { font-family: var(--f-mono); font-size: 12.5px; }
+.num { font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.small { font-size: 12.5px; }
+.label { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); font-weight: 600; }
+
+/* shell */
+.shell { display: grid; grid-template-columns: 248px minmax(0,1fr); min-height: 100%; }
+.rail { background: var(--surface); border-right: 1px solid var(--line); padding: 16px 12px 24px; position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
+.brand { display: flex; align-items: center; gap: 10px; padding: 4px 8px; }
+.brand svg { flex: none; }
+.brand b { font-family: var(--f-display); font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
+.brand span { display: block; font-size: 11.5px; color: var(--muted); }
+.navgroup { display: flex; flex-direction: column; gap: 2px; }
+.navgroup .label { padding: 0 10px 6px; }
+.nav { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-radius: 6px; color: var(--fg); text-decoration: none; font-weight: 500; }
+.nav:hover { background: var(--surface-2); }
+.nav.on { background: var(--accent-soft); color: var(--accent); }
+.nav .cnt { margin-left: auto; font-size: 11px; background: var(--bad-soft); color: var(--bad); padding: 0 7px; border-radius: 10px; font-weight: 600; }
+.nav svg { width: 16px; height: 16px; flex: none; opacity: .85; }
+.main { min-width: 0; display: flex; flex-direction: column; }
+.topbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; padding-block: 10px; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); flex-wrap: wrap; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.topbar .host { font-family: var(--f-mono); font-size: 12.5px; color: var(--muted); background: var(--surface-2); padding: 3px 9px; border-radius: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.topbar .spacer { flex: 1; }
+.rolepick { display: flex; align-items: center; gap: 8px; }
+.rolepick select { background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
+.iconbtn { background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.menubtn { display: none; }
+.content { padding-block: 22px 60px; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 18px; max-width: 1240px; width: 100%; }
+.pagehead { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.pagehead p { color: var(--muted); margin-top: 4px; max-width: 70ch; }
+.demo-banner { font-size: 12px; color: var(--muted); border: 1px dashed var(--line); border-radius: var(--r); padding: 6px 10px; }
+
+/* blocks */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; min-width: 0; }
+.card > h2 + *, .card > .cardhead + * { margin-top: 12px; }
+.cardhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.grid { display: grid; gap: 16px; }
+.g2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+.g3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+.g4 { grid-template-columns: repeat(4, minmax(0,1fr)); }
+.g-wide { grid-template-columns: minmax(0,2fr) minmax(0,1fr); }
+.stat { display: flex; flex-direction: column; gap: 2px; }
+.stat .v { font-family: var(--f-display); font-size: 26px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat .s { font-size: 12.5px; color: var(--muted); }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+.between { justify-content: space-between; }
+
+/* table */
+.tablewrap { overflow-x: auto; margin-inline: -16px; padding-inline: 16px; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+tr.click { cursor: pointer; }
+tr.click:hover td { background: var(--surface-2); }
+.who { display: flex; align-items: center; gap: 9px; min-width: 160px; }
+.av { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 600; background: var(--surface-2); color: var(--muted); flex: none; }
+
+/* pills */
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; padding: 2px 9px; border-radius: 20px; white-space: nowrap; background: var(--surface-2); color: var(--muted); }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill.plain::before { display: none; }
+.p-ok { background: var(--ok-soft); color: var(--ok); }
+.p-warn { background: var(--warn-soft); color: var(--warn); }
+.p-bad { background: var(--bad-soft); color: var(--bad); }
+.p-info { background: var(--info-soft); color: var(--info); }
+.p-acc { background: var(--accent-soft); color: var(--accent); }
+.tag { font-family: var(--f-mono); font-size: 11.5px; padding: 1px 7px; border-radius: 4px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+
+/* buttons + forms */
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 6px 12px; cursor: pointer; font-weight: 500; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { background: var(--surface-2); }
+.btn.pri { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+.btn.pri:hover { filter: brightness(1.07); }
+.btn.danger { color: var(--bad); border-color: var(--bad); }
+.btn.sm { padding: 3px 9px; font-size: 12.5px; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field label { font-size: 12.5px; font-weight: 500; }
+.field .hint { font-size: 12px; color: var(--muted); }
+input[type=text], input[type=email], input[type=number], select, textarea { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; width: 100%; min-width: 0; }
+.form { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); align-items: end; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; flex-wrap: wrap; }
+.seg button { border: 0; background: transparent; padding: 5px 12px; cursor: pointer; font-weight: 500; color: var(--muted); }
+.seg button.on { background: var(--accent-soft); color: var(--accent); }
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tabs button { border: 0; background: transparent; padding: 8px 12px; cursor: pointer; font-weight: 500; color: var(--muted); border-bottom: 2px solid transparent; white-space: nowrap; }
+.tabs button.on { color: var(--fg); border-bottom-color: var(--accent); }
+.notice { border-radius: var(--r); padding: 10px 14px; font-size: 13px; display: flex; gap: 10px; align-items: flex-start; }
+.notice.info { background: var(--info-soft); color: var(--fg); }
+.notice.warn { background: var(--warn-soft); color: var(--fg); }
+.notice.ok { background: var(--ok-soft); color: var(--fg); }
+.notice b { font-weight: 600; }
+.chip { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-2); border-radius: 6px; padding: 3px 4px 3px 9px; font-family: var(--f-mono); font-size: 12px; }
+.chip button { border: 0; background: transparent; cursor: pointer; color: var(--muted); padding: 0 4px; }
+.secret { font-family: var(--f-mono); background: var(--surface-2); border: 1px dashed var(--accent); padding: 8px 10px; border-radius: 6px; word-break: break-all; }
+.code { font-family: var(--f-mono); font-size: 12.5px; background: var(--surface-2); padding: 10px 12px; border-radius: 6px; overflow-x: auto; white-space: pre; }
+.confirm { background: var(--bad-soft); border-radius: 6px; padding: 8px 10px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; }
+
+/* charts */
+.bars { display: grid; grid-template-columns: repeat(var(--n), minmax(0,1fr)); gap: 6px; align-items: end; height: 150px; padding-top: 8px; border-bottom: 1px solid var(--line); background-image: linear-gradient(var(--line) 1px, transparent 1px); background-size: 100% 25%; background-position: 0 -1px; }
+.bars .b { position: relative; background: var(--accent-soft); border-radius: 3px 3px 0 0; min-height: 2px; }
+.bars .b i { position: absolute; left: 0; right: 0; bottom: 0; background: var(--accent); border-radius: 3px 3px 0 0; }
+.bars-x { display: grid; grid-template-columns: repeat(var(--n), minmax(0,1fr)); gap: 6px; font-size: 11px; color: var(--muted); text-align: center; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.split { display: flex; height: 12px; border-radius: 6px; overflow: hidden; background: var(--surface-2); }
+.split span { display: block; }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 6px; vertical-align: 0; }
+.hbar { display: grid; grid-template-columns: minmax(90px, 160px) minmax(0,1fr) 64px; gap: 10px; align-items: center; font-size: 13px; }
+.hbar .t { height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+.hbar .t i { display: block; height: 100%; border-radius: 4px; }
+.hbar .n { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+
+/* calendar */
+.cal { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 4px; }
+.cal .dh { font-size: 11px; color: var(--muted); text-align: center; padding-bottom: 4px; font-weight: 600; }
+.cal .d { border-radius: 6px; padding: 6px; min-height: 64px; background: var(--surface-2); display: flex; flex-direction: column; gap: 2px; font-size: 12px; }
+.cal .d.out { background: transparent; }
+.cal .d .n1 { color: var(--muted); font-size: 11px; }
+.cal .d .h { font-weight: 600; font-variant-numeric: tabular-nums; }
+.cal .d.today { outline: 2px solid var(--accent); }
+
+/* screenshots */
+.shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+.shot { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--surface); }
+.shot .scr { aspect-ratio: 16/10; background: var(--surface-2); position: relative; padding: 8px; display: flex; flex-direction: column; gap: 5px; max-width: 100%; }
+.shot .scr .tb { height: 8px; border-radius: 2px; background: var(--line); width: 100%; }
+.shot .scr .ln { height: 5px; border-radius: 2px; background: var(--line); }
+.shot .scr .app { position: absolute; left: 8px; bottom: 8px; font-size: 10.5px; font-weight: 600; background: var(--surface); padding: 1px 6px; border-radius: 4px; }
+.shot .scr.paused { display: grid; place-items: center; text-align: center; font-size: 12px; color: var(--muted); background: repeating-linear-gradient(45deg, var(--surface-2), var(--surface-2) 6px, var(--surface) 6px, var(--surface) 12px); }
+.shot .meta { padding: 6px 8px; font-size: 12px; display: flex; justify-content: space-between; color: var(--muted); }
+
+/* steps / checklist */
+.steps { display: flex; flex-direction: column; gap: 0; counter-reset: s; }
+.step { display: grid; grid-template-columns: 28px minmax(0,1fr); gap: 10px; padding: 8px 0; }
+.step .c { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--line); display: grid; place-items: center; font-size: 12px; font-weight: 600; color: var(--muted); }
+.step.done .c { background: var(--ok); border-color: var(--ok); color: var(--surface); }
+.step.now .c { border-color: var(--accent); color: var(--accent); }
+ol.guide { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+ol.guide li::marker { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* tier picker */
+.tiers { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.tier { border: 1.5px solid var(--line); border-radius: var(--r); padding: 12px; cursor: pointer; background: var(--surface); text-align: left; display: flex; flex-direction: column; gap: 3px; }
+.tier.on { border-color: var(--accent); background: var(--accent-soft); }
+.tier .pr { font-family: var(--f-display); font-size: 18px; font-weight: 600; }
+
+/* device mocks */
+.mock-desk { background: linear-gradient(160deg, #3A5568, #1E2E3B); border-radius: 10px; padding: 0 0 18px; min-height: 340px; position: relative; overflow: hidden; color: #E9EEF2; }
+.mac-bar { height: 26px; background: rgba(20,28,36,.55); display: flex; align-items: center; justify-content: flex-end; gap: 14px; padding: 0 12px; font-size: 12px; }
+.mac-bar .wb { display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,.18); padding: 1px 6px; border-radius: 4px; }
+.pop { background: #F7F8FA; color: #16202A; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.35); width: min(300px, calc(100% - 24px)); font-size: 13px; overflow: hidden; }
+.pop .ph { padding: 12px 14px; border-bottom: 1px solid #E1E5EA; display: flex; gap: 10px; align-items: center; }
+.pop .pi { padding: 4px 0; }
+.pop .pr2 { padding: 6px 14px; display: flex; justify-content: space-between; gap: 10px; }
+.pop .pr2 span:last-child { color: #5A6675; }
+.pop .sep { height: 1px; background: #E1E5EA; margin: 4px 0; }
+.pop .lnk { padding: 6px 14px; color: #0B6E5F; }
+.pop .foot { padding: 8px 14px; font-size: 11.5px; color: #5A6675; background: #EEF1F4; }
+.mac-pop { position: absolute; right: 12px; top: 32px; }
+.win-task { position: absolute; left: 0; right: 0; bottom: 0; height: 36px; background: rgba(16,22,28,.85); display: flex; align-items: center; justify-content: flex-end; padding: 0 12px; gap: 12px; font-size: 12px; }
+.win-pop { position: absolute; right: 12px; bottom: 46px; }
+.dlg { background: #F7F8FA; color: #16202A; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.35); width: min(380px, calc(100% - 24px)); padding: 18px; margin: 40px auto 0; display: flex; flex-direction: column; gap: 10px; font-size: 13px; }
+.dlg h3 { font-size: 15px; }
+.dlg .btns { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.dlg .b1 { background: #0B6E5F; color: #fff; border: 0; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.dlg .b2 { background: #fff; color: #16202A; border: 1px solid #C9D0D8; border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.browser { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); }
+.browser .chrome { background: var(--surface-2); padding: 8px 10px; display: flex; gap: 8px; align-items: center; }
+.browser .url { flex: 1; min-width: 0; background: var(--surface); border-radius: 14px; padding: 4px 12px; font-family: var(--f-mono); font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.blocked { padding: 48px 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.blocked .ic { width: 56px; height: 56px; border-radius: 50%; background: var(--bad-soft); color: var(--bad); display: grid; place-items: center; }
+.term { background: #0F151B; color: #CFE3DC; font-family: var(--f-mono); font-size: 12.5px; padding: 12px; border-radius: 8px; overflow-x: auto; white-space: pre; }
+
+.toast { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 9px 14px; border-radius: 8px; font-size: 13px; box-shadow: var(--shadow); z-index: 50; max-width: calc(100% - 32px); }
+.scrim { display: none; }
+
+@media (max-width: 1100px) { .g4 { grid-template-columns: repeat(2, minmax(0,1fr)); } .g-wide { grid-template-columns: minmax(0,1fr); } }
+@media (max-width: 900px) {
+  .shell { grid-template-columns: minmax(0,1fr); }
+  .rail { position: fixed; left: 0; top: 0; bottom: 0; width: 270px; z-index: 30; transform: translateX(-100%); transition: transform .2s; padding-top: calc(16px + env(safe-area-inset-top, 0px)); padding-left: max(12px, env(safe-area-inset-left, 0px)); }
+  .shell.open .rail { transform: none; }
+  .shell.open .scrim { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 20; }
+  .menubtn { display: inline-flex; }
+  .g2, .g3 { grid-template-columns: minmax(0,1fr); }
+}
+@media (max-width: 560px) { .g4 { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } .topbar .host { display: none; } .hbar { grid-template-columns: 90px minmax(0,1fr) 54px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* lists: search, filters, pagination */
+input[type=search], input[type=date], input[type=time] { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; min-width: 0; }
+input[type=search] { width: 100%; }
+input:disabled { opacity: .5; }
+.toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.toolbar .search { max-width: 300px; flex: 1 1 200px; }
+.toolbar select { width: auto; }
+.rangepick { gap: 8px; }
+.rangepick select, .rangepick input { width: auto; }
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 12px; font-size: 12.5px; color: var(--muted); }
+.pager .pgs { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+.pager .btn { min-width: 30px; justify-content: center; }
+.pager .btn.on { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.pager select { width: auto; padding: 3px 6px; }
+.seg .muted { font-weight: 400; }
+.checks { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+.checks label { display: flex; gap: 8px; align-items: center; }
+
+/* modal */
+.modal-scrim { position: fixed; inset: 0; background: rgba(10,15,20,.5); z-index: 40; display: grid; place-items: center; padding: 16px; }
+.modal { background: var(--surface); border-radius: 12px; box-shadow: var(--shadow); width: min(580px, 100%); max-height: calc(100vh - 32px); overflow: auto; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.modal.wide { width: min(940px, 100%); }
+.modal .mh { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.modal .mf { display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.err { color: var(--bad); font-size: 12.5px; min-height: 1em; }
+.err:empty { display: none; }
+
+/* status timeline */
+.timeline { display: flex; height: 24px; border-radius: 5px; overflow: hidden; background: var(--surface-2); }
+.timeline span { display: block; height: 100%; flex: 1 1 0; }
+.tl-x { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.bigpill { font-size: 14px; padding: 4px 12px; }
+
+/* calendar week/day */
+.week { display: grid; grid-template-columns: repeat(7, minmax(0,1fr)); gap: 8px; }
+.week .wd { background: var(--surface-2); border-radius: 6px; padding: 8px; display: flex; flex-direction: column; gap: 6px; font-size: 12px; min-width: 0; border: 0; text-align: left; color: inherit; font: inherit; cursor: pointer; }
+.week .wd.today { outline: 2px solid var(--accent); }
+.cal button.d { border: 0; text-align: left; color: inherit; font: inherit; cursor: pointer; }
+.cal .d.gone { opacity: .45; }
+
+/* screenshot viewer */
+.bigshot { aspect-ratio: 16/10; background: var(--surface-2); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+.bigshot .tb { background: var(--line); padding: 6px 12px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bigshot .body { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.bigshot .ln { height: 9px; border-radius: 3px; background: var(--line); }
+.pop button.lnk { background: none; border: 0; text-align: left; cursor: pointer; width: 100%; font: inherit; color: #0B6E5F; }
+.mock-toggle { display: inline-block; width: 38px; height: 22px; border-radius: 11px; background: #C9D0D8; position: relative; border: 0; cursor: pointer; }
+.mock-toggle::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; }
+.mock-toggle.on { background: #0B6E5F; }
+.mock-toggle.on::after { left: 19px; }
+.progress { height: 6px; background: #E1E5EA; border-radius: 3px; overflow: hidden; }
+.progress div { height: 100%; background: #0B6E5F; width: 100%; animation: grow 1.6s ease-out; }
+@keyframes grow { from { width: 0; } }
+
+@media (max-width: 760px) { .week { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+@media print {
+  .rail, .topbar, .toast, .noprint, .scrim, .modal-scrim { display: none !important; }
+  .shell { display: block; }
+  body.print-only .content > :not(.printable) { display: none !important; }
+  body { background: #fff; }
+}
+.hchart { display: grid; grid-template-columns: 34px minmax(0,1fr); gap: 6px; margin-top: 12px; }
+.hchart .yaxis { height: 150px; padding-top: 8px; display: flex; flex-direction: column; justify-content: space-between; font-size: 11px; color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; line-height: 1; }
+.hchart .yaxis span:first-child { margin-top: -5px; }
+.hchart .yaxis span:last-child { margin-bottom: -5px; }
+.hchart .bars-x { white-space: nowrap; }
+@media (max-width: 700px) { .hchart .bars-x span:nth-child(even) { visibility: hidden; } }
+.stephead { display: flex; gap: 12px; align-items: flex-start; }
+.stephead .n { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--accent-fg); display: grid; place-items: center; font-weight: 600; flex: none; }
+.keybox { border: 1px solid var(--line); border-radius: var(--r); padding: 14px; }
+.radio-row { display: flex; gap: 10px; align-items: flex-start; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; cursor: pointer; }
+.radio-row:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+.radio-row input { margin-top: 3px; }
+details > summary { cursor: pointer; }
+.dnsrec { display: grid; grid-template-columns: auto auto minmax(0,1fr) auto; gap: 6px 10px; align-items: center; margin-top: 6px; background: var(--surface-2); border-radius: 6px; padding: 8px 10px; }
+.dnsrec .mono { overflow-wrap: anywhere; }
+</style>
+
+<div class="shell" id="shell">
+  <aside class="rail" id="rail" aria-label="Main navigation"></aside>
+  <div class="scrim" data-act="closemenu"></div>
+  <div class="main">
+    <header class="topbar">
+      <button class="iconbtn menubtn" data-act="openmenu" aria-label="Open menu">☰</button>
+      <span class="host" id="host">nagorik.workbeat.io</span>
+      <span class="spacer"></span>
+      <label class="rolepick small"><span class="muted">Viewing as</span>
+        <select id="role" aria-label="Role">
+          <option value="admin">Company Admin</option>
+          <option value="manager">Manager</option>
+          <option value="it">IT Admin</option>
+          <option value="super">WorkBeat Super Admin</option>
+        </select>
+      </label>
+      <button class="iconbtn" data-act="theme" aria-label="Switch theme" id="themebtn">◐</button>
+    </header>
+    <main class="content" id="view"></main>
+  </div>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+// ---------------- time ----------------
+// The prototype runs at a frozen "now" so every screen is reproducible.
+const NOW = new Date(2026, 10, 11, 15, 40); // Wed 11 Nov 2026, 15:40
+const TODAY = new Date(2026, 10, 11);
+const DATA_START = new Date(2026, 9, 1); // Nagorik signed up in Oct 2026
+function rng(seed) { let a = seed >>> 0; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const hash = s => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7);
+const pad = n => String(n).padStart(2, '0');
+const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const pd = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const addD = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const at = (d, h, m = 0) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m);
+const monday = d => addD(d, -((d.getDay() + 6) % 7));
+const sameDay = (a, b) => iso(a) === iso(b);
+const hhmm = d => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const fD = (d, o = { weekday: 'short', day: 'numeric', month: 'short' }) => d.toLocaleDateString('en-GB', o);
+const fDY = d => fD(d, { day: 'numeric', month: 'short', year: 'numeric' });
+const fDT = d => `${fD(d)} ${hhmm(d)}`;
+const dur = ms => { const m = Math.round(ms / 6e4), dd = Math.floor(m / 1440), h = Math.floor(m % 1440 / 60), mm = m % 60; return [dd && dd + 'd', h && h + 'h', (mm || (!dd && !h)) && mm + 'm'].filter(Boolean).join(' '); };
+
+// ---------------- mock data (example company) ----------------
+const TIERS = { off: { name: 'Off', every: 'No screenshots', add: 0 }, light: { name: 'Light', every: 'Every 1 hour', add: 0.5 }, standard: { name: 'Standard', every: 'Every 30 minutes', add: 1 }, intensive: { name: 'Intensive', every: 'Every 10 minutes', add: 2 } };
+const USERS = [
+  { id: 'u1', name: 'Rafiq Ahmed', email: 'rafiq@nagorik.tech', role: 'admin', pending: false },
+  { id: 'u2', name: 'Tanvir Hossain', email: 'tanvir@nagorik.tech', role: 'manager', pending: false },
+  { id: 'u3', name: 'Sadia Rahman', email: 'sadia@nagorik.tech', role: 'manager', pending: false },
+  { id: 'u4', name: 'Imran Kabir', email: 'imran@nagorik.tech', role: 'it', pending: false },
+  { id: 'u5', name: 'Farhana Akter', email: 'farhana@nagorik.tech', role: 'manager', pending: true, sent: '9 Nov' },
+];
+const EMP = [
+  ['e1', 'Nusrat Jahan', 'Operations', 'u2'], ['e2', 'Arif Chowdhury', 'Operations', 'u2'], ['e3', 'Mitu Das', 'Operations', 'u2'],
+  ['e4', 'Shakil Islam', 'Operations', 'u2'], ['e5', 'Rumana Begum', 'Sales', 'u3'], ['e6', 'Kamal Uddin', 'Sales', 'u3'],
+  ['e7', 'Tania Sultana', 'Sales', 'u3'], ['e8', 'Jahid Hasan', 'Finance', null], ['e9', 'Lamia Karim', 'Finance', null],
+  ['e10', 'Omar Faruk', 'Engineering', null], ['e11', 'Priya Saha', 'Engineering', null], ['e12', 'Rezaul Karim', 'Support', 'u2'],
+].map(([id, name, dept, mgr]) => ({ id, name, dept, mgr, email: name.split(' ')[0].toLowerCase() + '@nagorik.tech' }));
+const MORE = ['Sabbir Rahman', 'Nadia Islam', 'Tahmid Hasan', 'Fatema Khatun', 'Rakib Hossain', 'Sumaiya Akter', 'Mahbub Alam', 'Ayesha Siddika', 'Fahim Shahriar', 'Jannatul Ferdous', 'Rashed Khan', 'Moushumi Paul', 'Asif Iqbal', 'Sharmin Sultana', 'Nayeem Ahmed', 'Tasnim Chowdhury', 'Habib Ullah', 'Rina Sarker'];
+const DEPTS = ['Operations', 'Sales', 'Finance', 'Engineering', 'Support', 'HR'];
+const MGR_OF = { Operations: 'u2', Support: 'u2', Sales: 'u3' };
+MORE.forEach((name, i) => { const dept = DEPTS[i % 6]; EMP.push({ id: 'e' + (13 + i), name, dept, mgr: MGR_OF[dept] || null, email: name.split(' ')[0].toLowerCase() + '@nagorik.tech' }); });
+
+const DEVICES = [
+  { id: 'd1', emp: 'e1', host: 'NG-LT-0141', os: 'Windows 11', ver: '1.0.4', status: 'online', helper: true, perms: 'ok', via: 'Intune', seen: '1 min ago' },
+  { id: 'd2', emp: 'e2', host: 'NG-LT-0142', os: 'Windows 11', ver: '1.0.4', status: 'online', helper: true, perms: 'ok', via: 'Intune', seen: '3 min ago' },
+  { id: 'd3', emp: 'e3', host: 'mitu-mbp', os: 'macOS 15', ver: '1.0.4', status: 'online', helper: true, perms: 'pending', via: 'Jamf', seen: '2 min ago' },
+  { id: 'd4', emp: 'e4', host: 'NG-LT-0155', os: 'Windows 10', ver: '1.0.2', status: 'online', helper: true, perms: 'ok', via: 'Intune', seen: '4 min ago' },
+  { id: 'd5', emp: 'e5', host: 'rumana-mba', os: 'macOS 14', ver: '1.0.4', status: 'offline', helper: false, perms: 'ok', via: 'Jamf', seen: '2 h ago', off: 2 },
+  { id: 'd6', emp: 'e6', host: 'NG-LT-0160', os: 'Windows 11', ver: '1.0.4', status: 'tamper', helper: true, perms: 'ok', via: 'Intune', seen: '1 min ago' },
+  { id: 'd7', emp: 'e7', host: 'NG-LT-0161', os: 'Windows 11', ver: '1.0.4', status: 'online', helper: true, perms: 'ok', via: 'Intune', seen: '2 min ago' },
+  { id: 'd8', emp: 'e8', host: 'jahid-mbp', os: 'macOS 15', ver: '1.0.4', status: 'online', helper: true, perms: 'ok', via: 'Jamf', seen: '1 min ago' },
+  { id: 'd9', emp: 'e9', host: 'NG-LT-0170', os: 'Windows 11', ver: '1.0.4', status: 'online', helper: true, perms: 'ok', via: 'Manual', seen: '5 min ago' },
+  { id: 'd10', emp: 'e10', host: 'omar-mbp', os: 'macOS 15', ver: '1.0.4', status: 'online', helper: true, perms: 'ok', via: 'Jamf', seen: '1 min ago' },
+  { id: 'd11', emp: 'e11', host: 'priya-mbp', os: 'macOS 15', ver: '1.0.3', status: 'online', helper: true, perms: 'pending', via: 'Jamf', seen: '3 min ago' },
+  { id: 'd12', emp: 'e12', host: 'NG-LT-0177', os: 'Windows 11', ver: '1.0.4', status: 'offline', helper: false, perms: 'ok', via: 'Intune', seen: '1 day ago', off: 30 },
+  { id: 'd13', emp: 'e9', host: 'NG-LT-0190', os: 'Windows 11', ver: '1.0.4', status: 'online', helper: true, perms: 'ok', via: 'Intune', seen: '6 min ago' },
+  { id: 'd14', emp: 'e11', host: 'NG-MAC-0021', os: 'macOS 15', ver: '1.0.4', status: 'online', helper: true, perms: 'pending', via: 'Jamf', seen: '8 min ago' },
+];
+MORE.forEach((name, i) => {
+  const mac = i % 3 === 1, first = name.split(' ')[0].toLowerCase(), offline = i % 7 === 3;
+  DEVICES.push({ id: 'd' + (15 + i), emp: 'e' + (13 + i), host: mac ? first + '-mbp' : 'NG-LT-0' + (200 + i), os: mac ? 'macOS 15' : 'Windows 11', ver: i % 9 === 5 ? '1.0.3' : '1.0.4', status: offline ? 'offline' : 'online', helper: !offline, perms: 'ok', via: mac ? 'Jamf' : 'Intune', seen: offline ? '20 h ago' : (1 + i % 6) + ' min ago', off: offline ? 20 : 0 });
+});
+
+const ALERT_LABEL = { hosts_modified: 'Website blocking changed', offline: 'Computer offline', process_restart: 'WorkBeat was closed', permission_revoked: 'Permission turned off', clock_tampered: 'Computer clock changed', config_changed: 'WorkBeat settings edited' };
+const ADETAIL = { offline: 'Not connected for 45 minutes. It came back online later.', process_restart: 'Someone or something closed WorkBeat. It started again on its own.', permission_revoked: 'Screen recording permission was turned off.', config_changed: 'WorkBeat’s settings on this computer were edited. WorkBeat put them back.', hosts_modified: 'Another program tried to undo website blocking. WorkBeat put it back.' };
+const ALERTS = [
+  { id: 'a2', type: 'hosts_modified', dev: 'd6', at: at(TODAY, 9, 40), detail: ADETAIL.hosts_modified },
+  { id: 'a3', type: 'offline', dev: 'd5', at: at(TODAY, 13, 40), detail: 'Not connected for 2 hours.' },
+  { id: 'a4', type: 'process_restart', dev: 'd4', at: at(addD(TODAY, -1), 16, 3), detail: ADETAIL.process_restart },
+  { id: 'a5', type: 'permission_revoked', dev: 'd3', at: at(addD(TODAY, -1), 11, 20), detail: 'Screen recording permission is off.' },
+  { id: 'a6', type: 'offline', dev: 'd12', at: at(addD(TODAY, -1), 9, 40), detail: 'Not connected for over a day.' },
+  { id: 'a7', type: 'clock_tampered', dev: 'd2', at: at(addD(TODAY, -2), 14, 11), detail: 'Computer clock was set back 47 minutes.' },
+];
+const ATYPES = ['offline', 'process_restart', 'permission_revoked', 'config_changed', 'hosts_modified'];
+{ const assigned = DEVICES.filter(d => d.emp);
+  for (let i = 0; i < 22; i++) {
+    const r = rng(500 + i), dv = assigned[Math.floor(r() * assigned.length)];
+    let type = ATYPES[Math.floor(r() * ATYPES.length)]; if (type === 'permission_revoked' && !dv.os.startsWith('macOS')) type = 'process_restart';
+    ALERTS.push({ id: 'a' + (8 + i), type, dev: dv.id, at: at(addD(TODAY, -3 - Math.floor(i * 1.4)), 9 + Math.floor(r() * 8), Math.floor(r() * 60)), detail: ADETAIL[type] });
+  } }
+ALERTS.forEach(a => a.host = DEVICES.find(d => d.id === a.dev).host); // kept so alerts survive device removal
+
+const APPS = ['Microsoft Excel', 'Outlook', 'Chrome', 'Slack', 'Microsoft Teams', 'Zoom', 'Visual Studio Code', 'Figma', 'Tally ERP', 'WhatsApp', 'Spotify', 'Notepad'];
+const SITES = ['erp.nagorik.tech', 'mail.google.com', 'docs.google.com', 'facebook.com', 'youtube.com', 'linkedin.com', 'github.com', 'stackoverflow.com', 'daraz.com.bd', 'prothomalo.com'];
+const TITLES = { 'Microsoft Excel': 'Q4 shipments.xlsx', Outlook: 'Inbox – Nagorik Technologies', Chrome: 'Orders – erp.nagorik.tech', Slack: '#ops-dispatch', 'Microsoft Teams': 'Daily stand-up', Zoom: 'Client call – Harbor Line', 'Visual Studio Code': 'routes.ts — nagorik-api' };
+const HOURS = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+
+const slugify = n => n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 32).replace(/-+$/, '');
+const genKey = seed => { const r = rng(seed), A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; return 'WB-' + Array.from({ length: 4 }, () => Array.from({ length: 4 }, () => A[Math.floor(r() * A.length)]).join('')).join('-'); };
+const maskKey = k => k.slice(0, 7) + '-••••-••••-' + k.slice(-4);
+
+const S = {
+  role: 'admin', route: 'overview', emp: 'e1', empTab: 'status',
+  preset: 'thisweek', from: '', to: '', rep: null, repCust: false,
+  cal: { view: 'month', date: iso(TODAY) }, tsWeek: iso(monday(TODAY)), shotDate: iso(TODAY), shotApp: 'all', stDate: iso(TODAY),
+  tier: 'intensive', shotEvery: 30, retention: 90, dept: 'all',
+  f: { devices: 'all', alerts: 'all', employees: 'all', prod: 'all', companies: 'all' },
+  q: {}, pg: {}, ps: {}, confirm: null, modal: null,
+  guide: 'intune', installMethod: 'mdm',
+  co: { name: 'Nagorik Technologies' },
+  card: { last4: '4242', exp: '08/28', email: 'billing@nagorik.tech' },
+  alertMail: { admin: true, it: true, manager: false, types: Object.keys(ALERT_LABEL), when: 'instant' },
+  domain: { name: 'monitor.nagorik.tech', status: 'pending', token: 'k3v9q2', check: '2 min ago', tries: 0 },
+  block: [
+    { id: 'b1', type: 'domain', pattern: 'facebook.com', reason: 'Social media during work hours', by: 'Rafiq Ahmed' },
+    { id: 'b2', type: 'domain', pattern: 'bet365.com', reason: 'Gambling', by: 'Imran Kabir' },
+    { id: 'b3', type: 'url', pattern: 'youtube.com/shorts', reason: 'Short video feeds', by: 'Rafiq Ahmed' },
+  ],
+  sensitive: ['*.bank', 'dutchbanglabank.com', 'bkash.com', 'mail.yahoo.com', 'outlook.live.com', 'mychart.org'],
+  prod: [
+    { id: 'r1', match: 'app', pattern: 'Microsoft Excel', cat: 'productive' }, { id: 'r2', match: 'app', pattern: 'Outlook', cat: 'productive' },
+    { id: 'r3', match: 'app', pattern: 'Visual Studio Code', cat: 'productive' }, { id: 'r4', match: 'app', pattern: 'Tally ERP', cat: 'productive' },
+    { id: 'r5', match: 'app', pattern: 'Microsoft Teams', cat: 'productive' }, { id: 'r6', match: 'app', pattern: 'Figma', cat: 'productive' },
+    { id: 'r7', match: 'app', pattern: 'Spotify', cat: 'unproductive' }, { id: 'r8', match: 'app', pattern: 'WhatsApp', cat: 'neutral' },
+    { id: 'r9', match: 'domain', pattern: 'erp.nagorik.tech', cat: 'productive' }, { id: 'r10', match: 'domain', pattern: 'docs.google.com', cat: 'productive' },
+    { id: 'r11', match: 'domain', pattern: 'github.com', cat: 'productive' }, { id: 'r12', match: 'domain', pattern: 'youtube.com', cat: 'unproductive' },
+    { id: 'r13', match: 'domain', pattern: 'facebook.com', cat: 'unproductive' }, { id: 'r14', match: 'domain', pattern: 'daraz.com.bd', cat: 'unproductive' },
+  ],
+  assignMgr: 'u2',
+  pauses: [
+    { id: 'p1', emp: 'e9', from: new Date(2026, 10, 9, 0, 0), to: new Date(2026, 10, 14, 0, 0), reason: 'Annual leave', note: 'Back Saturday', by: 'Rafiq Ahmed' },
+    { id: 'p2', emp: 'e4', from: new Date(2026, 10, 20, 0, 0), to: new Date(2026, 10, 23, 0, 0), reason: 'Sick leave', note: '', by: 'Rafiq Ahmed' },
+    { id: 'p3', emp: 'e2', from: new Date(2026, 10, 3, 13, 0), to: new Date(2026, 10, 3, 18, 0), reason: 'Personal time', note: 'Doctor visit', by: 'Rafiq Ahmed' },
+    { id: 'p4', emp: 'e1', from: new Date(2026, 10, 11, 16, 30), to: new Date(2026, 10, 11, 18, 0), reason: 'Off-site or training', note: 'Fire safety training', by: 'Rafiq Ahmed' },
+  ],
+  companies: [
+    { id: 'c1', name: 'Nagorik Technologies', plan: 'Growth', seats: 0, limit: 50, tier: 'Intensive', status: 'active', since: 'Oct 2026' },
+    { id: 'c2', name: 'Meghna Textiles', plan: 'Enterprise', seats: 412, limit: '∞', tier: 'Light', status: 'active', since: 'Jun 2026' },
+    { id: 'c3', name: 'Bayside Dental Group', plan: 'Starter', seats: 8, limit: 10, tier: 'Off', status: 'trial', since: 'Nov 2026' },
+    { id: 'c4', name: 'Orbit Software', plan: 'Growth', seats: 47, limit: 50, tier: 'Off', status: 'active', since: 'Aug 2026' },
+    { id: 'c5', name: 'Kestrel Freight', plan: 'Growth', seats: 31, limit: 50, tier: 'Intensive', status: 'suspended', since: 'Jul 2026' },
+    { id: 'c6', name: 'Lumen Accounting', plan: 'Starter', seats: 6, limit: 10, tier: 'Off', status: 'active', since: 'Sep 2026' },
+  ],
+  domains: [
+    { name: 'monitor.nagorik.tech', co: 'Nagorik Technologies', status: 'pending', check: '2 min ago' },
+    { name: 'workbeat.meghnatex.example', co: 'Meghna Textiles', status: 'active', check: 'certificate renews 2 Feb 2027' },
+    { name: 'track.orbitsoft.example', co: 'Orbit Software', status: 'missing', check: '4 min ago' },
+  ],
+  releases: [
+    { plat: 'Windows', ver: '1.0.4', date: '3 Nov 2026', status: 'Current' }, { plat: 'macOS', ver: '1.0.4', date: '3 Nov 2026', status: 'Current' },
+    { plat: 'Windows', ver: '1.0.3', date: '21 Oct 2026', status: 'Supported' }, { plat: 'macOS', ver: '1.0.3', date: '21 Oct 2026', status: 'Supported' },
+    { plat: 'Windows', ver: '1.0.2', date: '9 Oct 2026', status: 'Supported' },
+  ],
+  minVer: '1.0.3',
+};
+['Riverbend Pharma', 'Greenleaf Foods', 'Harbor Line Shipping', 'Silverthread Garments', 'Ironpeak Steel', 'Brightwire Electronics', 'Fieldstone Agro', 'Misty Hill Tea', 'Seashell Resorts', 'Lantern Media', 'Cornerstone Builders', 'Swift Parcel', 'Bluebird Travel', 'Marketsquare Retail', 'Clearview Clinics', 'Petal Cosmetics', 'Northstar Print', 'Quayside Imports'].forEach((name, i) => {
+  const r = rng(900 + i), n = 5 + Math.floor(r() * 180), plan = n <= 10 ? 'Starter' : n <= 50 ? 'Growth' : 'Enterprise';
+  S.companies.push({ id: 'c' + (7 + i), name, plan, seats: n, limit: { Starter: 10, Growth: 50, Enterprise: '∞' }[plan], tier: ['Off', 'Light', 'Standard', 'Intensive'][Math.floor(r() * 4)], status: i % 9 === 4 ? 'suspended' : i % 7 === 2 ? 'trial' : 'active', since: ['Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov'][i % 6] + ' 2026' });
+});
+S.companies.forEach((c, i) => { c.slug = slugify(c.name); c.key = genKey(77 + i); });
+S.companies[0].slug = 'nagorik'; // matches the dashboard address nagorik.workbeat.io
+const coSeats = c => c.id === 'c1' ? DEVICES.length : c.seats;
+const coMrr = c => c.status === 'active' ? Math.round(coSeats(c) * (1 + TIERS[c.tier.toLowerCase()].add)) : 0;
+
+// ---------------- helpers ----------------
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const initials = n => n.split(' ').map(x => x[0]).slice(0, 2).join('');
+const emp = id => EMP.find(e => e.id === id);
+const dev = id => DEVICES.find(d => d.id === id);
+const devsOf = id => DEVICES.filter(d => d.emp === id);
+const hm = sec => { const h = Math.floor(sec / 3600), m = Math.round(sec % 3600 / 60); return h ? `${h}h ${pad(m)}m` : `${m}m`; };
+const hrs = sec => (sec / 3600).toFixed(2);
+const pct = x => Math.round(x * 100) + '%';
+const uid = () => Math.random().toString(36).slice(2, 8);
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2800); }
+function catOf(kind, name) { const r = S.prod.find(r => r.match === kind && r.pattern.toLowerCase() === name.toLowerCase()); return r ? r.cat : 'neutral'; }
+const CATCOL = { productive: 'var(--prod)', neutral: 'var(--neu)', unproductive: 'var(--unprod)' };
+const cap = s => s[0].toUpperCase() + s.slice(1);
+const statusPill = s => ({ online: '<span class="pill p-ok">Online</span>', offline: '<span class="pill">Offline</span>', tamper: '<span class="pill p-bad">Tamper</span>' }[s]);
+const scopeEmps = () => S.role === 'manager' ? EMP.filter(e => e.mgr === 'u2') : EMP;
+const ME = { admin: USERS[0], manager: USERS[1], it: USERS[3], super: { name: 'WorkBeat Staff', email: 'ops@workbeat.io' } };
+const minDate = () => { const r = addD(TODAY, -S.retention + 1); return r > DATA_START ? r : DATA_START; };
+const confirmBox = (key, text, act, id, label, danger = true) => S.confirm === key
+  ? `<div class="confirm">${text} <button class="btn sm ${danger ? 'danger' : ''}" data-act="${act}" data-id="${id}">${label}</button><button class="btn sm" data-act="confirm" data-v="">Keep</button></div>`
+  : `<button class="btn sm" data-act="confirm" data-v="${key}">${label}</button>`;
+
+// CSV out (with spreadsheet-formula guard) and in
+const csvCell = v => { let s = String(v ?? ''); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+const toCSV = rows => rows.map(r => r.map(csvCell).join(',')).join('\r\n');
+function parseCSV(text) {
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+    else if (c === '"') q = true;
+    else if (c === ',') { row.push(cell); cell = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
+    else cell += c;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows.map(r => r.map(x => x.trim())).filter(r => r.some(Boolean));
+}
+// In claude.ai the viewer saves files through the downloads capability; opened as a local file, a plain link works.
+let DL = null; (async () => { try { DL = await window.claude?.use?.('downloads'); } catch (_) {} })();
+const SAVE_EXT = /\.(txt|json|md|csv|svg|html|pdf)$/i;
+async function download(name, text, type = 'text/plain') {
+  const renamed = !SAVE_EXT.test(name); if (renamed) name += '.txt';
+  const note = renamed ? ' Remove the .txt ending before using it.' : '';
+  if (DL) {
+    try { await DL.save({ filename: name, data: text }); toast(`${name} saved.${note}`); }
+    catch (e) { toast(e?.code === 'declined' ? 'Download cancelled' : e?.code === 'rate_limited' ? 'Another download is waiting for your answer' : 'Downloads aren’t available in this view'); }
+    return;
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type })); a.download = name;
+  document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); toast(`${name} downloaded.${note}`);
+}
+// Tiny one-page PDF (A4 landscape, built-in Helvetica) so the timesheet is a real PDF without a library.
+function makePDF(items) {
+  const t = s => String(s).replace(/[–—]/g, '-').replace(/[^\x20-\x7e]/g, '?').replace(/([\\()])/g, '\\$1');
+  const content = 'BT\n' + items.map(l => `/${l.b ? 'F2' : 'F1'} ${l.s || 10} Tf 1 0 0 1 ${l.x} ${l.y} Tm (${t(l.t)}) Tj`).join('\n') + '\nET';
+  const objs = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>', '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>',
+    `<< /Length ${content.length} >>\nstream\n${content}\nendstream`];
+  let out = '%PDF-1.4\n'; const offs = [];
+  objs.forEach((o, i) => { offs.push(out.length); out += `${i + 1} 0 obj\n${o}\nendobj\n`; });
+  const xref = out.length;
+  return out + `xref\n0 ${objs.length + 1}\n0000000000 65535 f \n${offs.map(o => String(o).padStart(10, '0') + ' 00000 n \n').join('')}trailer\n<< /Size ${objs.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+}
+
+// ---------------- monitoring pauses ----------------
+const pState = p => p.cancelled ? 'cancelled' : p.from > NOW ? 'scheduled' : (p.to && p.to <= NOW) ? 'ended' : 'active';
+const PSTATE = { active: '<span class="pill p-info">Paused now</span>', scheduled: '<span class="pill p-warn">Scheduled</span>', ended: '<span class="pill">Ended</span>', cancelled: '<span class="pill plain">Cancelled</span>' };
+const pauseAt = (eid, t) => S.pauses.find(p => p.emp === eid && !p.cancelled && p.from <= t && (!p.to || t < p.to));
+const pausesOnDay = (eid, d) => S.pauses.filter(p => p.emp === eid && !p.cancelled && p.from < addD(d, 1) && (!p.to || p.to > d));
+const pauseRange = p => `${fDT(p.from)} → ${p.to ? fDT(p.to) : 'until resumed'}`;
+
+// ---------------- deterministic usage per employee per day ----------------
+const UC = new Map(); // cache; cleared when pauses or retention change
+function dayUsage(e, d) { const k = e.id + iso(d); if (!UC.has(k)) UC.set(k, calcDay(e, d)); return UC.get(k); }
+function calcDay(e, d) {
+  const r = rng(hash(e.id + d.toDateString()));
+  const dow = d.getDay(), isToday = sameDay(d, TODAY);
+  if (dow === 0 || dow === 6 || d > TODAY || d < minDate() || (e.since && d < e.since)) return null;
+  const ds = devsOf(e.id);
+  if (isToday && (!ds.length || ds.every(x => x.status === 'offline' && (x.off || 0) >= 7))) return null;
+  const hours = isToday ? 5 + r() * 1.5 : 6.5 + r() * 2.2;
+  let total = Math.round(hours * 3600);
+  const apps = {}, sites = {};
+  const weights = APPS.map((a, i) => (e.dept === 'Engineering' && a === 'Visual Studio Code' ? 6 : 1) * (i < 5 ? 3 : 1) * (0.3 + r()));
+  const ws = weights.reduce((a, b) => a + b, 0);
+  APPS.forEach((a, i) => apps[a] = Math.round(total * weights[i] / ws));
+  const sw = SITES.map((s, i) => (i < 3 ? 3 : 1) * (0.2 + r())), ss = sw.reduce((a, b) => a + b, 0);
+  SITES.forEach((s, i) => sites[s] = Math.round(apps.Chrome * sw[i] / ss));
+  const active = 0.62 + r() * 0.3;
+  const hourly = HOURS.map(h => { const on = isToday && h > 15 ? 0 : (h === 13 ? 0.35 : 0.75 + r() * 0.25); return { h, tracked: Math.round(3600 * on), act: on ? Math.min(1, active + (r() - .5) * .3) : 0 }; });
+  // drop the hours that fall inside a monitoring pause
+  const before = hourly.reduce((a, x) => a + x.tracked, 0);
+  hourly.forEach(x => { if (pauseAt(e.id, at(d, x.h, 30))) { x.tracked = 0; x.act = 0; x.paused = true; } });
+  const kept = before ? hourly.reduce((a, x) => a + x.tracked, 0) / before : 0;
+  if (!kept) return null;
+  if (kept < 1) { total = Math.round(total * kept); for (const k in apps) apps[k] = Math.round(apps[k] * kept); for (const k in sites) sites[k] = Math.round(sites[k] * kept); }
+  return { total, apps, sites, active, hourly };
+}
+const splitOf = (apps, sites) => {
+  const s = { productive: 0, neutral: 0, unproductive: 0 };
+  for (const [a, v] of Object.entries(apps)) if (a !== 'Chrome') s[catOf('app', a)] += v;
+  for (const [x, v] of Object.entries(sites)) s[catOf('domain', x)] += v;
+  return s;
+};
+function aggregate(e, days) {
+  const out = { total: 0, apps: {}, sites: {}, actW: 0, days: 0, hourly: HOURS.map(h => ({ h, tracked: 0, act: 0, n: 0 })) };
+  for (const d of days) {
+    const u = dayUsage(e, d); if (!u) continue; out.days++;
+    out.total += u.total; out.actW += u.active * u.total;
+    for (const [k, v] of Object.entries(u.apps)) out.apps[k] = (out.apps[k] || 0) + v;
+    for (const [k, v] of Object.entries(u.sites)) out.sites[k] = (out.sites[k] || 0) + v;
+    u.hourly.forEach((x, i) => { out.hourly[i].tracked += x.tracked; if (x.tracked) { out.hourly[i].act += x.act; out.hourly[i].n++; } });
+  }
+  out.hourly.forEach(h => { h.act = h.n ? h.act / h.n : 0; h.avg = out.days ? h.tracked / out.days : 0; });
+  out.active = out.total ? out.actW / out.total : 0;
+  out.split = splitOf(out.apps, out.sites);
+  return out;
+}
+const daysBetween = (f, t) => { const out = []; for (let d = f; d <= t; d = addD(d, 1)) out.push(d); return out; };
+const rangeDays = () => daysBetween(pd(S.from), pd(S.to));
+const weekDays = () => daysBetween(monday(TODAY), TODAY);
+
+// live status: active / idle / offline / paused / tamper / no device
+const PRES = { active: ['Active', 'p-ok'], idle: ['Idle', 'p-warn'], offline: ['Offline', ''], paused: ['Monitoring paused', 'p-info'], tamper: ['Tamper', 'p-bad'], nodevice: ['No device', 'plain'] };
+function presence(e) {
+  if (pauseAt(e.id, NOW)) return 'paused';
+  const ds = devsOf(e.id);
+  if (!ds.length) return 'nodevice';
+  if (ds.some(d => d.status === 'tamper')) return 'tamper';
+  if (ds.some(d => d.status === 'online')) return Math.abs(hash(e.id)) % 5 === 1 ? 'idle' : 'active';
+  return 'offline';
+}
+const presPill = (p, big) => `<span class="pill ${PRES[p][1]} ${big ? 'bigpill' : ''}">${PRES[p][0]}</span>`;
+// 10-minute status slots between 09:00 and 18:00
+function timeline(e, d) {
+  const u = dayUsage(e, d), r = rng(hash(e.id + 'tl' + iso(d))), ds = devsOf(e.id), isT = sameDay(d, TODAY);
+  const offH = ds.length && ds.every(x => x.status === 'offline') ? Math.max(...ds.map(x => x.off || 0)) : 0;
+  const out = [];
+  for (let m = 9 * 60; m < 18 * 60; m += 10) {
+    const t = at(d, 0, m);
+    if (t >= NOW) { out.push({ t, s: 'future' }); continue; }
+    let s;
+    if (pauseAt(e.id, t)) s = 'paused';
+    else if (!u || (isT && !ds.length)) s = 'offline';
+    else if (isT && offH && t >= new Date(+NOW - offH * 36e5)) s = 'offline';
+    else { const h = u.hourly[Math.floor(m / 60) - 9]; s = !h.tracked ? 'offline' : r() < h.act ? 'active' : 'idle'; }
+    out.push({ t, s });
+  }
+  if (isT) { const p = presence(e), last = out.filter(x => x.s !== 'future').pop(); if (last && (p === 'active' || p === 'idle')) last.s = p; }
+  return out;
+}
+const segments = tl => tl.filter(x => x.s !== 'future').reduce((a, x) => { const l = a[a.length - 1]; if (l && l.s === x.s) l.end = new Date(Math.min(+x.t + 6e5, +NOW)); else a.push({ s: x.s, start: x.t, end: new Date(Math.min(+x.t + 6e5, +NOW)) }); return a; }, []);
+const TLCOL = { active: 'var(--ok)', idle: 'var(--warn)', offline: 'var(--neu)', paused: 'var(--info)', future: 'transparent' };
+const TLNAME = { active: 'Active', idle: 'Idle', offline: 'Offline', paused: 'Monitoring paused' };
+const tlBar = tl => `<div class="timeline" role="img" aria-label="Status from 09:00 to 18:00">${tl.map(x => `<span style="background:${TLCOL[x.s]}" title="${hhmm(x.t)} · ${TLNAME[x.s] || 'Not yet'}"></span>`).join('')}</div><div class="tl-x">${[9, 11, 13, 15, 17, 18].map(h => `<span>${pad(h)}:00</span>`).join('')}</div>`;
+const tlLegend = `<div class="legend">${['active', 'idle', 'offline', 'paused'].map(k => `<span><i style="background:${TLCOL[k]}"></i>${TLNAME[k]}</span>`).join('')}</div>`;
+
+// ---------------- date range ----------------
+const PRESETS = [['today', 'Today'], ['yesterday', 'Yesterday'], ['thisweek', 'This week'], ['lastweek', 'Last week'], ['last7', 'Last 7 days'], ['thismonth', 'This month'], ['lastmonth', 'Last month'], ['last30', 'Last 30 days'], ['custom', 'Custom range']];
+function presetRange(p) {
+  const t = TODAY, m = monday(t);
+  return ({ today: [t, t], yesterday: [addD(t, -1), addD(t, -1)], thisweek: [m, t], lastweek: [addD(m, -7), addD(m, -1)], last7: [addD(t, -6), t],
+    thismonth: [new Date(t.getFullYear(), t.getMonth(), 1), t], lastmonth: [new Date(t.getFullYear(), t.getMonth() - 1, 1), new Date(t.getFullYear(), t.getMonth(), 0)], last30: [addD(t, -29), t] })[p];
+}
+function setRange(f, t) { if (f > t) [f, t] = [t, f]; const mn = minDate(); if (f < mn) f = mn; if (t < mn) t = mn; if (t > TODAY) t = TODAY; if (f > TODAY) f = TODAY; S.from = iso(f); S.to = iso(t); }
+const rangeLabel = () => { const f = pd(S.from), t = pd(S.to), n = rangeDays().length; return S.from === S.to ? fD(f, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }) : `${fD(f, { day: 'numeric', month: 'short' })} – ${fDY(t)} · ${n} days`; };
+const rangePicker = () => `<div class="row rangepick"><select id="rp-preset" data-act-change="preset" aria-label="Date range">${PRESETS.map(([k, l]) => `<option value="${k}" ${S.preset === k ? 'selected' : ''}>${l}</option>`).join('')}</select>
+  <input type="date" id="rp-from" data-act-change="rfrom" value="${S.from}" min="${iso(minDate())}" max="${iso(TODAY)}" aria-label="From date"><span class="muted">to</span>
+  <input type="date" id="rp-to" data-act-change="rto" value="${S.to}" min="${iso(minDate())}" max="${iso(TODAY)}" aria-label="To date"></div>`;
+
+// ---------------- lists: search + pagination ----------------
+function lst(key, items, text, size = 10, sizes = [10, 25, 50]) {
+  const q = (S.q[key] || '').trim().toLowerCase();
+  const all = q ? items.filter(x => text(x).toLowerCase().includes(q)) : items;
+  const ps = S.ps[key] || size, pages = Math.max(1, Math.ceil(all.length / ps)), pg = Math.min(S.pg[key] || 1, pages);
+  return {
+    all, rows: all.slice((pg - 1) * ps, pg * ps),
+    search: ph => `<input type="search" class="search" id="q-${key}" data-q="${key}" value="${esc(S.q[key] || '')}" placeholder="${esc(ph)}" aria-label="${esc(ph)}">`,
+    pager: () => pager(key, pg, pages, all.length, ps, sizes),
+  };
+}
+function pager(key, pg, pages, n, ps, sizes) {
+  const a = n ? (pg - 1) * ps + 1 : 0, b = Math.min(pg * ps, n), nums = [];
+  for (let i = 1; i <= pages; i++) if (i === 1 || i === pages || Math.abs(i - pg) <= 1) nums.push(i); else if (nums[nums.length - 1] !== '…') nums.push('…');
+  return `<div class="pager"><span>${n ? `Showing ${a}–${b} of ${n}` : 'No results'}</span><div class="pgs">
+    <label class="row" style="gap:6px">Rows <select data-act-change="pagesize" data-k="${key}" aria-label="Rows per page">${sizes.map(s => `<option ${s === ps ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
+    <button class="btn sm" data-act="page" data-k="${key}" data-v="${pg - 1}" ${pg <= 1 ? 'disabled' : ''} aria-label="Previous page">‹</button>
+    ${nums.map(i => i === '…' ? '<span>…</span>' : `<button class="btn sm ${i === pg ? 'on' : ''}" data-act="page" data-k="${key}" data-v="${i}" aria-label="Page ${i}" ${i === pg ? 'aria-current="page"' : ''}>${i}</button>`).join('')}
+    <button class="btn sm" data-act="page" data-k="${key}" data-v="${pg + 1}" ${pg >= pages ? 'disabled' : ''} aria-label="Next page">›</button></div></div>`;
+}
+const chips = (key, opts) => `<div class="seg" role="group">${opts.map(([k, l, n]) => `<button class="${S.f[key] === k ? 'on' : ''}" aria-pressed="${S.f[key] === k}" data-act="filt" data-k="${key}" data-v="${k}">${l}${n != null ? ` <span class="muted">${n}</span>` : ''}</button>`).join('')}</div>`;
+const emptyRow = (cols, msg = 'Nothing matches your search or filter.') => `<tr><td colspan="${cols}" class="muted">${msg}</td></tr>`;
+
+// ---------------- icons ----------------
+const IC = {
+  overview: '<path d="M3 13h4l3-8 4 14 3-6h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+  employees: '<circle cx="9" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2.5 20c.8-3.6 3.4-5.5 6.5-5.5s5.7 1.9 6.5 5.5M16 4.8a3.3 3.3 0 0 1 0 6.4M18 14.6c1.9.6 3.2 2.2 3.6 5.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  devices: '<rect x="3" y="4" width="18" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M1 20h22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  deployment: '<path d="M12 3v12m0 0-4.5-4.5M12 15l4.5-4.5M4 17v3h16v-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',
+  alerts: '<path d="M12 3 2 20h20L12 3Zm0 6v5m0 3v.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>',
+  blocklist: '<circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="m5.6 5.6 12.8 12.8" stroke="currentColor" stroke-width="2"/>',
+  productivity: '<path d="M4 20V10m6 10V4m6 16v-7m6 7H2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  team: '<circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  company: '<path d="M4 21V5l8-3v19M12 9h8v12M7 8h2m-2 4h2m-2 4h2m6-3h2m-2 4h2M2 21h20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  device: '<rect x="6" y="2" width="12" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 18h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  pricing: '<path d="M3 12V4h8l10 10-8 8L3 12Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="7.5" cy="8.5" r="1.5" fill="currentColor"/>',
+  admin: '<path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5l-8-3Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>',
+};
+const icon = k => `<svg viewBox="0 0 24 24" aria-hidden="true">${IC[k] || IC.overview}</svg>`;
+
+// ---------------- navigation & access (permission matrix) ----------------
+const NAV = [
+  { group: 'Company', items: [
+    ['overview', 'Overview', 'overview', ['admin', 'manager', 'it']],
+    ['employees', 'Employees', 'employees', ['admin', 'manager']],
+    ['devices', 'Devices', 'devices', ['admin', 'it']],
+    ['alerts', 'Alerts', 'alerts', ['admin', 'manager', 'it']],
+    ['blocklist', 'Block list', 'blocklist', ['admin', 'it']],
+    ['productivity', 'Productivity rules', 'productivity', ['admin', 'manager']],
+  ] },
+  { group: 'Setup', items: [
+    ['deployment', 'Deployment', 'deployment', ['admin', 'it']],
+    ['team', 'Team & roles', 'team', ['admin']],
+    ['company', 'Company settings', 'company', ['admin']],
+  ] },
+  { group: 'WorkBeat staff', items: [
+    ['admin-companies', 'Companies', 'admin', ['super']],
+    ['admin-licenses', 'Licenses', 'pricing', ['super']],
+    ['admin-domains', 'Custom domains', 'company', ['super']],
+    ['admin-releases', 'Agent releases', 'deployment', ['super']],
+  ] },
+];
+const ALL = Object.fromEntries(NAV.flatMap(g => g.items.map(i => [i[0], i[3]])));
+ALL.employee = ['admin', 'manager'];
+const DEFAULT = { admin: 'overview', manager: 'overview', it: 'overview', super: 'admin-companies' };
+
+function renderNav() {
+  const alertCount = visibleAlerts().filter(a => sameDay(a.at, TODAY)).length;
+  $('#rail').innerHTML = `
+    <div class="brand">${logo()}<div><b>WorkBeat</b><span>${S.role === 'super' ? 'Internal console' : esc(S.co.name)}</span></div></div>
+    ${NAV.map(g => {
+      const items = g.items.filter(i => i[3].includes(S.role)); if (!items.length) return '';
+      return `<nav class="navgroup"><div class="label">${g.group}</div>${items.map(([r, l, ic]) =>
+        `<a class="nav ${S.route === r || (r === 'employees' && S.route === 'employee') ? 'on' : ''}" href="#${r}">${icon(ic)}${l}${r === 'alerts' && alertCount ? `<span class="cnt" title="Alerts today">${alertCount}</span>` : ''}</a>`).join('')}</nav>`;
+    }).join('')}
+    <div class="small muted" style="margin-top:auto;padding:0 10px">Signed in as <b>${esc(ME[S.role].name)}</b><br>${esc(ME[S.role].email)}</div>`;
+  $('#host').textContent = S.role === 'super' ? 'admin.workbeat.io' : 'nagorik.workbeat.io';
+}
+const logo = () => `<svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><path d="M5 17h5l2.5-7 4 13 3-9 1.6 3H27" fill="none" stroke="var(--accent-fg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const logoMini = () => `<svg width="14" height="14" viewBox="0 0 32 32" aria-hidden="true"><path d="M3 17h6l3-8 5 15 3-10 2 3h7" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+function head(title, sub, right = '') { return `<div class="pagehead"><div><h1>${title}</h1>${sub ? `<p>${sub}</p>` : ''}</div>${right}</div>`; }
+const demoNote = '<div class="demo-banner">Prototype with example data. Nothing here is a real company or person. The clock is frozen at Wed 11 Nov 2026, 15:40.</div>';
+
+// ---------------- views ----------------
+function visibleAlerts() {
+  let a = ALERTS;
+  if (S.role === 'manager') { const ids = new Set(scopeEmps().map(e => e.id)); a = a.filter(x => ids.has(dev(x.dev)?.emp)); }
+  return a;
+}
+const whenOf = a => sameDay(a.at, TODAY) ? `${hhmm(a.at)} today` : sameDay(a.at, addD(TODAY, -1)) ? `Yesterday ${hhmm(a.at)}` : fDT(a.at);
+function alertRow(a) {
+  const d = dev(a.dev), e = d && emp(d.emp);
+  const sev = a.type === 'offline' ? 'p-warn' : a.type === 'permission_revoked' ? 'p-info' : 'p-bad';
+  return `<div class="row between" style="align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:10px">
+    <div class="stack" style="gap:2px;min-width:0;flex:1"><div class="row" style="gap:8px"><span class="pill ${sev}">${ALERT_LABEL[a.type]}</span><span class="small muted">${whenOf(a)}</span></div>
+    <div class="small">${esc(a.detail)}</div><div class="small muted">${e ? `<a href="#employee" data-act="openemp" data-id="${e.id}">${esc(e.name)}</a> · ` : ''}<span class="mono">${esc(a.host)}</span>${d ? '' : ' (released)'}</div></div></div>`;
+}
+const splitBar = sp => { const s = sp.productive + sp.neutral + sp.unproductive || 1; return `<div class="split" role="img" aria-label="Productive ${pct(sp.productive / s)}, neutral ${pct(sp.neutral / s)}, unproductive ${pct(sp.unproductive / s)}"><span style="width:${sp.productive / s * 100}%;background:var(--prod)"></span><span style="width:${sp.neutral / s * 100}%;background:var(--neu)"></span><span style="width:${sp.unproductive / s * 100}%;background:var(--unprod)"></span></div>`; };
+
+const V = {};
+V.overview = () => {
+  const devs = S.role === 'manager' ? DEVICES.filter(d => scopeEmps().some(e => e.id === d.emp)) : DEVICES;
+  const c = s => devs.filter(d => d.status === s).length;
+  const link = S.role !== 'manager';
+  const stat = (k, label, v, sub, color) => `<${link && k ? `button class="card stat" style="text-align:left;cursor:pointer" data-act="statgo" data-v="${k}"` : 'div class="card stat"'}><span class="label">${label}</span><span class="v" ${color ? `style="color:${color}"` : ''}>${v}</span><span class="s">${sub}</span></${link && k ? 'button' : 'div'}>`;
+  const stats = `<div class="grid g4">
+    ${stat('online', 'Online now', c('online'), `of ${devs.length} devices`)}
+    ${stat('offline', 'Offline', c('offline'), 'silent over 15 minutes')}
+    ${stat('tamper', 'Tamper', c('tamper'), 'needs review', 'var(--bad)')}
+    ${S.role === 'it' ? stat('attention', 'Permission pending', devs.filter(d => d.perms === 'pending').length, 'macOS Screen Recording') : stat('', 'Seats used', DEVICES.length + ' / 50', 'Growth plan')}
+  </div>`;
+  const alertList = `<div class="card"><div class="cardhead"><h2>Recent alerts</h2><a href="#alerts" class="small">View all</a></div>
+    <div class="stack">${visibleAlerts().slice(0, 4).map(alertRow).join('') || '<p class="muted">No alerts.</p>'}</div></div>`;
+  if (S.role === 'it') return head('Overview', 'Device health and rollout status. Activity reports are not available to IT Admins.') + stats + `<div class="grid g-wide">${rolloutCard(true)}${alertList}</div>`;
+  const emps = scopeEmps(), days = rangeDays();
+  const rows = emps.map(e => ({ e, a: aggregate(e, days), p: presence(e) }));
+  const totals = rows.reduce((t, r) => { t.total += r.a.total; for (const k in r.a.split) t.split[k] += r.a.split[k]; return t; }, { total: 0, split: { productive: 0, neutral: 0, unproductive: 0 } });
+  const sp = totals.split, sps = sp.productive + sp.neutral + sp.unproductive || 1;
+  const L = lst('ov', rows, r => r.e.name + ' ' + r.e.dept + ' ' + PRES[r.p][0]);
+  return head('Overview', `${S.role === 'manager' ? `Your team (${emps.length} people)` : esc(S.co.name)} · ${rangeLabel()}`, rangePicker()) +
+    demoNote + stats +
+    `<div class="grid g-wide">
+      <div class="card"><div class="cardhead"><h2>Productivity split</h2><span class="muted small">${hm(totals.total)} tracked</span></div>
+        <div class="stack" style="margin-top:12px">
+          ${splitBar(sp)}
+          <div class="legend"><span><i style="background:var(--prod)"></i>Productive ${pct(sp.productive / sps)}</span><span><i style="background:var(--neu)"></i>Neutral ${pct(sp.neutral / sps)}</span><span><i style="background:var(--unprod)"></i>Unproductive ${pct(sp.unproductive / sps)}</span></div>
+          <div class="toolbar">${L.search('Search employees')}</div>
+          <div class="tablewrap"><table><thead><tr><th>Employee</th><th>Tracked</th><th>Activity</th><th style="min-width:140px">Split</th><th>Status</th></tr></thead><tbody>
+          ${L.rows.map(({ e, a, p }) => `<tr class="click" data-act="openemp" data-id="${e.id}"><td><div class="who"><span class="av">${initials(e.name)}</span><div>${esc(e.name)}<div class="small muted">${esc(e.dept)}</div></div></div></td><td class="num">${hm(a.total)}</td><td class="num">${pct(a.active)}</td><td>${splitBar(a.split)}</td><td>${presPill(p)}</td></tr>`).join('') || emptyRow(5)}
+          </tbody></table></div>${L.pager()}
+        </div></div>
+      ${alertList}
+    </div>`;
+};
+
+V.employees = () => {
+  const emps = scopeEmps().map(e => ({ e, p: presence(e), ds: devsOf(e.id) }));
+  const byDept = emps.filter(x => S.dept === 'all' || x.e.dept === S.dept);
+  const filtered = byDept.filter(x => S.f.employees === 'all' || x.p === S.f.employees);
+  const L = lst('employees', filtered, x => [x.e.name, x.e.email, x.e.dept, ...x.ds.map(d => d.host)].join(' '));
+  const wk = weekDays();
+  const cnt = k => byDept.filter(x => x.p === k).length;
+  const depts = [...new Set(EMP.map(e => e.dept))].sort();
+  return head('Employees', S.role === 'manager' ? 'People assigned to you. You can view their reports but not edit them.' : `Everyone monitored on a company device (${EMP.length} people).`,
+    S.role === 'admin' ? `<div class="row"><button class="btn" data-act="modal" data-v="import">Import CSV</button><button class="btn pri" data-act="modal" data-v="addemp">Add employee</button></div>` : '') +
+    `<div class="card stack">
+      <div class="toolbar">${L.search('Search name, email, department or device')}
+        <select data-act-change="dept" aria-label="Department"><option value="all">All departments</option>${depts.map(d => `<option ${S.dept === d ? 'selected' : ''}>${d}</option>`).join('')}</select></div>
+      ${chips('employees', [['all', 'All', byDept.length], ['active', 'Active', cnt('active')], ['idle', 'Idle', cnt('idle')], ['offline', 'Offline', cnt('offline')], ['paused', 'Paused', cnt('paused')], ['tamper', 'Tamper', cnt('tamper')], ['nodevice', 'No device', cnt('nodevice')]])}
+      <div class="tablewrap"><table><thead><tr><th>Name</th><th>Department</th><th>Manager</th><th>Devices</th><th>This week</th><th>Status</th></tr></thead><tbody>
+      ${L.rows.map(({ e, p, ds }) => { const m = USERS.find(u => u.id === e.mgr), ap = pauseAt(e.id, NOW);
+        return `<tr class="click" data-act="openemp" data-id="${e.id}"><td><div class="who"><span class="av">${initials(e.name)}</span><div>${esc(e.name)}<div class="small muted">${esc(e.email)}</div></div></div></td><td>${esc(e.dept)}</td><td>${m ? esc(m.name) : '<span class="muted">—</span>'}</td><td class="mono">${ds.map(d => esc(d.host)).join(', ') || '<span class="muted">—</span>'}</td><td class="num">${hm(aggregate(e, wk).total)}</td><td>${presPill(p)}${ap ? `<div class="small muted">until ${ap.to ? fDT(ap.to) : 'resumed'}</div>` : ''}</td></tr>`; }).join('') || emptyRow(6)}
+      </tbody></table></div>${L.pager()}</div>`;
+};
+
+V.employee = () => {
+  const e = emp(S.emp); if (!e || !scopeEmps().includes(e)) { S.emp = scopeEmps()[0].id; return V.employee(); }
+  const ds = devsOf(e.id), p = presence(e);
+  const tabs = [['status', 'Status'], ['report', 'Report'], ['calendar', 'Calendar'], ['timesheet', 'Timesheet'], ['screenshots', 'Screenshots'], ['pauses', 'Pause monitoring']];
+  const body = { status: empStatus, report: empReport, calendar: empCalendar, timesheet: empTimesheet, screenshots: empShots, pauses: empPauses }[S.empTab](e);
+  const admin = S.role === 'admin';
+  return `<a href="#employees" class="small noprint">← Employees</a>` +
+    `<div class="noprint">${head(`<span class="row" style="gap:12px"><span class="av" style="width:40px;height:40px;font-size:14px">${initials(e.name)}</span>${esc(e.name)} ${presPill(p)}</span>`,
+      `${esc(e.dept)} · ${esc(e.email)} · ${ds.length ? ds.map(d => `<span class="mono">${esc(d.host)}</span> (${d.os})`).join(', ') : 'No device'}`,
+      admin ? `<div class="row"><button class="btn" data-act="modal" data-v="editemp">Edit</button><button class="btn" data-act="modal" data-v="rmemp">Remove</button></div>` : '')}</div>` +
+    `<div class="tabs noprint" role="tablist">${tabs.map(([k, l]) => `<button role="tab" aria-selected="${S.empTab === k}" class="${S.empTab === k ? 'on' : ''}" data-act="emptab" data-v="${k}">${l}</button>`).join('')}</div>` + body;
+};
+
+function dayNav(act, dateIso, label) {
+  const d = pd(dateIso);
+  return `<div class="row" style="gap:6px"><button class="btn sm" data-act="${act}" data-v="-1" ${d <= minDate() ? 'disabled' : ''} aria-label="Previous day">‹</button>
+    <input type="date" id="${act}-date" data-act-change="${act}" value="${dateIso}" min="${iso(minDate())}" max="${iso(TODAY)}" aria-label="${label}">
+    <button class="btn sm" data-act="${act}" data-v="1" ${d >= TODAY ? 'disabled' : ''} aria-label="Next day">›</button>
+    <button class="btn sm" data-act="${act}" data-v="0" ${sameDay(d, TODAY) ? 'disabled' : ''}>Today</button></div>`;
+}
+
+function empStatus(e) {
+  const p = presence(e), ds = devsOf(e.id), ap = pauseAt(e.id, NOW);
+  const todaySeg = segments(timeline(e, TODAY)), cur = todaySeg[todaySeg.length - 1];
+  const sum = k => todaySeg.filter(s => s.s === k).reduce((a, s) => a + (s.end - s.start), 0);
+  const firstOn = todaySeg.find(s => s.s === 'active' || s.s === 'idle');
+  const app = APPS[Math.abs(hash(e.id + 'now')) % 7];
+  const desc = {
+    active: `Using <b>${app}</b> on <span class="mono">${esc(ds.find(d => d.status === 'online')?.host || '')}</span>. Active since ${cur ? hhmm(cur.start) : '—'}.`,
+    idle: `Device is on but there has been no keyboard or mouse use since ${cur ? hhmm(cur.start) : '—'}.`,
+    offline: `No heartbeat from ${ds.length > 1 ? 'any device' : 'the device'}. Last seen ${esc(ds.map(d => d.seen).join(', '))}.`,
+    paused: ap ? `Paused by ${esc(ap.by)} for <b>${esc(ap.reason)}</b>, ${pauseRange(ap)}. Nothing is collected; tamper alerts still work.` : '',
+    tamper: `A tamper event was reported. <a href="#alerts">Open alerts</a> to review it.`,
+    nodevice: `No device is linked to this person. ${S.role === 'admin' ? 'Assign one on the <a href="#devices">Devices</a> page.' : ''}`,
+  }[p];
+  const day = pd(S.stDate), tl = timeline(e, day), sg = segments(tl);
+  const L = lst('stlog', [...sg].reverse(), s => TLNAME[s.s], 10);
+  const empAlerts = ALERTS.filter(a => ds.some(d => d.id === a.dev)).slice(0, 5);
+  return `<div class="grid g-wide">
+    <div class="card stack"><div class="cardhead"><h2>Right now</h2><span class="small muted">${fDT(NOW)}</span></div>
+      <div class="row">${presPill(p, true)}</div><p>${desc}</p>
+      <div class="grid g4" style="gap:10px">
+        <div class="stat"><span class="label">First activity</span><span class="v" style="font-size:20px">${firstOn ? hhmm(firstOn.start) : '—'}</span></div>
+        <div class="stat"><span class="label">Active today</span><span class="v" style="font-size:20px">${dur(sum('active'))}</span></div>
+        <div class="stat"><span class="label">Idle today</span><span class="v" style="font-size:20px">${dur(sum('idle'))}</span></div>
+        <div class="stat"><span class="label">Offline or paused</span><span class="v" style="font-size:20px">${dur(sum('offline') + sum('paused'))}</span></div>
+      </div>
+      <details class="small muted"><summary>What each status means</summary><p style="margin-top:6px"><b>Active</b>: keyboard or mouse used in the last 5 minutes. <b>Idle</b>: device on, no input for 5 minutes or more. <b>Offline</b>: no heartbeat for 15 minutes. <b>Monitoring paused</b>: an admin paused collection for this person. <b>Tamper</b>: the agent reported interference.</p></details>
+    </div>
+    <div class="card"><div class="cardhead"><h2>Recent alerts</h2><a class="small" href="#alerts">All alerts</a></div><div class="stack">${empAlerts.map(alertRow).join('') || '<p class="muted small">No alerts for this person’s devices.</p>'}</div></div>
+  </div>
+  ${(() => { const u = dayUsage(e, pd(S.stDate)); return `<div class="card"><div class="cardhead"><h2>Activity by hour · ${fD(pd(S.stDate))}</h2><span class="small muted">Change the day in the timeline below</span></div>${u ? hourChart(u.hourly.map(h => ({ h: h.h, sec: h.tracked, act: h.act, paused: h.paused }))) : '<p class="muted">No activity recorded this day.</p>'}</div>`; })()}
+  <div class="card"><h2>Devices</h2><div class="tablewrap"><table><thead><tr><th>Device</th><th>Status</th><th>Agent</th><th>Helper</th><th>Permissions</th><th>Last seen</th></tr></thead><tbody>
+    ${ds.map(d => `<tr><td><span class="mono">${esc(d.host)}</span><div class="small muted">${d.os} · ${d.via}</div></td><td>${statusPill(d.status)}</td><td class="mono">${d.ver}${d.ver < S.minVer ? ' <span class="pill p-warn">Outdated</span>' : ''}</td><td>${d.helper ? '<span class="pill p-ok">Running</span>' : '<span class="pill">Stopped</span>'}</td><td>${d.perms === 'ok' ? '<span class="pill p-ok">Granted</span>' : '<span class="pill p-info">Screen Recording pending</span>'}</td><td class="small muted">${d.seen}</td></tr>`).join('') || emptyRow(6, 'No device linked.')}
+  </tbody></table></div></div>
+  <div class="card stack"><div class="cardhead"><h2>Status timeline</h2>${dayNav('stnav', S.stDate, 'Timeline date')}</div>
+    ${tlBar(tl)}${tlLegend}
+    <div class="tablewrap"><table><thead><tr><th>Status</th><th>From</th><th>To</th><th>Duration</th></tr></thead><tbody>
+      ${L.rows.map(s => `<tr><td><span class="pill ${{ active: 'p-ok', idle: 'p-warn', offline: '', paused: 'p-info' }[s.s]}">${TLNAME[s.s]}</span></td><td class="num">${hhmm(s.start)}</td><td class="num">${hhmm(s.end)}</td><td class="num">${dur(s.end - s.start)}</td></tr>`).join('') || emptyRow(4, 'No status recorded for this day.')}
+    </tbody></table></div>${L.pager()}</div>`;
+}
+
+// Hourly chart on a fixed 0–60 minute scale: full bar = minutes the computer was on, dark part = minutes with keyboard or mouse use.
+function hourChart(hours) {
+  const best = hours.reduce((b, h) => h.sec * h.act > (b ? b.sec * b.act : -1) ? h : b, null);
+  return `<div class="hchart"><div class="yaxis" aria-hidden="true"><span>60m</span><span>45m</span><span>30m</span><span>15m</span><span>0</span></div>
+    <div><div class="bars" style="--n:${hours.length}" role="img" aria-label="Minutes active per hour">${hours.map(h => `<div class="b" style="height:${Math.min(100, h.sec / 36)}%" title="${pad(h.h)}:00–${pad(h.h + 1)}:00 · ${hm(h.sec)} on · ${hm(h.sec * h.act)} active${h.paused ? ' · paused' : ''}"><i style="height:${h.act * 100}%"></i></div>`).join('')}</div>
+    <div class="bars-x" style="--n:${hours.length}">${hours.map(h => `<span>${pad(h.h)}:00</span>`).join('')}</div><div class="small muted" style="text-align:center">Time of day (each bar is one hour, e.g. 09:00 = 09:00–10:00)</div></div></div>
+    <div class="legend" style="margin-top:8px"><span><i style="background:var(--accent)"></i>Active: keyboard or mouse used</span><span><i style="background:var(--accent-soft)"></i>Computer on, no input (idle)</span>${best && best.sec ? `<span>Busiest hour: <b>${pad(best.h)}:00</b>, ${hm(best.sec * best.act)} active</span>` : ''}</div>`;
+}
+const defaultRep = () => ({ show: { summary: true, hourly: true, daily: true, apps: true, sites: true }, top: 8, cat: 'all', group: 'day', compare: false });
+S.rep = defaultRep();
+function breakdown(e, days, by) {
+  const g = new Map();
+  for (const d of days) { const k = by === 'day' ? iso(d) : by === 'week' ? iso(monday(d)) : iso(new Date(d.getFullYear(), d.getMonth(), 1)); if (!g.has(k)) g.set(k, []); g.get(k).push(d); }
+  return [...g].map(([k, ds]) => {
+    const a = aggregate(e, ds), d0 = pd(k);
+    const label = by === 'day' ? fD(d0) : by === 'week' ? `Week of ${fD(d0, { day: 'numeric', month: 'short' })}` : fD(d0, { month: 'long', year: 'numeric' });
+    const paused = ds.some(d => pausesOnDay(e.id, d).length), weekend = by === 'day' && (d0.getDay() === 0 || d0.getDay() === 6);
+    return { k, label, a, note: paused ? 'Monitoring paused' : weekend ? 'Weekend' : !a.days ? 'No activity' : '' };
+  }).reverse();
+}
+function empReport(e) {
+  const R = S.rep, days = rangeDays(), a = aggregate(e, days);
+  const prevDays = daysBetween(addD(days[0], -days.length), addD(days[0], -1)), pa = R.compare ? aggregate(e, prevDays) : null;
+  const sp = a.split, sps = sp.productive + sp.neutral + sp.unproductive || 1;
+  const delta = (cur, old) => !pa ? '' : !old ? '<span class="s">no earlier data</span>' : `<span class="s">${cur >= old ? '▲' : '▼'} ${Math.abs(Math.round((cur - old) / old * 100))}% vs previous ${days.length === 1 ? 'day' : days.length + ' days'}</span>`;
+  const topList = (obj, kind) => { let x = Object.entries(obj).filter(([n]) => kind === 'domain' || n !== 'Chrome' || true).filter(([n]) => R.cat === 'all' || catOf(kind, n) === R.cat).sort((p, q) => q[1] - p[1]); if (R.top !== 'all') x = x.slice(0, +R.top); return x; };
+  const apps = topList(a.apps, 'app'), sites = topList(a.sites, 'domain');
+  const hbars = (list, kind) => { const mx = list[0]?.[1] || 1; return list.map(([n, v]) => { const c = catOf(kind, n); return `<div class="hbar"><span class="row ${kind === 'domain' ? 'mono' : ''}" style="gap:6px;flex-wrap:nowrap;min-width:0"><span class="dot" style="background:${CATCOL[c]}"></span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(n)}">${esc(n)}</span></span><span class="t"><i style="width:${v / mx * 100}%;background:${CATCOL[c]}"></i></span><span class="n">${hm(v)}</span></div>`; }).join('') || '<p class="small muted">Nothing in this category.</p>'; };
+  const maxH = Math.max(1, ...a.hourly.map(h => h.avg));
+  const bd = breakdown(e, days, R.group), L = lst('repbd', bd, r => r.label + ' ' + r.note);
+  const cust = S.repCust ? `<div class="card stack noprint"><div class="cardhead"><h2>Customize report</h2><button class="btn sm" data-act="represet">Reset to default</button></div>
+      <div class="checks">${[['summary', 'Summary cards'], ['hourly', 'Activity by hour'], ['daily', 'Breakdown table'], ['apps', 'Applications'], ['sites', 'Websites']].map(([k, l]) => `<label><input type="checkbox" data-act-change="repshow" data-k="${k}" ${R.show[k] ? 'checked' : ''}> ${l}</label>`).join('')}</div>
+      <div class="form">
+        <div class="field"><label for="rep-top">Apps and sites to list</label><select id="rep-top" data-act-change="reptop">${[['5', 'Top 5'], ['8', 'Top 8'], ['15', 'Top 15'], ['all', 'All']].map(([v, l]) => `<option value="${v}" ${String(R.top) === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+        <div class="field"><label for="rep-cat">Category</label><select id="rep-cat" data-act-change="repcat">${['all', 'productive', 'neutral', 'unproductive'].map(v => `<option value="${v}" ${R.cat === v ? 'selected' : ''}>${v === 'all' ? 'All categories' : cap(v) + ' only'}</option>`).join('')}</select></div>
+        <div class="field"><label for="rep-grp">Breakdown by</label><select id="rep-grp" data-act-change="repgroup">${['day', 'week', 'month'].map(v => `<option value="${v}" ${R.group === v ? 'selected' : ''}>${cap(v)}</option>`).join('')}</select></div>
+        <label class="row" style="gap:8px"><input type="checkbox" data-act-change="repcmp" ${R.compare ? 'checked' : ''}> Compare with previous period</label>
+      </div></div>` : '';
+  const toolbar = `<div class="card toolbar between noprint" style="padding:12px 16px">${rangePicker()}<div class="row"><button class="btn ${S.repCust ? 'pri' : ''}" data-act="toggle" data-k="repCust" aria-pressed="${!!S.repCust}">Customize</button><button class="btn" data-act="repcsv">Export CSV</button></div></div>`;
+  if (!a.days) return toolbar + cust + `<div class="card"><h2>No activity · ${rangeLabel()}</h2><p class="muted" style="margin-top:6px">${pausesOnDay(e.id, days[0]).length ? 'Monitoring was paused for part or all of this range. ' : ''}Weekends, paused time and days before the retention limit (${S.retention} days) have no data. Pick another range.</p></div>`;
+  return toolbar + cust +
+    (R.show.summary ? `<div class="grid g4">
+      <div class="card stat"><span class="label">Tracked time</span><span class="v">${hm(a.total)}</span><span class="s">${rangeLabel()} · ${a.days} working day${a.days > 1 ? 's' : ''}</span>${delta(a.total, pa?.total)}</div>
+      <div class="card stat"><span class="label">Activity</span><span class="v">${pct(a.active)}</span><span class="s">time with keyboard or mouse use</span>${delta(a.active, pa?.active)}</div>
+      <div class="card stat"><span class="label">Productive</span><span class="v" style="color:var(--prod)">${pct(sp.productive / sps)}</span><span class="s">${hm(sp.productive)}</span>${delta(sp.productive, pa?.split.productive)}</div>
+      <div class="card stat"><span class="label">Unproductive</span><span class="v" style="color:var(--unprod)">${pct(sp.unproductive / sps)}</span><span class="s">${hm(sp.unproductive)}</span>${delta(sp.unproductive, pa?.split.unproductive)}</div>
+    </div>` : '') +
+    (R.show.hourly ? `<div class="card"><div class="cardhead"><h2>Activity by hour</h2>${a.days > 1 ? `<span class="small muted">Average of ${a.days} working days in this range</span>` : ''}</div>${hourChart(a.hourly.map(h => ({ h: h.h, sec: h.avg, act: h.act })))}
+      <p class="small muted" style="margin-top:8px">Each bar is one hour. Its full height is how many minutes the computer was on; the dark part is how many of those minutes the keyboard or mouse was used. What was typed is never recorded. Hover a bar for exact numbers.</p></div>` : '') +
+    (R.show.apps || R.show.sites ? `<div class="grid ${R.show.apps && R.show.sites ? 'g2' : ''}">
+      ${R.show.apps ? `<div class="card"><h2>Applications</h2><div class="stack">${hbars(apps, 'app')}</div></div>` : ''}
+      ${R.show.sites ? `<div class="card"><h2>Websites</h2><div class="stack">${hbars(sites, 'domain')}</div><p class="small muted" style="margin-top:10px">Banking, health and personal email sites on the sensitive list are not logged.</p></div>` : ''}
+    </div>` : '') +
+    (R.show.daily ? `<div class="card"><div class="cardhead"><h2>Breakdown by ${R.group}</h2>${L.search('Search periods')}</div>
+      <div class="tablewrap"><table><thead><tr><th>${cap(R.group)}</th><th>Tracked</th><th>Activity</th><th>Productive</th><th>Neutral</th><th>Unproductive</th><th>Note</th></tr></thead><tbody>
+      ${L.rows.map(r => `<tr ${R.group === 'day' ? `class="click" data-act="calday" data-v="${r.k}" title="Open this day in the calendar"` : ''}><td>${r.label}</td><td class="num">${r.a.days ? hm(r.a.total) : '—'}</td><td class="num">${r.a.days ? pct(r.a.active) : '—'}</td><td class="num">${r.a.days ? hm(r.a.split.productive) : '—'}</td><td class="num">${r.a.days ? hm(r.a.split.neutral) : '—'}</td><td class="num">${r.a.days ? hm(r.a.split.unproductive) : '—'}</td><td class="small muted">${r.note}</td></tr>`).join('') || emptyRow(7)}
+      </tbody></table></div>${L.pager()}</div>` : '');
+}
+function reportCSV(e) {
+  const days = rangeDays(), a = aggregate(e, days), bd = breakdown(e, days, S.rep.group).reverse();
+  const rows = [['Employee', e.name], ['Email', e.email], ['From', S.from], ['To', S.to], [],
+    [cap(S.rep.group), 'Tracked (h)', 'Activity %', 'Productive (h)', 'Neutral (h)', 'Unproductive (h)', 'Note'],
+    ...bd.map(r => [r.label, hrs(r.a.total), Math.round(r.a.active * 100), hrs(r.a.split.productive), hrs(r.a.split.neutral), hrs(r.a.split.unproductive), r.note]), [],
+    ['Application', 'Category', 'Time (h)'], ...Object.entries(a.apps).sort((p, q) => q[1] - p[1]).map(([n, v]) => [n, catOf('app', n), hrs(v)]), [],
+    ['Website', 'Category', 'Time (h)'], ...Object.entries(a.sites).sort((p, q) => q[1] - p[1]).map(([n, v]) => [n, catOf('domain', n), hrs(v)])];
+  download(`workbeat-${slugify(e.name)}-${S.from}-to-${S.to}.csv`, toCSV(rows), 'text/csv');
+}
+
+function empCalendar(e) {
+  const C = S.cal, d = pd(C.date);
+  const seg = `<div class="seg" role="group">${['day', 'week', 'month'].map(v => `<button class="${C.view === v ? 'on' : ''}" aria-pressed="${C.view === v}" data-act="calview" data-v="${v}">${cap(v)}</button>`).join('')}</div>`;
+  let title = '', body = '', prevOk, nextOk;
+  if (C.view === 'month') {
+    const first = new Date(d.getFullYear(), d.getMonth(), 1), last = new Date(d.getFullYear(), d.getMonth() + 1, 0), lead = (first.getDay() + 6) % 7;
+    prevOk = addD(first, -1) >= minDate(); nextOk = addD(last, 1) <= TODAY; title = fD(first, { month: 'long', year: 'numeric' });
+    let cells = ''; for (let i = 0; i < lead; i++) cells += '<div class="d out"></div>';
+    for (let n = 1; n <= last.getDate(); n++) {
+      const day = new Date(d.getFullYear(), d.getMonth(), n), u = dayUsage(e, day), gone = day < minDate(), fut = day > TODAY, paused = pausesOnDay(e.id, day).length;
+      const lvl = u ? Math.min(1, u.total / 32400) : 0;
+      cells += fut || gone ? `<div class="d ${gone ? 'gone' : ''}"><span class="n1">${n}</span>${gone ? '<span class="small muted">deleted</span>' : ''}</div>`
+        : `<button class="d ${sameDay(day, TODAY) ? 'today' : ''}" data-act="calday" data-v="${iso(day)}" aria-label="${fD(day)}${u ? ', ' + hm(u.total) : ''}" style="${u ? `background:color-mix(in srgb, var(--accent) ${Math.round(lvl * 38)}%, var(--surface-2))` : ''}"><span class="n1">${n}</span>${u ? `<span class="h">${hm(u.total)}</span><span class="small muted">${pct(u.active)} active</span>` : ''}${paused ? '<span class="pill p-info plain" style="font-size:10.5px;padding:0 6px">Paused</span>' : ''}</button>`;
+    }
+    body = `<div class="cal">${['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(x => `<div class="dh">${x}</div>`).join('')}${cells}</div><p class="small muted">Darker days have more tracked time. Click a day to open it.</p>`;
+  } else if (C.view === 'week') {
+    const m = monday(d), days = daysBetween(m, addD(m, 6));
+    prevOk = addD(m, -1) >= minDate(); nextOk = addD(m, 7) <= TODAY; title = `Week of ${fDY(m)}`;
+    body = `<div class="week">${days.map(day => { const u = dayUsage(e, day), paused = pausesOnDay(e.id, day).length, ok = day <= TODAY && day >= minDate();
+      const top = u ? Object.entries(u.apps).sort((p, q) => q[1] - p[1]).slice(0, 3) : [];
+      return `<${ok ? `button data-act="calday" data-v="${iso(day)}"` : 'div'} class="wd ${sameDay(day, TODAY) ? 'today' : ''}"><b>${fD(day)}</b>${u ? `<span class="h" style="font-size:15px;font-weight:600">${hm(u.total)}</span><span class="muted">${pct(u.active)} active</span>${splitBar(splitOf(u.apps, u.sites))}${top.map(([n, v]) => `<span class="row between" style="flex-wrap:nowrap;gap:4px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n}</span><span class="muted num">${hm(v)}</span></span>`).join('')}` : `<span class="muted">${day > TODAY ? 'Not yet' : day < minDate() ? 'Deleted' : paused ? 'Monitoring paused' : 'No activity'}</span>`}${u && paused ? '<span class="pill p-info plain">Partly paused</span>' : ''}</${ok ? 'button' : 'div'}>`; }).join('')}</div>`;
+  } else {
+    const u = dayUsage(e, d), tl = timeline(e, d);
+    prevOk = addD(d, -1) >= minDate(); nextOk = addD(d, 1) <= TODAY; title = fD(d, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const maxH = Math.max(1, ...(u ? u.hourly.map(h => h.tracked) : [1]));
+    body = `<div class="stack"><h3>Status</h3>${tlBar(tl)}${tlLegend}</div>` + (u ? `<div class="grid g2"><div class="stack"><h3>Hours · ${hm(u.total)} tracked, ${pct(u.active)} active</h3>${hourChart(u.hourly.map(h => ({ h: h.h, sec: h.tracked, act: h.act, paused: h.paused })))}</div>
+      <div class="stack"><h3>Top apps</h3>${Object.entries(u.apps).sort((p, q) => q[1] - p[1]).slice(0, 5).map(([n, v]) => `<div class="row between small"><span class="row" style="gap:6px"><span class="dot" style="background:${CATCOL[catOf('app', n)]}"></span>${n}</span><span class="num muted">${hm(v)}</span></div>`).join('')}</div></div>
+      <div class="row"><button class="btn" data-act="dayshots" data-v="${iso(d)}">Screenshots for this day</button><button class="btn" data-act="dayreport" data-v="${iso(d)}">Open in report</button></div>`
+      : `<p class="muted">${pausesOnDay(e.id, d).length ? 'Monitoring was paused this day.' : 'No activity recorded this day.'}</p>`);
+  }
+  return `<div class="card stack"><div class="cardhead"><div class="row"><button class="btn sm" data-act="calnav" data-v="-1" ${prevOk ? '' : 'disabled'} aria-label="Previous">‹</button><h2>${title}</h2><button class="btn sm" data-act="calnav" data-v="1" ${nextOk ? '' : 'disabled'} aria-label="Next">›</button><button class="btn sm" data-act="calnav" data-v="0">Today</button></div>${seg}</div>${body}</div>`;
+}
+
+function timesheetRows(e) {
+  const m = pd(S.tsWeek);
+  return daysBetween(m, addD(m, 6)).map(d => {
+    const u = dayUsage(e, d), sg = u ? segments(timeline(e, d)).filter(s => s.s === 'active' || s.s === 'idle') : [];
+    const sp = u ? splitOf(u.apps, u.sites) : null;
+    return { d, u, sp, first: sg[0] ? hhmm(sg[0].start) : '—', last: !sg.length ? '—' : sameDay(d, TODAY) ? 'in progress' : hhmm(sg[sg.length - 1].end), note: pausesOnDay(e.id, d).length ? 'Paused' : '' };
+  });
+}
+function empTimesheet(e) {
+  const m = pd(S.tsWeek), rows = timesheetRows(e), tot = rows.reduce((a, r) => a + (r.u?.total || 0), 0), totP = rows.reduce((a, r) => a + (r.sp?.productive || 0), 0);
+  return `<div class="card printable"><div class="cardhead"><div><h2>Weekly timesheet · ${esc(e.name)}</h2><p class="small muted">Week starting Monday ${fDY(m)} · ${esc(S.co.name)}</p></div>
+    <div class="row noprint"><button class="btn" data-act="tsnav" data-v="-1" ${addD(m, -1) < minDate() ? 'disabled' : ''} aria-label="Previous week">←</button><button class="btn" data-act="tsnav" data-v="1" ${addD(m, 7) > TODAY ? 'disabled' : ''} aria-label="Next week">→</button><button class="btn" data-act="tsnav" data-v="0">This week</button><button class="btn" data-act="tscsv">Download CSV</button><button class="btn pri" data-act="tspdf">Download PDF</button></div></div>
+    <div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>Day</th><th>First activity</th><th>Last activity</th><th>Tracked</th><th>Activity</th><th>Productive</th><th>Neutral</th><th>Unproductive</th><th>Note</th></tr></thead><tbody>
+    ${rows.map(r => `<tr><td>${fD(r.d)}</td><td class="num">${r.first}</td><td class="num">${r.last}</td><td class="num">${r.u ? hm(r.u.total) : '—'}</td><td class="num">${r.u ? pct(r.u.active) : '—'}</td><td class="num">${r.u ? hm(r.sp.productive) : '—'}</td><td class="num">${r.u ? hm(r.sp.neutral) : '—'}</td><td class="num">${r.u ? hm(r.sp.unproductive) : '—'}</td><td class="small muted">${r.note}</td></tr>`).join('')}
+    <tr><td><b>Total</b></td><td></td><td></td><td class="num"><b>${hm(tot)}</b></td><td></td><td class="num"><b>${hm(totP)}</b></td><td></td><td></td><td></td></tr></tbody></table></div>
+    </div>`;
+}
+
+const STEP = { light: 60, standard: 30, intensive: 10 }; // fastest interval each plan allows, in minutes
+// Interval actually used: the admin's choice, never faster than the plan allows; 0 = off.
+const shotMin = () => S.tier === 'off' || S.shotEvery === 0 ? 0 : Math.max(STEP[S.tier], S.shotEvery || STEP[S.tier]);
+const everyTxt = m => m % 60 === 0 ? (m === 60 ? 'every hour' : `every ${m / 60} hours`) : `every ${m} minutes`;
+function shotsFor(e, d) {
+  if (!shotMin() || !dayUsage(e, d)) return [];
+  const step = shotMin(), r = rng(hash(e.id + 'shots' + iso(d))), end = sameDay(d, TODAY) ? NOW : at(d, 17, 30), out = [];
+  let n = 0;
+  for (let m = 9 * 60; ; m += step) {
+    const t = at(d, 0, m); if (t > end) break;
+    const p = pauseAt(e.id, t);
+    if (p) { const l = out[out.length - 1]; if (l && l.kind === 'paused') l.until = t; else out.push({ t, kind: 'paused', until: t }); continue; }
+    if (t.getHours() === 13 && step < 60) { out.push({ t, kind: 'lunch' }); continue; }
+    n++; if (n % 9 === 4) { out.push({ t, kind: 'sensitive' }); continue; }
+    const app = APPS[Math.floor(r() * 7)];
+    out.push({ t, kind: 'shot', app, title: TITLES[app], kb: Math.round(240 + r() * 120), seed: Math.floor(r() * 1e9), host: devsOf(e.id)[0]?.host || '—' });
+  }
+  return out;
+}
+const shotLines = (seed, n, cls = 'ln') => { const r = rng(seed); return Array.from({ length: n }, () => `<div class="${cls}" style="width:${40 + r() * 55}%"></div>`).join(''); };
+function empShots(e) {
+  if (!shotMin()) return `<div class="card stack" style="align-items:flex-start"><h2>Screenshots are off</h2><p class="muted">${S.tier === 'off' ? 'Your company’s plan doesn’t include screenshots. Contact WorkBeat to add them.' : 'Your Company Admin has turned screenshots off in Company settings.'}</p>${S.role === 'admin' && S.tier !== 'off' ? '<a class="btn pri" href="#company">Open company settings</a>' : ''}</div>`;
+  const d = pd(S.shotDate), all = shotsFor(e, d), real = all.filter(s => s.kind === 'shot');
+  const appsHere = [...new Set(real.map(s => s.app))].sort();
+  const filtered = S.shotApp === 'all' ? all : all.filter(s => s.app === S.shotApp);
+  const L = lst('shots', filtered, s => (s.app || '') + ' ' + (s.title || '') + ' ' + hhmm(s.t), 24, [12, 24, 48]);
+  const pz = pausesOnDay(e.id, d);
+  const tile = s => {
+    if (s.kind === 'paused') return `<div class="shot"><div class="scr paused">Monitoring paused<br>${hhmm(s.t)}–${hhmm(new Date(+s.until + shotMin() * 6e4))}</div><div class="meta"><span>${hhmm(s.t)}</span><span>paused</span></div></div>`;
+    if (s.kind === 'lunch') return `<div class="shot"><div class="scr paused">Lunch break<br>no activity</div><div class="meta"><span>${hhmm(s.t)}</span><span>skipped</span></div></div>`;
+    if (s.kind === 'sensitive') return `<div class="shot"><div class="scr paused">Paused<br>sensitive site open</div><div class="meta"><span>${hhmm(s.t)}</span><span>excluded</span></div></div>`;
+    return `<button class="shot" style="padding:0;cursor:pointer;text-align:left" data-act="openshot" data-v="${real.indexOf(s)}" aria-label="Screenshot at ${hhmm(s.t)}, ${esc(s.app)}"><div class="scr"><div class="tb"></div>${shotLines(s.seed, 4)}<span class="app">${esc(s.app)}</span></div><div class="meta"><span>${hhmm(s.t)}</span><span>${s.kb} KB</span></div></button>`;
+  };
+  return `<div class="notice info"><div><b>One screenshot ${everyTxt(shotMin())}.</b> Kept for ${S.retention} days, so the earliest date you can open is ${fDY(minDate())}. Only Company Admins and this person's manager can see them.</div></div>
+    <div class="card stack"><div class="cardhead"><h2>${fD(d, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</h2>${dayNav('shotnav', S.shotDate, 'Screenshot date')}</div>
+      <div class="toolbar">${L.search('Search app or window title')}<select data-act-change="shotapp" aria-label="Filter by app"><option value="all">All apps</option>${appsHere.map(a => `<option ${S.shotApp === a ? 'selected' : ''}>${esc(a)}</option>`).join('')}</select><span class="small muted">${real.length} captures this day</span></div>
+      ${pz.length ? `<div class="notice info"><div>Monitoring paused: ${pz.map(p => `${esc(p.reason)} (${pauseRange(p)})`).join('; ')}. Nothing was captured during that time.</div></div>` : ''}
+      ${L.rows.length ? `<div class="shots">${L.rows.map(tile).join('')}</div>${L.pager()}` : `<p class="muted">${!dayUsage(e, d) ? (pz.length ? 'Monitoring was paused all day.' : d.getDay() % 6 === 0 ? 'Weekend: no activity, so no screenshots.' : 'No activity this day, so no screenshots.') : 'No screenshots match this filter.'}</p>`}
+    </div>`;
+}
+function shotSVG(s, e) {
+  const r = rng(s.seed), lines = Array.from({ length: 12 }, (_, i) => `<rect x="48" y="${110 + i * 52}" width="${Math.round(380 + r() * 900)}" height="16" rx="5" fill="#D9DFE6"/>`).join('');
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900"><rect width="1440" height="900" fill="#EBEFF3"/><rect width="1440" height="48" fill="#D9DFE6"/><text x="24" y="31" font-family="Arial, sans-serif" font-size="18" fill="#16202A">${esc(s.title)}</text>${lines}<rect x="24" y="834" width="760" height="44" rx="8" fill="#FFFFFF"/><text x="40" y="862" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#16202A">${esc(s.app)} · ${esc(e.name)} · ${esc(s.host)} · ${fDT(s.t)}</text></svg>`;
+}
+
+function empPauses(e) {
+  const list = S.pauses.filter(p => p.emp === e.id).sort((a, b) => b.from - a.from);
+  const L = lst('pz', list, p => p.reason + ' ' + p.note + ' ' + pState(p));
+  const admin = S.role === 'admin';
+  return `<div class="card stack"><div class="cardhead"><div><h2>Pause monitoring</h2><p class="small muted">Take ${esc(e.name.split(' ')[0])} out of monitoring for a set time, such as leave or personal time. Nothing is collected while paused.</p></div>${admin ? '<button class="btn pri" data-act="modal" data-v="pause">Schedule pause</button>' : ''}</div>
+    <div class="notice info"><div>While paused: no apps, websites, activity or screenshots are collected. Tamper alerts still work, and website blocking stays on. The tray icon tells the employee monitoring is paused and until when. The seat stays billed.</div></div>
+    <div class="toolbar">${L.search('Search reason or note')}</div>
+    <div class="tablewrap"><table><thead><tr><th>When</th><th>Length</th><th>Reason</th><th>Status</th><th>By</th><th></th></tr></thead><tbody>
+    ${L.rows.map(p => { const st = pState(p);
+      return `<tr><td class="small">${pauseRange(p)}</td><td class="num">${p.to ? dur(p.to - p.from) : 'open-ended'}</td><td>${esc(p.reason)}${p.note ? `<div class="small muted">${esc(p.note)}</div>` : ''}</td><td>${PSTATE[st]}</td><td class="small">${esc(p.by)}</td>
+      <td>${!admin ? '' : st === 'active' ? confirmBox('pz-' + p.id, 'Resume monitoring now?', 'pauseend', p.id, 'End now', false) : st === 'scheduled' ? confirmBox('pz-' + p.id, 'Cancel this pause?', 'pausecancel', p.id, 'Cancel') : ''}</td></tr>`; }).join('') || emptyRow(6, 'No pauses yet.')}
+    </tbody></table></div>${L.pager()}</div>`;
+}
+
+V.devices = () => {
+  const f = S.f.devices;
+  const need = d => d.status !== 'online' || d.perms === 'pending' || d.ver < S.minVer;
+  const test = { all: () => true, attention: need, online: d => d.status === 'online', offline: d => d.status === 'offline', tamper: d => d.status === 'tamper' };
+  const L = lst('devices', DEVICES.filter(test[f]), d => [d.host, d.os, d.via, d.ver, emp(d.emp)?.name || ''].join(' '));
+  const n = k => DEVICES.filter(test[k]).length;
+  return head('Devices', `${DEVICES.length} of 50 seats used. Releasing a device frees its seat at once: the device deletes its unsent data, stops blocking and goes dormant. It comes back only through a new install with your license key.`) +
+    `<div class="card stack"><div class="toolbar">${L.search('Search device, employee, OS or install method')}</div>
+    ${chips('devices', [['all', 'All', n('all')], ['attention', 'Needs attention', n('attention')], ['online', 'Online', n('online')], ['offline', 'Offline', n('offline')], ['tamper', 'Tamper', n('tamper')]])}
+    <div class="tablewrap"><table><thead><tr><th>Device</th><th>Employee</th><th>Status</th><th>Agent</th><th>Helper</th><th>Permissions</th><th>Installed via</th><th>Last seen</th><th></th></tr></thead><tbody>
+    ${L.rows.map(d => { const e = emp(d.emp);
+      return `<tr><td><span class="mono">${esc(d.host)}</span><div class="small muted">${d.os}</div></td>
+      <td>${e ? `<a href="#employee" data-act="openemp" data-id="${e.id}">${esc(e.name)}</a>` : ''}</td>
+      <td>${statusPill(d.status)}</td>
+      <td class="mono">${d.ver}${d.ver < S.minVer ? ' <span class="pill p-warn">Outdated</span>' : ''}</td>
+      <td>${d.helper ? '<span class="pill p-ok">Running</span>' : '<span class="pill">Stopped</span>'}</td>
+      <td>${d.perms === 'ok' ? '<span class="pill p-ok">Granted</span>' : '<span class="pill p-info">Screen Recording pending</span>'}</td>
+      <td><span class="tag">${d.via}</span></td>
+      <td class="small muted" style="white-space:nowrap">${d.seen}</td>
+      <td><div class="row" style="flex-wrap:nowrap">${e ? `<button class="btn sm" data-act="modal" data-v="reassign" data-id="${d.id}">Reassign</button>` : ''}${confirmBox('dev-' + d.id, `Release ${esc(d.host)}? Its unsent data is deleted and its seat is freed.`, 'rmdev', d.id, 'Release')}</div></td></tr>`; }).join('') || emptyRow(9)}
+    </tbody></table></div>${L.pager()}</div>`;
+};
+
+V.alerts = () => {
+  const va = visibleAlerts(), types = [...new Set(va.map(a => a.type))];
+  const L = lst('alerts', va.filter(a => S.f.alerts === 'all' || a.type === S.f.alerts), a => [ALERT_LABEL[a.type], a.detail, a.host, emp(dev(a.dev)?.emp)?.name || '', whenOf(a)].join(' '));
+  const M = S.alertMail, to = [M.admin && 'Company Admins', M.it && 'IT Admins', M.manager && 'Managers'].filter(Boolean).join(', ') || 'nobody';
+  const sevOf = t => t === 'offline' ? 'p-warn' : t === 'permission_revoked' ? 'p-info' : 'p-bad';
+  const opt = (k, l, n) => `<option value="${k}" ${S.f.alerts === k ? 'selected' : ''}>${l} (${n})</option>`;
+  const row = a => { const d = dev(a.dev), e = d && emp(d.emp);
+    return `<tr><td class="small muted" style="white-space:nowrap">${whenOf(a)}</td><td><span class="pill ${sevOf(a.type)}">${ALERT_LABEL[a.type]}</span></td>
+      <td>${e ? `<a href="#employee" data-act="openemp" data-id="${e.id}">${esc(e.name)}</a>` : '<span class="muted">—</span>'}</td>
+      <td class="small"><span class="mono">${esc(a.host)}</span>${d ? '' : ' <span class="muted">(removed)</span>'}</td><td class="small">${esc(a.detail)}</td></tr>`; };
+  return head('Alerts', `Signs that WorkBeat was interfered with, or a computer stopped connecting. Emails go to ${to}, ${{ instant: 'as they happen', hourly: 'as an hourly digest', daily: 'as a daily digest' }[M.when]}.`,
+    S.role === 'admin' ? `<button class="btn" data-act="modal" data-v="mail">Email settings</button>` : '') +
+    `<div class="card stack"><div class="toolbar">${L.search('Search alerts, computers or people')}
+        <select data-act-change="alertfilt" aria-label="Alert type">${opt('all', 'All alerts', va.length)}${types.map(t => opt(t, ALERT_LABEL[t], va.filter(a => a.type === t).length)).join('')}</select></div>
+      <div class="tablewrap"><table><thead><tr><th>When</th><th>Alert</th><th>Person</th><th>Computer</th><th>What happened</th></tr></thead>
+        <tbody>${L.rows.map(row).join('') || '<tr><td colspan="5" class="muted">No alerts match.</td></tr>'}</tbody></table></div>${L.pager()}
+      <details class="small muted"><summary>What each alert means</summary><ul style="margin:6px 0 0;padding-left:18px">
+        <li><b>WorkBeat was closed</b>: someone or something shut WorkBeat down. It restarted itself.</li>
+        <li><b>Website blocking changed</b>: another program tried to undo blocked websites. WorkBeat put the blocks back.</li>
+        <li><b>WorkBeat settings edited</b>: WorkBeat’s settings on the computer were changed or deleted.</li>
+        <li><b>Computer clock changed</b>: the clock was set back, which can hide when work happened.</li>
+        <li><b>Permission turned off</b>: a Mac permission WorkBeat needs (screen recording or accessibility) is off.</li>
+        <li><b>Computer offline</b>: not connected for more than 15 minutes. Often just switched off or no internet.</li>
+      </ul></details></div>`;
+};
+
+V.blocklist = () => {
+  const L = lst('block', S.block, b => [b.pattern, b.reason, b.by].join(' '));
+  const LS = lst('sens', S.sensitive, s => s, 25, [25, 50, 100]);
+  const canEdit = S.role === 'admin' || S.role === 'it';
+  return head('Block list', 'Websites employees can’t open on company computers. New rules reach every computer within 30 minutes.', canEdit ? '<button class="btn pri" data-act="modal" data-v="block">Add rule</button>' : '') +
+  `<div class="card stack"><div class="toolbar">${L.search('Search rules, reasons or people')}</div>
+    <div class="tablewrap"><table><thead><tr><th>Rule</th><th>Blocks</th><th>Reason</th><th>Added by</th><th></th></tr></thead><tbody>
+    ${L.rows.map(b => `<tr><td class="mono">${esc(b.pattern)}</td><td class="small">${b.type === 'domain' ? 'Whole site and its subdomains, in every browser and app' : 'Only this part of the site, in most browsers'}</td><td>${esc(b.reason)}</td><td>${esc(b.by)}</td><td>${confirmBox('bl-' + b.id, 'Delete rule?', 'rmblock', b.id, 'Delete')}</td></tr>`).join('') || emptyRow(5)}
+    </tbody></table></div>${L.pager()}</div>
+  <div class="card stack"><div class="cardhead"><div><h2>Private sites (never recorded)</h2><p class="small muted">WorkBeat never records visits to these sites, and screenshots pause while they are open. Defaults cover banking, mobile money, health and personal email.</p></div><div class="row">${LS.search('Search private sites')}${canEdit ? '<button class="btn" data-act="modal" data-v="sens">Add site</button>' : ''}</div></div>
+    <div class="row">${LS.rows.map(s => `<span class="chip">${esc(s)}<button aria-label="Remove ${esc(s)}" data-act="rmsens" data-v="${esc(s)}">×</button></span>`).join('') || '<span class="muted small">No sites match.</span>'}</div>${LS.pager()}</div>`;
+};
+
+V.productivity = () => {
+  const ro = S.role !== 'admin';
+  const L = lst('prod', S.prod.filter(r => S.f.prod === 'all' || r.cat === S.f.prod), r => r.pattern + ' ' + r.match + ' ' + r.cat);
+  const n = c => S.prod.filter(r => c === 'all' || r.cat === c).length;
+  return head('Productivity rules', ro ? 'Read-only. Your Company Admin sets these rules.' : 'Mark apps and sites as productive or unproductive. Anything without a rule counts as neutral. Changing a rule updates past reports too.', ro ? '' : '<button class="btn pri" data-act="modal" data-v="prod">Add rule</button>') +
+    `<div class="card stack"><div class="toolbar">${L.search('Search apps or domains')}</div>
+    ${chips('prod', [['all', 'All', n('all')], ['productive', 'Productive', n('productive')], ['neutral', 'Neutral', n('neutral')], ['unproductive', 'Unproductive', n('unproductive')]])}
+    <div class="tablewrap"><table><thead><tr><th>Name or domain</th><th>Match</th><th>Category</th><th></th></tr></thead><tbody>
+    ${L.rows.map(r => `<tr><td class="${r.match === 'domain' ? 'mono' : ''}">${esc(r.pattern)}</td><td><span class="tag">${r.match}</span></td>
+      <td>${ro ? `<span class="row" style="gap:6px"><span class="dot" style="background:${CATCOL[r.cat]}"></span>${cap(r.cat)}</span>` : `<select data-act-change="prodcat" data-id="${r.id}" aria-label="Category for ${esc(r.pattern)}" style="max-width:180px">${['productive', 'neutral', 'unproductive'].map(c => `<option value="${c}" ${r.cat === c ? 'selected' : ''}>${cap(c)}</option>`).join('')}</select>`}</td>
+      <td>${ro ? '' : confirmBox('pr-' + r.id, 'Delete?', 'rmprod', r.id, 'Delete')}</td></tr>`).join('') || emptyRow(4)}
+    </tbody></table></div>${L.pager()}</div>`;
+};
+
+function rolloutCard(compact, stepHead) {
+  const n = k => DEVICES.filter(k).length;
+  const rows = [
+    ['Installed and working', n(d => d.status === 'online' && d.perms === 'ok' && d.ver >= S.minVer), 'p-ok', 'None', 'all'],
+    ['Permission pending', n(d => d.perms === 'pending'), 'p-info', 'Mac only: the employee must click Allow for Screen Recording once.', 'attention'],
+    ['Outdated', n(d => d.ver < S.minVer), 'p-warn', 'Install the latest WorkBeat version.', 'attention'],
+    ['Offline', n(d => d.status === 'offline'), '', 'The computer is off or has no internet.', 'offline'],
+  ];
+  return `<div class="card"><div class="cardhead">${stepHead || '<h2>Rollout status</h2>'}<a href="#devices" class="small">Open devices</a></div>
+    <div class="stack" style="margin-top:12px">
+      <div class="row small muted"><span><b class="num" style="color:var(--fg)">${DEVICES.length}</b> enrolled</span><span>·</span><span><b class="num" style="color:var(--fg)">50</b> seats</span><span>·</span><span><b class="num" style="color:var(--fg)">${pct(rows[0][1] / (DEVICES.length || 1))}</b> healthy</span></div>
+      <div class="tablewrap"><table><thead><tr><th>Status</th><th>Devices</th>${compact ? '' : '<th>What to do</th>'}</tr></thead><tbody>
+      ${rows.map(r => `<tr class="click" data-act="statgo" data-v="${r[4]}"><td><span class="pill ${r[2]}">${r[0]}</span></td><td class="num">${r[1]}</td>${compact ? '' : `<td class="small">${r[3]}</td>`}</tr>`).join('')}
+      </tbody></table></div></div></div>`;
+}
+
+const GUIDES = {
+  intune: { name: 'Microsoft Intune', os: 'Windows', steps: [
+    'Download <b>WorkBeat.intunewin</b> below.',
+    'In Intune, go to <b>Apps → Windows → Add → Windows app (Win32)</b> and upload the file.',
+    'Install command: <code>msiexec /i WorkBeat.msi ENROLLMENT_TOKEN=&lt;token&gt; /qn</code>. Install behaviour: <b>System</b>.',
+    'Detection rule: MSI product code, or registry <code>HKLM\\SOFTWARE\\WorkBeat\\Version</code> is at least 1.0.4.',
+    'Assign as <b>Required</b> to your device group.',
+    'To link devices to employees automatically, add the registry value <code>UserEmail = {{UserPrincipalName}}</code> in a configuration profile.'] },
+  jamf: { name: 'Jamf Pro', os: 'macOS', steps: [
+    'Download <b>WorkBeat.pkg</b> and the two profiles below.',
+    'Upload the package in <b>Settings → Packages</b>.',
+    'Upload <b>WorkBeat-Config</b> and <b>WorkBeat-Permissions</b> in <b>Computers → Configuration Profiles</b>. Scope them to the same computers.',
+    'Create a <b>Policy</b> that installs the package. Trigger: Enrollment Complete and Recurring Check-in.',
+    'The config profile already contains <code>$EMAIL</code>, so Jamf fills in each user’s email and devices link to employees automatically.',
+    'Screen Recording cannot be granted by any MDM. The employee approves it once; watch <b>Permission pending</b> in the rollout status.'] },
+  mosyle: { name: 'Mosyle', os: 'macOS', steps: ['Upload WorkBeat.pkg under <b>Management → Install PKG</b>.', 'Add the two WorkBeat profiles under <b>Management → Custom Commands / Profiles</b>.', 'Assign both to the device group.', 'Follow up on devices showing Permission pending.'] },
+  kandji: { name: 'Kandji', os: 'macOS', steps: ['Create a <b>Custom App</b> with WorkBeat.pkg, install type “Install once”.', 'Add the two profiles as <b>Custom Profiles</b> to the same Blueprint.', 'Follow up on devices showing Permission pending.'] },
+  gpo: { name: 'Group Policy', os: 'Windows', steps: ['Copy WorkBeat.msi to a network share readable by computers.', 'In Group Policy, go to <b>Computer Configuration → Policies → Software Settings → Software Installation</b> and add the MSI.', 'Import <b>WorkBeat.admx</b> and set the enrollment token under <b>Administrative Templates → WorkBeat</b>.'] },
+  fleet: { name: 'Fleet', os: 'Windows + macOS', steps: ['Upload WorkBeat.pkg and WorkBeat.msi under <b>Software</b>, or install them with a custom MDM command.', 'Add the macOS profiles and the Windows configuration profile under <b>Controls → OS settings</b>.', 'Target the team that holds your company devices.'] },
+};
+const FILES = [
+  ['WorkBeat.msi', 'Windows', 'Installs the agent service and helper. Signed. x64 and ARM64.', 'bin'],
+  ['WorkBeat.intunewin', 'Windows · Intune', 'The MSI wrapped for Intune Win32 app deployment.', 'bin'],
+  ['WorkBeat.admx', 'Windows', 'Policy template for Group Policy or Intune: token and settings.', 'admx'],
+  ['WorkBeat.pkg', 'macOS', 'Installs the agent service, helper and menu bar icon. Signed and notarized. Apple silicon and Intel.', 'bin'],
+  ['WorkBeat-Config.mobileconfig', 'macOS', 'Server address, employee email mapping. Add the token in your MDM.', 'config'],
+  ['WorkBeat-Permissions.mobileconfig', 'macOS', 'Grants Accessibility, lets the employee approve Screen Recording, keeps WorkBeat in Login Items.', 'pppc'],
+];
+const uuid = s => { const r = rng(hash(s)), h = () => Math.floor(r() * 16).toString(16).toUpperCase(); return [8, 4, 4, 4, 12].map(n => Array.from({ length: n }, h).join('')).join('-'); };
+const plist = (name, id, inner) => `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>PayloadDisplayName</key><string>${name}</string>
+  <key>PayloadIdentifier</key><string>${id}</string>
+  <key>PayloadType</key><string>Configuration</string>
+  <key>PayloadUUID</key><string>${uuid(id)}</string>
+  <key>PayloadVersion</key><integer>1</integer>
+  <key>PayloadContent</key>
+  <array>
+${inner}
+  </array>
+</dict>
+</plist>
+`;
+function fileBody(f) {
+  const [name, , , kind] = f;
+  if (kind === 'bin') return [name + '.placeholder.txt', `Prototype placeholder for ${name}.\n\nIn the product this button fetches the signed installer from a short-lived signed URL.\nThe enrollment token is never baked into the installer; add it in your MDM.\n`, 'text/plain'];
+  if (kind === 'config') return [name, plist('WorkBeat configuration', 'io.workbeat.config', `    <dict>
+      <key>PayloadType</key><string>io.workbeat.agent</string>
+      <key>PayloadIdentifier</key><string>io.workbeat.agent.settings</string>
+      <key>PayloadUUID</key><string>${uuid('io.workbeat.agent.settings')}</string>
+      <key>PayloadVersion</key><integer>1</integer>
+      <key>ServerURL</key><string>https://api.workbeat.io/v1</string>
+      <key>EnrollmentToken</key><string>PASTE_ENROLLMENT_TOKEN</string>
+      <key>UserEmail</key><string>$EMAIL</string>
+    </dict>`), 'application/x-apple-aspen-config'];
+  if (kind === 'pppc') return [name, plist('WorkBeat permissions', 'io.workbeat.permissions', `    <dict>
+      <key>PayloadType</key><string>com.apple.TCC.configuration-profile-policy</string>
+      <key>PayloadIdentifier</key><string>io.workbeat.permissions.tcc</string>
+      <key>PayloadUUID</key><string>${uuid('io.workbeat.permissions.tcc')}</string>
+      <key>PayloadVersion</key><integer>1</integer>
+      <key>Services</key>
+      <dict>
+        <key>Accessibility</key>
+        <array><dict><key>Identifier</key><string>io.workbeat.helper</string><key>IdentifierType</key><string>bundleID</string><key>CodeRequirement</key><string>identifier "io.workbeat.helper" and anchor apple generic</string><key>Authorization</key><string>Allow</string></dict></array>
+        <key>ScreenCapture</key>
+        <array><dict><key>Identifier</key><string>io.workbeat.helper</string><key>IdentifierType</key><string>bundleID</string><key>CodeRequirement</key><string>identifier "io.workbeat.helper" and anchor apple generic</string><key>Authorization</key><string>AllowStandardUserToSetSystemService</string></dict></array>
+      </dict>
+    </dict>
+    <dict>
+      <key>PayloadType</key><string>com.apple.servicemanagement</string>
+      <key>PayloadIdentifier</key><string>io.workbeat.permissions.login</string>
+      <key>PayloadUUID</key><string>${uuid('io.workbeat.permissions.login')}</string>
+      <key>PayloadVersion</key><integer>1</integer>
+      <key>Rules</key><array><dict><key>RuleType</key><string>TeamIdentifier</string><key>RuleValue</key><string>YOUR_TEAM_ID</string></dict></array>
+    </dict>`), 'application/x-apple-aspen-config'];
+  return [name, `<?xml version="1.0" encoding="utf-8"?>
+<policyDefinitions revision="1.0" schemaVersion="1.0">
+  <policyNamespaces><target prefix="workbeat" namespace="WorkBeat.Policies" /></policyNamespaces>
+  <resources minRequiredRevision="1.0" />
+  <categories><category name="WorkBeat" displayName="$(string.WorkBeat)" /></categories>
+  <policies>
+    <policy name="EnrollmentToken" class="Machine" displayName="$(string.EnrollmentToken)" key="SOFTWARE\\Policies\\WorkBeat" presentation="$(presentation.EnrollmentToken)">
+      <parentCategory ref="WorkBeat" /><supportedOn ref="windows:SUPPORTED_Windows10" />
+      <elements><text id="Token" valueName="EnrollmentToken" required="true" /></elements>
+    </policy>
+    <policy name="ServerURL" class="Machine" displayName="$(string.ServerURL)" key="SOFTWARE\\Policies\\WorkBeat" presentation="$(presentation.ServerURL)">
+      <parentCategory ref="WorkBeat" /><supportedOn ref="windows:SUPPORTED_Windows10" />
+      <elements><text id="Url" valueName="ServerURL" /></elements>
+    </policy>
+  </policies>
+</policyDefinitions>
+`, 'application/xml'];
+}
+const GUIDE_FILES = { intune: [1, 2], jamf: [3, 4, 5], mosyle: [3, 4, 5], kandji: [3, 4, 5], gpo: [0, 2], fleet: [0, 3, 4, 5] };
+const stepHead = (n, title, sub) => `<div class="stephead"><span class="n">${n}</span><div><h2>${title}</h2>${sub ? `<p class="small muted">${sub}</p>` : ''}</div></div>`;
+V.deployment = () => {
+  const lic = S.companies[0].key, g = GUIDES[S.guide], manual = S.installMethod === 'manual';
+  const fileRows = ids => ids.map(i => FILES[i]).map((f, k) => `<tr><td class="mono">${f[0]}</td><td class="small">${f[2]}</td><td><button class="btn sm" data-act="dlfile" data-v="${ids[k]}">Download</button></td></tr>`).join('');
+  return head('Deployment', 'Put WorkBeat on your company computers in three steps.') +
+    `<div class="card stack">${stepHead(1, 'Get your license key', 'The installer asks for it so it knows the computer belongs to your company. It is the only key you need.')}
+      <div class="grid g2">
+        <div class="keybox stack"><div class="row between"><h3>License key</h3><span class="pill p-ok">Works now</span></div>
+          <p class="small">Your company’s key. It works on any computer while a seat is free. It came in your welcome email.</p>
+          <div class="secret" id="lickey">${S.showLic ? lic : maskKey(lic)}</div>
+          <div class="row"><button class="btn sm" data-act="toggle" data-k="showLic">${S.showLic ? 'Hide' : 'Show'}</button><button class="btn sm" data-act="copylic">Copy</button></div>
+          <p class="small muted">Keep it private. If it leaks, contact WorkBeat support to replace it. Computers already installed keep working and your seats stay as they are.</p></div>
+        <div class="keybox stack"><div class="row between"><h3>Seats</h3><span class="pill">${DEVICES.length} of 50 used</span></div>
+          <p class="small">Each installed computer uses one seat. When all seats are used, the key installs nothing more until one is free.</p>
+          <p class="small muted">Releasing a computer on the <a href="#devices">Devices</a> page frees its seat at once, and the key can install another computer straight away.</p></div>
+      </div>
+    </div>
+    <div class="card stack">${stepHead(2, 'Install on your computers', 'Choose how your company manages its computers.')}
+      <div class="tiers">
+        <button class="tier ${!manual ? 'on' : ''}" data-act="method" data-v="mdm" aria-pressed="${!manual}"><b>We use an MDM</b><span class="small muted">Intune, Jamf, Mosyle, Kandji, Group Policy, Fleet… Installs on every computer at once. Employees can’t remove it.</span></button>
+        <button class="tier ${manual ? 'on' : ''}" data-act="method" data-v="manual" aria-pressed="${manual}"><b>No MDM: install by hand</b><span class="small muted">For small teams. Run the installer on each computer once.</span></button>
+      </div>
+      ${manual ? `<ol class="guide">
+          <li>Download the installer: <span class="row" style="display:inline-flex;gap:6px;vertical-align:middle"><button class="btn sm" data-act="dlsetup" data-v="win">For Windows</button><button class="btn sm" data-act="dlsetup" data-v="mac">For Mac</button></span></li>
+          <li>On the employee’s computer, open it as an administrator.</li>
+          <li>Paste your <b>license key</b> from step 1.</li>
+          <li>Pick the employee who uses the computer from the list. This is required: the computer is installed for that person and uses one seat once it is installed.</li>
+          <li>Done. The computer shows up on the <a href="#devices">Devices</a> page within a minute.</li>
+        </ol>
+        <div class="row"><a class="btn" href="https://claude.ai/artifact/B4o8LLwb2Xd9KCtAXWXx9T" target="_blank" rel="noopener">See the installer screens</a></div>
+        <details><summary class="small">Install with a script instead</summary><div class="code" style="margin-top:8px">WorkBeatSetup.exe --license-key YOUR_KEY --employee-email minhaz@nagorik.tech --silent</div></details>
+        <div class="notice warn"><div>Without an MDM, someone with administrator rights on the computer could remove WorkBeat. You’ll get an alert if a computer stops reporting.</div></div>`
+      : `<div class="field"><label for="mdm-pick">Which MDM do you use?</label><select id="mdm-pick" data-act-change="guide" style="max-width:320px">${Object.entries(GUIDES).map(([k, v]) => `<option value="${k}" ${S.guide === k ? 'selected' : ''}>${v.name} (${v.os})</option>`).join('')}</select></div>
+        <div class="grid g2">
+          <div class="stack"><h3>Steps in ${g.name}</h3><ol class="guide">${g.steps.map(x => `<li>${x}</li>`).join('')}</ol><p class="small muted">Where a step says <span class="mono">&lt;token&gt;</span>, paste your license key from step 1.</p></div>
+          <div class="stack"><h3>Files you need</h3><div class="tablewrap"><table><tbody>${fileRows(GUIDE_FILES[S.guide])}</tbody></table></div><p class="small muted">These files contain no key, so they’re safe to store in your MDM.</p></div>
+        </div>`}
+    </div>
+    ${rolloutCard(false, stepHead(3, 'Check your computers', 'Click a row to see those computers.'))}`;
+};
+
+V.team = () => {
+  const mgrs = USERS.filter(u => u.role === 'manager' && !u.pending);
+  const roleName = { admin: 'Company Admin', manager: 'Manager', it: 'IT Admin' };
+  const LU = lst('users', USERS, u => [u.name, u.email, roleName[u.role], u.pending ? 'invite sent' : 'active'].join(' '));
+  const LE = lst('teamemp', EMP, e => e.name + ' ' + e.dept, 24, [24, 48, 96]);
+  return head('Team & roles', 'People who can sign in to the dashboard. Monitored employees are managed on the Employees page.', '<button class="btn pri" data-act="modal" data-v="invite">Invite someone</button>') +
+    `<div class="card stack"><div class="toolbar">${LU.search('Search people')}</div><div class="tablewrap"><table><thead><tr><th>Name</th><th>Role</th><th>Status</th><th></th></tr></thead><tbody>
+    ${LU.rows.map(u => `<tr><td><div class="who"><span class="av">${initials(u.name)}</span><div>${esc(u.name)}<div class="small muted">${esc(u.email)}</div></div></div></td>
+      <td>${u.id === 'u1' ? roleName[u.role] : `<select data-act-change="userrole" data-id="${u.id}" aria-label="Role for ${esc(u.name)}" style="max-width:180px">${Object.entries(roleName).map(([k, l]) => `<option value="${k}" ${u.role === k ? 'selected' : ''}>${l}</option>`).join('')}</select>`}</td>
+      <td>${u.pending ? `<span class="pill p-warn">Invite sent ${esc(u.sent || '')}</span>` : '<span class="pill p-ok">Active</span>'}</td>
+      <td>${u.id === 'u1' ? '<span class="small muted">You</span>' : `<div class="row">${u.pending ? `<button class="btn sm" data-act="resend" data-id="${u.id}">Resend</button>` : ''}${confirmBox('us-' + u.id, u.pending ? 'Cancel invite?' : `Remove ${esc(u.name)}?`, 'rmuser', u.id, u.pending ? 'Cancel invite' : 'Remove')}</div>`}</td></tr>`).join('') || emptyRow(4)}
+    </tbody></table></div>${LU.pager()}</div>
+    <div class="card stack"><div class="cardhead"><div><h2>Manager teams</h2><p class="small muted">Managers only see the employees ticked here.</p></div>
+      <div class="row">${LE.search('Search employees')}<select id="mgrpick" aria-label="Manager" data-act-change="mgr" style="max-width:240px">${mgrs.map(m => `<option value="${m.id}" ${S.assignMgr === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</select></div></div>
+      <div class="grid g3" style="gap:8px">${LE.rows.map(e => `<label class="row" style="gap:8px;flex-wrap:nowrap"><input type="checkbox" data-act-change="teamtick" data-id="${e.id}" ${e.mgr === S.assignMgr ? 'checked' : ''}><span>${esc(e.name)} <span class="small muted">${esc(e.dept)}${e.mgr && e.mgr !== S.assignMgr ? ' · ' + esc(USERS.find(u => u.id === e.mgr)?.name || '') : ''}</span></span></label>`).join('') || '<span class="muted small">No employees match.</span>'}</div>${LE.pager()}</div>
+    <div class="card"><h2>Who can do what</h2><div class="tablewrap" style="margin-top:8px"><table><thead><tr><th>Action</th><th>Company Admin</th><th>Manager</th><th>IT Admin</th></tr></thead><tbody>
+      ${[['View employees and live status', 'Yes', 'Own team', '—'], ['Add, edit or remove employees', 'Yes', '—', '—'], ['Pause monitoring for an employee', 'Yes', 'See only', '—'], ['Usage, URL history, calendar, timesheets', 'Yes', 'Own team', '—'], ['Screenshots', 'Yes', 'Own team', '—'], ['Tamper and offline alerts', 'Yes', 'Own team', 'Yes'], ['Block list', 'Yes', '—', 'Yes'], ['Devices and deployment', 'Yes', '—', 'Yes'], ['Productivity rules', 'Edit', 'Read', '—'], ['Invites, custom domain, screenshots, billing', 'Yes', '—', '—']]
+        .map(r => `<tr>${r.map((c, i) => `<td${i ? ' class="small"' : ''}>${c}</td>`).join('')}</tr>`).join('')}
+    </tbody></table></div></div>`;
+};
+
+function customDomainCard() {
+  const D = S.domain;
+  if (!D) return `<div class="card stack"><h2>Custom domain</h2><p class="small">Open your dashboard at your own address, for example <span class="mono">monitor.nagorik.tech</span>, instead of <span class="mono">nagorik.workbeat.io</span>. This is optional: everything works the same without it.</p><div class="row"><button class="btn pri" data-act="modal" data-v="domain">Add custom domain</button></div></div>`;
+  const live = D.status === 'active', parts = D.name.split('.');
+  const rec = (n, type, name, value, what) => `<li><b>${what}</b><div class="dnsrec"><span class="tag">${type}</span><span class="small muted">Name</span><span class="mono" id="dn-${n}">${esc(name)}</span><button class="btn sm" data-act="copy" data-target="dn-${n}">Copy</button><span></span><span class="small muted">Value</span><span class="mono" id="dv-${n}">${esc(value)}</span><button class="btn sm" data-act="copy" data-target="dv-${n}">Copy</button></div></li>`;
+  return `<div class="card stack"><div class="row between"><h2>Custom domain</h2>${live ? '<span class="pill p-ok">Live</span>' : '<span class="pill p-warn">Waiting for your DNS records</span>'}</div>
+    <div class="row between"><span class="mono">${esc(D.name)}</span><div class="row"><button class="btn sm" data-act="modal" data-v="domain">Change</button>${confirmBox('dom', 'Remove it? The dashboard will only open at nagorik.workbeat.io.', 'rmdomain', 'x', 'Remove')}</div></div>
+    ${live ? `<p class="small">Your dashboard now opens at <span class="mono">https://${esc(D.name)}</span>. <span class="mono">nagorik.workbeat.io</span> still works too.</p>`
+    : `<p class="small">Ask whoever manages <b>${esc(parts.slice(-2).join('.'))}</b> (for example in GoDaddy or Cloudflare) to add these two records:</p>
+      <ol class="guide">${rec(1, 'CNAME', D.name, 'proxy.workbeat.io', 'Points the address to WorkBeat')}${rec(2, 'TXT', '_workbeat.' + D.name, 'verify-' + D.token, 'Proves your company owns the domain')}</ol>
+      <p class="small muted">Some providers want only the first part of the name (for example <span class="mono">${esc(parts[0])}</span>). We check every 5 minutes, and new records can take up to an hour to show up. Then we turn on https automatically.</p>
+      <div class="row"><button class="btn" data-act="verifydomain">Check now</button><span class="small muted">Last checked: ${esc(D.check)}</span></div>`}
+  </div>`;
+}
+V.company = () => {
+  const seats = DEVICES.length, base = 1, add = TIERS[S.tier].add;
+  return head('Company settings', `${esc(S.co.name)} · Growth plan`) +
+    `<div class="grid g2">
+      <form class="card stack" data-form="company"><h2>Company</h2>
+        <div class="field"><label for="co-name">Company name</label><input id="co-name" type="text" value="${esc(S.co.name)}" required maxlength="80"></div>
+        <div class="field"><label>Dashboard address</label><div class="mono">nagorik.workbeat.io</div><span class="hint">The address keeps its original slug when you rename the company.</span></div>
+        <div class="field"><label for="co-ret">Keep activity data for</label><select id="co-ret">${[30, 60, 90, 180, 365].map(d => `<option value="${d}" ${S.retention == d ? 'selected' : ''}>${d} days${d === 90 ? ' (default)' : ''}</option>`).join('')}</select><span class="hint">Older activity and screenshots are deleted every night at 02:00. Shortening this deletes data that is now too old.</span></div>
+        <div class="row"><button class="btn pri">Save</button></div></form>
+      ${customDomainCard()}
+    </div>
+    <form class="card stack" data-form="shots"><div><h2>Screenshots</h2><p class="small muted">Applies to every employee. Changes reach computers within 30 minutes.</p></div>
+      ${S.tier === 'off' ? '<p>Your plan doesn’t include screenshots. To add them, contact WorkBeat.</p>' : `
+      <div class="notice info"><div>Your plan: <b>${TIERS[S.tier].name}</b>. Screenshots as often as <b>${everyTxt(STEP[S.tier])}</b>. To change the plan, contact WorkBeat.</div></div>
+      <label class="row" style="gap:8px"><input type="checkbox" id="sh-on" data-act-change="shon" ${S.shotEvery !== 0 ? 'checked' : ''}> Take screenshots</label>
+      <div class="field" style="max-width:360px"><label for="sh-min">Take one every</label><div class="row" style="flex-wrap:nowrap;gap:8px"><input type="number" id="sh-min" min="${STEP[S.tier]}" max="480" step="1" value="${S.shotEvery || STEP[S.tier]}" ${S.shotEvery === 0 ? 'disabled' : ''} style="max-width:120px"><span>minutes</span></div>
+        <span class="hint">Any number from ${STEP[S.tier]} (your plan’s fastest) to 480. Taking fewer screenshots doesn’t change the price.</span>
+        <div class="row" style="gap:6px;margin-top:4px">${[10, 15, 30, 60, 120].filter(m => m >= STEP[S.tier]).map(m => `<button type="button" class="btn sm" data-act="shotpick" data-v="${m}">${m < 60 ? m + ' min' : m / 60 + ' h'}</button>`).join('')}</div></div>
+      <div class="row"><button class="btn pri">Save</button><span class="small muted">Now: ${shotMin() ? 'one screenshot ' + everyTxt(shotMin()) : 'off'}</span></div>
+      ${shotMin() ? '<p class="small muted">Employees are told screenshots are taken (the monitoring notice says so). Screenshots pause automatically on private sites.</p>' : ''}`}</form>
+    <div class="grid g2">
+      <div class="card stack"><h2>Billing</h2>
+        <div class="tablewrap"><table><tbody>
+          <tr><td>Base plan</td><td class="num">${seats} × $${base.toFixed(2)}</td><td class="num">$${(seats * base).toFixed(2)}</td></tr>
+          <tr><td>Screenshots (${TIERS[S.tier].name})</td><td class="num">${seats} × $${add.toFixed(2)}</td><td class="num">$${(seats * add).toFixed(2)}</td></tr>
+          <tr><td><b>Next invoice, 1 Dec 2026</b></td><td></td><td class="num"><b>$${(seats * (base + add)).toFixed(2)}</b></td></tr></tbody></table></div>
+        <div class="row"><button class="btn" data-act="modal" data-v="billing">Payment method and invoices</button><span class="small muted">Visa •••• ${S.card.last4} · Growth plan · up to 50 seats</span></div></div>
+      <div class="card stack"><h2>Employee notice</h2><p class="small">Employees must sign a monitoring notice before WorkBeat is installed. The template lists what is collected, says activity is measured as counts only, and says whether screenshots are on.</p>
+        <div class="row"><button class="btn" data-act="noticetpl">Download template</button><a href="https://claude.ai/artifact/B4o8LLwb2Xd9KCtAXWXx9T" class="btn" target="_blank" rel="noopener">See what employees see</a></div></div>
+    </div>`;
+};
+const noticeText = () => `EMPLOYEE MONITORING NOTICE\n\n${S.co.name} uses WorkBeat on company-owned devices.\n\nWhat is recorded:\n- Which applications and websites you use, and for how long\n- Whether the keyboard or mouse was used (counts only; what you type is never recorded)\n- ${shotMin() ? 'A screenshot ' + everyTxt(shotMin()) : 'No screenshots'}\n\nWhat is never recorded: keystrokes, email or message content, camera, microphone, personal devices.\nBanking, health and personal email sites are not recorded, and screenshots pause while they are open.\n\nData is kept for ${S.retention} days and then deleted.\nOnly Company Admins and your manager can see your activity. WorkBeat staff cannot.\nMonitoring may be paused for set periods such as leave; the WorkBeat icon shows when it is paused.\n\nI have read and understood this notice.\n\nName: ______________________   Signature: ______________________   Date: __________\n`;
+
+// ---- super admin
+const superBanner = '<div class="notice info"><div><b>Internal console.</b> WorkBeat staff can manage companies, licenses and plans. Employee names, activity, URLs and screenshots are never visible here.</div></div>';
+const coStatus = c => c.status === 'active' ? '<span class="pill p-ok">Active</span>' : c.status === 'trial' ? '<span class="pill p-info">Trial</span>' : '<span class="pill p-bad">Suspended</span>';
+V['admin-companies'] = () => {
+  const cs = S.companies, mrr = cs.reduce((a, c) => a + coMrr(c), 0), seats = cs.reduce((a, c) => a + coSeats(c), 0);
+  const L = lst('companies', cs.filter(c => S.f.companies === 'all' || c.status === S.f.companies), c => [c.name, c.slug, c.plan, c.tier, c.status].join(' '));
+  const n = s => cs.filter(c => s === 'all' || c.status === s).length;
+  return head('Companies', 'Every customer account.') + superBanner +
+    `<div class="grid g4"><div class="card stat"><span class="label">Companies</span><span class="v">${cs.length}</span></div><div class="card stat"><span class="label">Seats in use</span><span class="v">${seats.toLocaleString('en-US')}</span></div><div class="card stat"><span class="label">Monthly revenue</span><span class="v">$${mrr.toLocaleString('en-US')}</span></div><div class="card stat"><span class="label">Suspended</span><span class="v">${n('suspended')}</span></div></div>
+    <div class="card stack"><div class="toolbar">${L.search('Search companies')}</div>
+    ${chips('companies', [['all', 'All', n('all')], ['active', 'Active', n('active')], ['trial', 'Trial', n('trial')], ['suspended', 'Suspended', n('suspended')]])}
+    <div class="tablewrap"><table><thead><tr><th>Company</th><th>Plan</th><th>Seats</th><th>Screenshots</th><th>Monthly</th><th>Status</th><th></th></tr></thead><tbody>
+    ${L.rows.map(c => `<tr><td>${esc(c.name)}<div class="small muted mono">${c.slug}.workbeat.io · since ${c.since}</div></td><td>${c.plan}</td><td class="num">${coSeats(c)} / ${c.limit}</td><td>${c.tier}</td><td class="num">$${coMrr(c)}</td><td>${coStatus(c)}</td>
+      <td><div class="row">${confirmBox('co-' + c.id, `${c.status === 'suspended' ? 'Restore' : 'Suspend'} ${esc(c.name)}?`, 'suspend', c.id, c.status === 'suspended' ? 'Restore' : 'Suspend', c.status !== 'suspended')}<button class="btn sm" data-act="modal" data-v="plan" data-id="${c.id}">Change plan</button></div></td></tr>`).join('') || emptyRow(7)}
+    </tbody></table></div>${L.pager()}<p class="small muted">Suspending a company makes every device’s next heartbeat return “suspended”. Devices stop collecting and show the employee a notice.</p></div>`;
+};
+V['admin-licenses'] = () => {
+  const L = lst('licenses', S.companies, c => c.name + ' ' + c.key.slice(-4) + ' ' + c.status);
+  return head('Licenses', 'One license key per company. Seats belong to the company, not the key: a released device frees its seat, and a reissued key keeps every seat in use.') + superBanner +
+  `<div class="card stack"><div class="toolbar">${L.search('Search company or last 4 of key')}</div><div class="tablewrap"><table><thead><tr><th>License</th><th>Company</th><th>Seats</th><th>Status</th><th></th></tr></thead><tbody>
+  ${L.rows.map(c => `<tr><td class="mono">${maskKey(c.key)}</td><td>${esc(c.name)}</td><td class="num">${coSeats(c)} / ${c.limit}</td><td>${c.status === 'suspended' ? '<span class="pill p-bad">Suspended</span>' : '<span class="pill p-ok">Active</span>'}</td><td><div class="row"><button class="btn sm" data-act="modal" data-v="plan" data-id="${c.id}">Edit seats</button><button class="btn sm" data-act="modal" data-v="reissue" data-id="${c.id}">Reissue key</button></div></td></tr>`).join('') || emptyRow(5)}
+  </tbody></table></div>${L.pager()}</div>`;
+};
+V['admin-domains'] = () => {
+  const all = [...(S.domain ? [{ name: S.domain.name, co: S.co.name, status: S.domain.status, check: S.domain.check }] : []), ...S.domains.slice(1)];
+  const L = lst('domains', all, d => d.name + ' ' + d.co + ' ' + d.status);
+  const st = { pending: '<span class="pill p-warn">Waiting for DNS</span>', active: '<span class="pill p-ok">Active</span>', missing: '<span class="pill p-bad">TXT record not found</span>' };
+  return head('Custom domains', 'Domains customers have added. Certificates are issued once DNS checks pass.') + superBanner +
+  `<div class="card stack"><div class="toolbar">${L.search('Search domains or companies')}</div><div class="tablewrap"><table><thead><tr><th>Domain</th><th>Company</th><th>Status</th><th>Last check</th><th></th></tr></thead><tbody>
+    ${L.rows.map(d => `<tr><td class="mono">${esc(d.name)}</td><td>${esc(d.co)}</td><td>${st[d.status]}</td><td class="small">${esc(d.check)}</td><td>${d.status === 'active' ? '' : `<button class="btn sm" data-act="recheck" data-v="${esc(d.name)}">Check DNS now</button>`}</td></tr>`).join('') || emptyRow(5)}
+  </tbody></table></div>${L.pager()}</div>`;
+};
+const verCmp = (a, b) => { const x = a.split('.').map(Number), y = b.split('.').map(Number); for (let i = 0; i < 3; i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) - (y[i] || 0); return 0; };
+V['admin-releases'] = () => {
+  const L = lst('releases', S.releases, r => r.plat + ' ' + r.ver + ' ' + r.status);
+  const vers = [...new Set(S.releases.map(r => r.ver))].sort(verCmp);
+  return head('Agent releases', 'Signed installers available to customers. Devices below the minimum version are flagged as outdated.') + superBanner +
+  `<div class="card row between"><div class="field" style="max-width:260px"><label for="minver">Minimum supported version</label><select id="minver" data-act-change="minver">${vers.map(v => `<option ${S.minVer === v ? 'selected' : ''}>${v}</option>`).join('')}</select></div><button class="btn pri" data-act="modal" data-v="publish">Publish release</button></div>
+  <div class="card stack"><div class="toolbar">${L.search('Search releases')}</div><div class="tablewrap"><table><thead><tr><th>Platform</th><th>Version</th><th>Released</th><th>Status</th><th>Signature</th></tr></thead><tbody>
+  ${L.rows.map(r => `<tr><td>${r.plat}</td><td class="mono">${esc(r.ver)}</td><td>${r.date}</td><td>${verCmp(r.ver, S.minVer) < 0 ? '<span class="pill p-warn">Below minimum</span>' : r.status === 'Current' ? '<span class="pill p-ok">Current</span>' : '<span class="pill">Supported</span>'}</td><td class="small">${r.plat === 'Windows' ? 'EV code signing ✓' : 'Developer ID + notarized ✓'}</td></tr>`).join('') || emptyRow(5)}
+  </tbody></table></div>${L.pager()}</div>`;
+};
+
+
+// ---------------- modals ----------------
+const M = {};
+const mhead = t => `<div class="mh"><h2 id="mt">${t}</h2><button class="btn sm" data-act="closemodal" aria-label="Close">✕</button></div>`;
+const merr = msg => { const el = $('#modal-err'); if (el) el.textContent = msg; return false; };
+const errSlot = '<p class="err" id="modal-err" role="alert"></p>';
+M.pause = () => { const e = emp(S.emp);
+  return mhead(`Pause monitoring for ${esc(e.name)}`) + `<form class="stack" data-form="pause">
+    <div class="row">${[['rest', 'Rest of today'], ['tomorrow', 'Tomorrow'], ['week', 'Next 7 days'], ['open', 'Until I resume']].map(([k, l]) => `<button type="button" class="btn sm" data-act="pausepreset" data-v="${k}">${l}</button>`).join('')}</div>
+    <div class="grid g2">
+      <div class="field"><label for="pz-fd">Starts</label><div class="row" style="flex-wrap:nowrap;gap:6px"><input type="date" id="pz-fd" required value="${iso(TODAY)}" min="${iso(TODAY)}" aria-label="Start date"><input type="time" id="pz-ft" required value="${hhmm(NOW)}" aria-label="Start time"></div></div>
+      <div class="field"><label for="pz-td">Ends</label><div class="row" style="flex-wrap:nowrap;gap:6px"><input type="date" id="pz-td" value="${iso(addD(TODAY, 1))}" min="${iso(TODAY)}" aria-label="End date"><input type="time" id="pz-tt" value="09:00" aria-label="End time"></div>
+        <label class="row small" style="gap:6px"><input type="checkbox" id="pz-open" data-act-change="pzopen"> No end date: until I resume it</label></div>
+    </div>
+    <div class="grid g2"><div class="field"><label for="pz-r">Reason</label><select id="pz-r">${['Annual leave', 'Sick leave', 'Personal time', 'Off-site or training', 'Other'].map(r => `<option>${r}</option>`).join('')}</select></div>
+      <div class="field"><label for="pz-n">Note (optional)</label><input type="text" id="pz-n" maxlength="140" placeholder="Visible to admins only"></div></div>
+    <div class="notice info"><div>Nothing is collected from ${esc(e.name.split(' ')[0])}’s devices while paused: no apps, websites, activity or screenshots. Tamper alerts and website blocking keep working. The tray icon shows “Monitoring paused until …”. The seat stays billed. A pause can’t start in the past.</div></div>
+    ${errSlot}<div class="mf"><button type="button" class="btn" data-act="closemodal">Cancel</button><button class="btn pri">Schedule pause</button></div></form>`; };
+M.addemp = () => { const mgrs = USERS.filter(u => u.role === 'manager' && !u.pending);
+  return mhead('Add employee') + `<form class="stack" data-form="addemp">
+    <div class="field"><label for="ne-name">Full name</label><input type="text" id="ne-name" required maxlength="80"></div>
+    <div class="field"><label for="ne-email">Work email</label><input type="email" id="ne-email" required placeholder="name@nagorik.tech"><span class="hint">IT picks this person in the installer, or passes this email to a scripted install.</span></div>
+    <div class="grid g2"><div class="field"><label for="ne-dept">Department</label><input type="text" id="ne-dept" required maxlength="60" list="dept-list2"><datalist id="dept-list2">${[...new Set(EMP.map(x => x.dept))].map(d => `<option value="${esc(d)}">`).join('')}</datalist></div>
+    <div class="field"><label for="ne-mgr">Manager</label><select id="ne-mgr"><option value="">No manager</option>${mgrs.map(m => `<option value="${m.id}">${esc(m.name)}</option>`).join('')}</select></div></div>
+    ${errSlot}<div class="mf"><button type="button" class="btn" data-act="closemodal">Cancel</button><button class="btn pri">Add employee</button></div></form>`; };
+M.reassign = () => { const d = dev(S.modal.id), cur = emp(d.emp);
+  return mhead(`Reassign ${esc(d.host)}`) + `<form class="stack" data-form="reassign">
+    <p>Currently used by <b>${cur ? esc(cur.name) : 'nobody'}</b>. ${esc(d.os)} · installed via ${esc(d.via)}.</p>
+    <div class="field"><label for="ra-emp">Give this device to</label><select id="ra-emp" required><option value="">Choose an employee…</option>${EMP.filter(x => x !== cur).map(x => `<option value="${x.id}">${esc(x.name)} · ${esc(x.dept)}</option>`).join('')}</select></div>
+    <div class="notice info"><div>From now on, this device’s activity counts for the new person. Everything recorded before now stays with ${cur ? esc(cur.name.split(' ')[0]) : 'the previous person'}. The seat doesn’t change. If the device was installed through an MDM, also change its primary user there, or the next reinstall will link it back.</div></div>
+    ${errSlot}<div class="mf"><button type="button" class="btn" data-act="closemodal">Cancel</button><button class="btn pri">Reassign</button></div></form>`; };
+const keyHelp = '<p class="small muted">Find your keys on the Deployment page, step 1.</p>';
+M.invite = () => mhead('Invite someone to the dashboard') + `<form class="stack" data-form="invite"><p class="small">They get an email with a link to sign in. This is for people who manage WorkBeat, not for the employees being monitored.</p>
+  <div class="field"><label for="iv-email">Work email</label><input id="iv-email" type="email" required placeholder="minhaz@nagorik.tech"></div>
+  <fieldset class="stack" style="border:0;padding:0;margin:0"><legend class="small" style="font-weight:500;margin-bottom:6px">What can they do?</legend>
+    ${[['manager', 'Manager', 'Sees reports for the employees you assign to them.'], ['it', 'IT Admin', 'Installs WorkBeat and manages computers and blocked sites. Can’t see reports.'], ['admin', 'Company Admin', 'Can do everything, including billing.']].map(([v, l, d], i) => `<label class="radio-row"><input type="radio" name="iv-role" value="${v}" ${i === 0 ? 'checked' : ''}><span><b>${l}</b><br><span class="small muted">${d}</span></span></label>`).join('')}</fieldset>
+  ${errSlot}<div class="mf"><button type="button" class="btn" data-act="closemodal">Cancel</button><button class="btn pri">Send invite</button></div></form>`;
+M.block = () => mhead('Block a website') + `<form class="stack" data-form="addblock">
+  <fieldset class="stack" style="border:0;padding:0;margin:0"><legend class="small" style="font-weight:500;margin-bottom:6px">What do you want to block?</legend>
+    ${[['domain', 'A whole website', 'Example: facebook.com. Also blocks m.facebook.com and other subdomains, in every browser and app.'], ['url', 'One part of a website', 'Example: youtube.com/shorts. Works in Chrome, Edge, Safari and most browsers. In a few (Firefox on Mac; Brave, Opera, Vivaldi on Windows) only whole-website rules work.']].map(([v, l, d], i) => `<label class="radio-row"><input type="radio" name="bl-type" value="${v}" ${i === 0 ? 'checked' : ''}><span><b>${l}</b><br><span class="small muted">${d}</span></span></label>`).join('')}</fieldset>
+  <div class="field"><label for="bl-pat">Website address</label><input id="bl-pat" type="text" required maxlength="2048" placeholder="facebook.com"></div>
+  <div class="field"><label for="bl-why">Reason (employees see this)</label><input id="bl-why" type="text" maxlength="120" placeholder="Not allowed on company computers"></div>
+  ${errSlot}<div class="mf"><button type="button" class="btn" data-act="closemodal">Cancel</button><button class="btn pri">Block it</button></div></form>`;
+M.sens = () => mhead('Add a private site') + `<form class="stack" data-form="addsens"><p class="small">WorkBeat will never record visits to this site, and screenshots pause while it is open. Use it for banking, health or personal sites.</p>
+  <div class="field"><label for="sens-new">Website address</label><input id="sens-new" type="text" required maxlength="200" placeholder="citybank.com"></div>
+  ${errSlot}<div class="mf"><button type="button" class="btn" data-act="closemodal">Cancel</button><button class="btn pri">Add site</button></div></form>`;
+M.prod = () => mhead('Add productivity rule') + `<form class="stack" data-form="addprod"><p class="small">Reports count time in this app or site as productive, neutral or unproductive. Past reports update too.</p>
+  <div class="grid g2"><div class="field"><label for="pr-m">Is it an app or a website?</label><select id="pr-m"><option value="app">App</option><option value="domain">Website</option></select></div>
+  <div class="field"><label for="pr-c">Count it as</label><select id="pr-c"><option value="productive">Productive</option><option value="neutral">Neutral</option><option value="unproductive">Unproductive</option></select></div></div>
+  <div class="field"><label for="pr-p">App name or website address</label><input id="pr-p" type="text" required maxlength="120" placeholder="Microsoft Word or notion.so"></div>
+  ${errSlot}<div class="mf"><button type="button" class="btn" data-act="closemodal">Cancel</button><button class="btn pri">Add rule</button></div></form>`;
+M.domain = () => mhead(S.domain ? 'Change custom domain' : 'Add custom domain') + `<form class="stack" data-form="domain">
+  <p class="small">Pick an address on a domain your company owns. It must have a part in front, like <b>monitor</b>.nagorik.tech, because the main domain (nagorik.tech) usually already points to your website.</p>
+  <div class="field"><label for="dm-name">Address</label><input type="text" id="dm-name" required maxlength="200" value="${esc(S.domain?.name || '')}" placeholder="monitor.nagorik.tech" autocomplete="off" spellcheck="false"></div>
+  ${S.domain ? '<p class="small muted">Changing it means adding new DNS records. The old address stops working.</p>' : ''}
+  ${errSlot}<div class="mf"><button type="button" class="btn" data-act="closemodal">Cancel</button><button class="btn pri">${S.domain ? 'Save' : 'Next: show DNS records'}</button></div></form>`;
+M.editemp = () => { const e = emp(S.emp), mgrs = USERS.filter(u => u.role === 'manager' && !u.pending);
+  return mhead(`Edit ${esc(e.name)}`) + `<form class="stack" data-form="editemp">
+    <div class="field"><label for="ee-name">Name</label><input type="text" id="ee-name" required maxlength="80" value="${esc(e.name)}"></div>
+    <div class="field"><label for="ee-email">Work email</label><input type="email" id="ee-email" required value="${esc(e.email)}"><span class="hint">Devices installed through an MDM link to employees by this email.</span></div>
+    <div class="grid g2"><div class="field"><label for="ee-dept">Department</label><input type="text" id="ee-dept" required maxlength="60" value="${esc(e.dept)}" list="dept-list"><datalist id="dept-list">${[...new Set(EMP.map(x => x.dept))].map(d => `<option value="${esc(d)}">`).join('')}</datalist></div>
+    <div class="field"><label for="ee-mgr">Manager</label><select id="ee-mgr"><option value="">No manager</option>${mgrs.map(m => `<option value="${m.id}" ${e.mgr === m.id ? 'selected' : ''}>${esc(m.name)}</option>`).join('')}</select></div></div>
+    ${errSlot}<div class="mf"><button type="button" class="btn" data-act="closemodal">Cancel</button><button class="btn pri">Save</button></div></form>`; };
+M.rmemp = () => { const e = emp(S.emp), ds = devsOf(e.id);
+  if (ds.length) return mhead(`${esc(e.name)} still has ${ds.length === 1 ? 'a device' : ds.length + ' devices'}`) + `<p>Every device belongs to an employee. Reassign or release ${ds.map(d => esc(d.host)).join(', ')} on the <a href="#devices" data-act="closemodal">Devices</a> page first, then remove ${esc(e.name.split(' ')[0])}.</p>
+    <div class="mf"><button class="btn pri" data-act="closemodal">OK</button></div>`;
+  return mhead(`Remove ${esc(e.name)}?`) + `<p>${esc(e.name)} will no longer appear in reports.</p><p class="small muted">Collected activity is deleted on the normal ${S.retention}-day schedule.</p>
+    <div class="mf"><button class="btn" data-act="closemodal">Keep</button><button class="btn danger" data-act="rmempgo">Remove employee</button></div>`; };
+M.import = () => `${mhead('Import employees from CSV')}
+  <p class="small">One person per line: <span class="mono">name, email, department, manager email (optional)</span>. A header row is fine. Existing emails are skipped.</p>
+  <div class="row"><button class="btn sm" data-act="imptemplate">Download template</button><label class="btn sm" for="imp-file">Choose file…</label><input type="file" id="imp-file" accept=".csv,text/csv" data-act-change="impfile" style="position:absolute;opacity:0;width:1px;height:1px"></div>
+  <div class="field"><label for="imp-text">Or paste CSV</label><textarea id="imp-text" rows="6" class="mono" placeholder="Name,Email,Department,Manager email&#10;Sara Ali,sara@nagorik.tech,Sales,sadia@nagorik.tech"></textarea></div>
+  <div id="imp-prev"></div>${errSlot}
+  <div class="mf"><button class="btn" data-act="closemodal">Cancel</button><button class="btn" data-act="impcheck">Check</button><button class="btn pri" data-act="impgo" id="imp-go" disabled>Import</button></div>`;
+M.mail = () => { const A = S.alertMail;
+  return mhead('Alert emails') + `<form class="stack" data-form="mail">
+    <div class="field"><label>Send to</label><div class="checks">${[['admin', 'Company Admins'], ['it', 'IT Admins'], ['manager', 'Managers (own team only)']].map(([k, l]) => `<label><input type="checkbox" id="am-${k}" ${A[k] ? 'checked' : ''}> ${l}</label>`).join('')}</div></div>
+    <div class="field"><label>Alert types</label><div class="checks">${Object.entries(ALERT_LABEL).map(([k, l]) => `<label><input type="checkbox" name="am-type" value="${k}" ${A.types.includes(k) ? 'checked' : ''}> ${l}</label>`).join('')}</div></div>
+    <div class="field"><label for="am-when">Delivery</label><select id="am-when">${[['instant', 'As they happen'], ['hourly', 'Hourly digest'], ['daily', 'Daily digest at 09:00']].map(([k, l]) => `<option value="${k}" ${A.when === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+    ${errSlot}<div class="mf"><button type="button" class="btn" data-act="closemodal">Cancel</button><button class="btn pri">Save</button></div></form>`; };
+const INVOICES = [['INV-2026-11', '1 Nov 2026', 'Paid'], ['INV-2026-10', '1 Oct 2026', 'Paid']];
+M.billing = () => `${mhead('Payment method and invoices')}<p class="small muted">In the product this is the Stripe customer portal. Card details go straight to Stripe and never touch WorkBeat servers.</p>
+  <form class="stack" data-form="card"><h3>Card on file: Visa •••• ${S.card.last4}, expires ${S.card.exp}</h3>
+    <div class="grid g2"><div class="field"><label for="cd-num">New card number</label><input type="text" id="cd-num" inputmode="numeric" autocomplete="off" placeholder="Use 4242 4242 4242 4242" maxlength="23" required></div><div class="field"><label for="cd-exp">Expiry (MM/YY)</label><input type="text" id="cd-exp" placeholder="12/29" maxlength="5" required></div></div>
+    <div class="field"><label for="cd-mail">Billing email</label><input type="email" id="cd-mail" value="${esc(S.card.email)}" required></div>
+    ${errSlot}<div class="row"><button class="btn pri">Update card</button></div></form>
+  <div class="stack"><h3>Invoices</h3><div class="tablewrap"><table><thead><tr><th>Invoice</th><th>Date</th><th>Amount</th><th>Status</th><th></th></tr></thead><tbody>
+  ${INVOICES.map(([id, d, st]) => `<tr><td class="mono">${id}</td><td>${d}</td><td class="num">$${(DEVICES.length * (1 + TIERS[S.tier].add)).toFixed(2)}</td><td><span class="pill p-ok">${st}</span></td><td><button class="btn sm" data-act="invoice" data-v="${id}">Download</button></td></tr>`).join('')}
+  </tbody></table></div></div>`;
+M.plan = () => { const c = S.companies.find(x => x.id === S.modal.id);
+  return mhead(`Plan for ${esc(c.name)}`) + `<form class="stack" data-form="plan">
+    <div class="grid g2"><div class="field"><label for="pl-plan">Plan</label><select id="pl-plan">${['Starter', 'Growth', 'Enterprise'].map(p => `<option ${c.plan === p ? 'selected' : ''}>${p}</option>`).join('')}</select></div>
+    <div class="field"><label for="pl-lim">Seat limit</label><input type="number" id="pl-lim" min="1" max="100000" value="${c.limit === '∞' ? '' : c.limit}" placeholder="Empty = unlimited (Enterprise)"></div></div>
+    <div class="field"><label for="pl-tier">Screenshot plan</label><select id="pl-tier">${['Off', 'Light', 'Standard', 'Intensive'].map(t => `<option value="${t}" ${c.tier === t ? 'selected' : ''}>${t === 'Off' ? 'Off: no screenshots' : `${t}: as often as ${everyTxt(STEP[t.toLowerCase()])} (+$${TIERS[t.toLowerCase()].add.toFixed(2)})`}</option>`).join('')}</select><span class="hint">The company can pick a slower interval in its settings, never a faster one.</span></div>
+    <p class="small muted">${coSeats(c)} seats are in use. The limit can’t go below that. Changes sync to Stripe and apply from the next billing cycle.</p>
+    ${errSlot}<div class="mf"><button type="button" class="btn" data-act="closemodal">Cancel</button><button class="btn pri">Save</button></div></form>`; };
+M.reissue = () => { const c = S.companies.find(x => x.id === S.modal.id);
+  return S.modal.newKey ? mhead('New license key') + `<div class="notice ok"><div class="stack" style="gap:6px;min-width:0;flex:1"><b>Key reissued and emailed to the Company Admin of ${esc(c.name)}.</b><div class="secret" id="newkey">${S.modal.newKey}</div><div class="row"><button class="btn sm" data-act="copy" data-target="newkey">Copy</button></div></div></div><p class="small muted">The old key stops working for new installs now. Enrolled devices are not affected; they use their own device keys. Seats stay as they were: ${coSeats(c)} of ${c.limit} in use on the new key.</p><div class="mf"><button class="btn pri" data-act="closemodal">Done</button></div>`
+    : mhead(`Reissue key for ${esc(c.name)}?`) + `<p>The current key <span class="mono">${maskKey(c.key)}</span> stops working for new installs immediately. Devices already enrolled keep working, and the ${coSeats(c)} of ${c.limit} seats in use carry over to the new key.</p><div class="mf"><button class="btn" data-act="closemodal">Cancel</button><button class="btn danger" data-act="reissuego">Reissue key</button></div>`; };
+M.publish = () => mhead('Publish agent release') + `<form class="stack" data-form="publish">
+  <div class="grid g2"><div class="field"><label for="rl-plat">Platform</label><select id="rl-plat"><option>Windows</option><option>macOS</option></select></div><div class="field"><label for="rl-ver">Version</label><input type="text" id="rl-ver" required placeholder="1.0.5" pattern="\\d+\\.\\d+\\.\\d+" title="Use x.y.z"></div></div>
+  <div class="field"><label for="rl-file">Signed installer</label><input type="file" id="rl-file" accept=".msi,.pkg" required><span class="hint">MSI must carry the EV signature; pkg must be notarized. Both are checked on upload.</span></div>
+  <div class="field"><label for="rl-notes">Release notes</label><textarea id="rl-notes" rows="3" maxlength="2000"></textarea></div>
+  ${errSlot}<div class="mf"><button type="button" class="btn" data-act="closemodal">Cancel</button><button class="btn pri">Publish</button></div></form>`;
+M.shot = () => { const e = emp(S.emp), real = shotsFor(e, pd(S.shotDate)).filter(s => s.kind === 'shot'), i = Math.max(0, Math.min(S.modal.i, real.length - 1)), s = real[i];
+  if (!s) return mhead('Screenshot') + '<p class="muted">This screenshot is no longer available.</p>';
+  return mhead(`${hhmm(s.t)} · ${esc(s.app)}`) + `<div class="bigshot" role="img" aria-label="Screenshot of ${esc(s.app)} at ${hhmm(s.t)}"><div class="tb">${esc(s.title)}</div><div class="body">${shotLines(s.seed, 10)}</div></div>
+    <div class="row between small"><span>${esc(e.name)} · <span class="mono">${esc(s.host)}</span> · ${fDT(s.t)} · ${s.kb} KB</span><span class="muted">Signed link, expires in 5 minutes</span></div>
+    <div class="mf"><button class="btn" data-act="shotstep" data-v="-1" ${i === 0 ? 'disabled' : ''}>‹ Previous</button><span class="small muted" style="align-self:center">${i + 1} of ${real.length}</span><button class="btn" data-act="shotstep" data-v="1" ${i === real.length - 1 ? 'disabled' : ''}>Next ›</button><button class="btn pri" data-act="shotdl">Download</button></div>`; };
+function renderModal() {
+  let host = $('#modal'); if (!host) { host = document.createElement('div'); host.id = 'modal'; document.body.append(host); }
+  host.innerHTML = S.modal ? `<div class="modal-scrim" data-act="scrimclose"><div class="modal ${S.modal.t === 'shot' ? 'wide' : ''}" role="dialog" aria-modal="true" aria-labelledby="mt">${M[S.modal.t]()}</div></div>` : '';
+}
+function openModal(t, extra = {}) { S.modal = { t, ...extra }; renderModal(); setTimeout(() => $('.modal input:not([type=hidden]):not([type=file]), .modal select, .modal textarea, .modal .btn.pri, .modal button')?.focus(), 0); }
+function closeModal() { S.modal = null; renderModal(); }
+
+// ---------------- render & events ----------------
+function render() {
+  if (!ALL[S.route]?.includes(S.role)) S.route = DEFAULT[S.role];
+  const ae = document.activeElement, fid = ae && ae.id && $('#view').contains(ae) ? ae.id : null;
+  let sel = null; try { sel = ae && ae.type === 'search' ? [ae.selectionStart, ae.selectionEnd] : null; } catch (_) {}
+  renderNav();
+  $('#view').innerHTML = (V[S.route] || V.overview)();
+  $('#shell').classList.remove('open');
+  renderModal();
+  if (fid) { const n = document.getElementById(fid); if (n) { n.focus(); if (sel) try { n.setSelectionRange(...sel); } catch (_) {} } }
+}
+function go(r) { if (location.hash !== '#' + r) location.hash = r; else render(); }
+window.addEventListener('hashchange', () => { S.route = location.hash.slice(1) || DEFAULT[S.role]; S.confirm = null; render(); window.scrollTo(0, 0); });
+$('#role').addEventListener('change', e => { S.role = e.target.value; S.confirm = null; S.modal = null; if (!ALL[S.route]?.includes(S.role)) go(DEFAULT[S.role]); else render(); });
+const shiftDay = (key, v) => { const d = +v === 0 ? TODAY : addD(pd(S[key]), +v); S[key] = iso(d < minDate() ? minDate() : d > TODAY ? TODAY : d); };
+function pausePreset(k) {
+  const set = (id, v) => { $('#' + id).value = v; }, open = $('#pz-open');
+  open.checked = k === 'open'; $('#pz-td').disabled = $('#pz-tt').disabled = k === 'open';
+  if (k === 'rest') { set('pz-fd', iso(TODAY)); set('pz-ft', hhmm(NOW)); set('pz-td', iso(TODAY)); set('pz-tt', '23:59'); }
+  if (k === 'tomorrow') { set('pz-fd', iso(addD(TODAY, 1))); set('pz-ft', '00:00'); set('pz-td', iso(addD(TODAY, 2))); set('pz-tt', '00:00'); }
+  if (k === 'week') { set('pz-fd', iso(TODAY)); set('pz-ft', hhmm(NOW)); set('pz-td', iso(addD(TODAY, 7))); set('pz-tt', hhmm(NOW)); }
+  if (k === 'open') { set('pz-fd', iso(TODAY)); set('pz-ft', hhmm(NOW)); }
+}
+function importRows(text) {
+  const rows = parseCSV(text); if (rows.length && /mail/i.test(rows[0][1] || '')) rows.shift();
+  const seen = new Set(EMP.map(e => e.email.toLowerCase())), mgrs = USERS.filter(u => u.role === 'manager');
+  return rows.slice(0, 500).map((r, i) => {
+    const [name = '', email = '', dept = '', mgrMail = ''] = r, m = mgrMail && mgrs.find(u => u.email.toLowerCase() === mgrMail.toLowerCase());
+    let err = !name ? 'Name missing' : !EMAIL_RE.test(email) ? 'Email not valid' : seen.has(email.toLowerCase()) ? 'Already exists' : !dept ? 'Department missing' : mgrMail && !m ? 'Manager not found' : '';
+    if (!err) seen.add(email.toLowerCase());
+    return { line: i + 1, name, email, dept, mgr: m ? m.id : null, err };
+  });
+}
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const a = el.dataset.act, v = el.dataset.v, id = el.dataset.id;
+  if (a === 'scrimclose' && e.target !== el) return; // clicks inside the dialog don't close it
+  const emp0 = () => emp(S.emp);
+  const acts = {
+    openmenu: () => $('#shell').classList.add('open'),
+    closemenu: () => $('#shell').classList.remove('open'),
+    theme: () => { const r = document.documentElement; const dark = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches; r.dataset.theme = dark ? 'light' : 'dark'; try { localStorage.setItem('wb-theme', r.dataset.theme); } catch (_) {} },
+    modal: () => openModal(v, id ? { id } : {}),
+    closemodal: closeModal, scrimclose: closeModal,
+    openemp: () => { S.emp = id; S.empTab = 'status'; S.stDate = iso(TODAY); S.q.stlog = ''; go('employee'); },
+    emptab: () => { S.empTab = v; S.confirm = null; render(); },
+    filt: () => { S.f[el.dataset.k] = v; S.pg[el.dataset.k] = 1; render(); },
+    page: () => { S.pg[el.dataset.k] = +v; render(); },
+    statgo: () => { S.f.devices = v; S.pg.devices = 1; go('devices'); },
+    confirm: () => { S.confirm = v || null; render(); },
+    toggle: () => { S[el.dataset.k] = !S[el.dataset.k]; render(); },
+    // employee: calendar, timesheet, screenshots, status timeline
+    calview: () => { S.cal.view = v; render(); },
+    calnav: () => { const d = pd(S.cal.date), V2 = S.cal.view; let n = +v === 0 ? TODAY : V2 === 'month' ? new Date(d.getFullYear(), d.getMonth() + +v, 1) : addD(d, +v * (V2 === 'week' ? 7 : 1)); if (n > TODAY) n = TODAY; if (n < minDate()) n = minDate(); S.cal.date = iso(n); render(); },
+    calday: () => { S.cal = { view: 'day', date: v }; S.empTab = 'calendar'; render(); window.scrollTo(0, 0); },
+    dayshots: () => { S.shotDate = v; S.empTab = 'screenshots'; S.pg.shots = 1; render(); },
+    dayreport: () => { S.preset = 'custom'; S.from = S.to = v; S.empTab = 'report'; render(); },
+    tsnav: () => { S.tsWeek = iso(+v === 0 ? monday(TODAY) : addD(pd(S.tsWeek), 7 * +v)); render(); },
+    tscsv: () => { const e2 = emp0(), rows = timesheetRows(e2); download(`timesheet-${slugify(e2.name)}-${S.tsWeek}.csv`, toCSV([['Employee', e2.name], ['Week starting', S.tsWeek], [], ['Day', 'First activity', 'Last activity', 'Tracked (h)', 'Activity %', 'Productive (h)', 'Neutral (h)', 'Unproductive (h)', 'Note'], ...rows.map(r => [iso(r.d), r.first, r.last, r.u ? hrs(r.u.total) : '', r.u ? Math.round(r.u.active * 100) : '', r.u ? hrs(r.sp.productive) : '', r.u ? hrs(r.sp.neutral) : '', r.u ? hrs(r.sp.unproductive) : '', r.note])]), 'text/csv'); },
+    tspdf: () => { const e2 = emp0(), rows = timesheetRows(e2), X = [40, 150, 245, 340, 420, 495, 585, 665, 755];
+      const tot = rows.reduce((a, r) => a + (r.u?.total || 0), 0), totP = rows.reduce((a, r) => a + (r.sp?.productive || 0), 0);
+      const it = [{ x: 40, y: 545, s: 18, b: 1, t: `Weekly timesheet - ${e2.name}` }, { x: 40, y: 522, s: 11, t: `${S.co.name} - week starting Monday ${fDY(pd(S.tsWeek))} - ${e2.email}` },
+        ...['Day', 'First activity', 'Last activity', 'Tracked', 'Activity', 'Productive', 'Neutral', 'Unproductive', 'Note'].map((t, i) => ({ x: X[i], y: 480, b: 1, t }))];
+      rows.forEach((r, j) => [fD(r.d), r.first, r.last, r.u ? hm(r.u.total) : '-', r.u ? pct(r.u.active) : '-', r.u ? hm(r.sp.productive) : '-', r.u ? hm(r.sp.neutral) : '-', r.u ? hm(r.sp.unproductive) : '-', r.note].forEach((t, i) => it.push({ x: X[i], y: 456 - j * 24, t })));
+      it.push({ x: X[0], y: 456 - 7 * 24 - 6, b: 1, t: 'Total' }, { x: X[3], y: 456 - 7 * 24 - 6, b: 1, t: hm(tot) }, { x: X[5], y: 456 - 7 * 24 - 6, b: 1, t: hm(totP) },
+        { x: 40, y: 60, s: 9, t: 'Activity counts keyboard or mouse use in 30-second samples. What was typed is never recorded. Generated by WorkBeat.' });
+      download(`timesheet-${slugify(e2.name)}-${S.tsWeek}.pdf`, makePDF(it), 'application/pdf'); },
+    shotnav: () => { shiftDay('shotDate', v); S.pg.shots = 1; render(); },
+    stnav: () => { shiftDay('stDate', v); S.pg.stlog = 1; render(); },
+    openshot: () => openModal('shot', { i: +v }),
+    shotstep: () => { S.modal.i += +v; renderModal(); },
+    shotdl: () => { const e2 = emp0(), s = shotsFor(e2, pd(S.shotDate)).filter(x => x.kind === 'shot')[S.modal.i]; if (s) download(`screenshot-${slugify(e2.name)}-${S.shotDate}-${hhmm(s.t).replace(':', '')}.svg`, shotSVG(s, e2), 'image/svg+xml'); },
+    // report
+    represet: () => { S.rep = defaultRep(); render(); },
+    repcsv: () => reportCSV(emp0()),
+    // pauses
+    pausepreset: () => pausePreset(v),
+    pauseend: () => { const p = S.pauses.find(x => x.id === id); p.to = new Date(+NOW); UC.clear(); S.confirm = null; render(); toast('Monitoring resumed. Devices pick this up within a minute.'); },
+    pausecancel: () => { S.pauses.find(x => x.id === id).cancelled = true; UC.clear(); S.confirm = null; render(); toast('Scheduled pause cancelled.'); },
+    rmempgo: () => { const e2 = emp0(); EMP.splice(EMP.indexOf(e2), 1); closeModal(); toast(`${e2.name} removed.`); go('employees'); },
+    // import
+    imptemplate: () => download('workbeat-employees-template.csv', toCSV([['Name', 'Email', 'Department', 'Manager email'], ['Sara Ali', 'sara@nagorik.tech', 'Sales', 'sadia@nagorik.tech'], ['Tanim Roy', 'tanim@nagorik.tech', 'Finance', '']]), 'text/csv'),
+    impcheck: () => { const rows = importRows($('#imp-text').value), ok = rows.filter(r => !r.err); S.modal.rows = ok;
+      $('#imp-prev').innerHTML = rows.length ? `<p class="small"><b>${ok.length}</b> ready to import${rows.length - ok.length ? `, <b>${rows.length - ok.length}</b> with problems` : ''}.</p><div class="tablewrap" style="max-height:220px;overflow:auto"><table><thead><tr><th>Line</th><th>Name</th><th>Email</th><th>Department</th><th>Result</th></tr></thead><tbody>${rows.map(r => `<tr><td class="num">${r.line}</td><td>${esc(r.name)}</td><td class="mono">${esc(r.email)}</td><td>${esc(r.dept)}</td><td>${r.err ? `<span class="pill p-bad">${r.err}</span>` : '<span class="pill p-ok">OK</span>'}</td></tr>`).join('')}</tbody></table></div>` : '';
+      merr(rows.length ? '' : 'Nothing to import. Choose a file or paste rows first.'); $('#imp-go').disabled = !ok.length; $('#imp-go').textContent = ok.length ? `Import ${ok.length}` : 'Import'; },
+    impgo: () => { const rows = S.modal.rows || []; rows.forEach(r => EMP.push({ id: uid(), name: r.name, email: r.email, dept: r.dept, mgr: r.mgr, since: TODAY })); closeModal(); render(); toast(`${rows.length} employee${rows.length === 1 ? '' : 's'} imported`); },
+    // lists
+    rmdev: () => { const i = DEVICES.findIndex(d => d.id === id); const h = DEVICES[i].host; DEVICES.splice(i, 1); UC.clear(); S.confirm = null; render(); toast(`${h} released. Seat freed; the device goes dormant.`); },
+    rmblock: () => { S.block = S.block.filter(b => b.id !== id); S.confirm = null; render(); toast('Rule deleted. Devices update within 30 minutes.'); },
+    rmsens: () => { S.sensitive = S.sensitive.filter(s => s !== v); render(); toast(`${v} removed from sensitive sites`); },
+    rmprod: () => { S.prod = S.prod.filter(r => r.id !== id); S.confirm = null; render(); toast('Rule deleted. Reports recalculated.'); },
+    method: () => { S.installMethod = v; render(); },
+    guide: () => { S.guide = v; render(); },
+    dlfile: () => download(...fileBody(FILES[+v])),
+    dlsetup: () => download(...fileBody([v === 'win' ? 'WorkBeatSetup.exe' : 'WorkBeatSetup.pkg', '', '', 'bin'])),
+    copylic: () => { const k = S.companies[0].key; navigator.clipboard?.writeText(k).then(() => toast('License key copied'), () => { S.showLic = true; render(); toast('Select the key and press Ctrl+C or ⌘C'); }); },
+    copy: () => { const t = $('#' + el.dataset.target).textContent; navigator.clipboard?.writeText(t).then(() => toast('Copied'), () => { const r = document.createRange(); r.selectNodeContents($('#' + el.dataset.target)); getSelection().removeAllRanges(); getSelection().addRange(r); toast('Press Ctrl+C or ⌘C to copy'); }); },
+    // team
+    resend: () => { USERS.find(u => u.id === id).sent = 'today'; render(); toast('Invite email sent again'); },
+    rmuser: () => { const u = USERS.find(x => x.id === id); USERS.splice(USERS.indexOf(u), 1); EMP.forEach(e2 => { if (e2.mgr === u.id) e2.mgr = null; }); if (S.assignMgr === u.id) S.assignMgr = USERS.find(x => x.role === 'manager' && !x.pending)?.id; S.confirm = null; render(); toast(u.pending ? 'Invite cancelled' : `${u.name} can no longer sign in`); },
+    // company
+    shotpick: () => { $('#sh-min').value = v; $('#sh-min').disabled = false; $('#sh-on').checked = true; },
+    verifydomain: () => { const D = S.domain; D.check = 'just now'; if (D.tries++ < 1) { render(); toast('Records not found yet. If you just added them, wait a few minutes and check again.'); return; } D.status = 'active'; render(); toast('Both records found. Your custom domain is live.'); },
+    rmdomain: () => { S.domain = null; S.confirm = null; render(); toast('Custom domain removed.'); },
+    noticetpl: () => download(`${slugify(S.co.name)}-monitoring-notice.txt`, noticeText()),
+    invoice: () => download(`${v}.txt`, `${v}\n${S.co.name}\nWorkBeat Growth plan\n\n${DEVICES.length} seats x $1.00 = $${DEVICES.length.toFixed(2)}\nScreenshots ${TIERS[S.tier].name}: ${DEVICES.length} x $${TIERS[S.tier].add.toFixed(2)}\nTotal: $${(DEVICES.length * (1 + TIERS[S.tier].add)).toFixed(2)}\nPaid by Visa ending ${S.card.last4}\n`),
+    // super admin
+    suspend: () => { const c = S.companies.find(c => c.id === id); c.status = c.status === 'suspended' ? 'active' : 'suspended'; S.confirm = null; render(); toast(`${c.name} ${c.status === 'suspended' ? 'suspended' : 'restored'}.`); },
+    reissuego: () => { const c = S.companies.find(x => x.id === S.modal.id); c.key = genKey(Date.now() % 1e9); S.modal.newKey = c.key; renderModal(); render(); },
+    recheck: () => { const d = S.domain?.name === v ? S.domain : S.domains.find(x => x.name === v); d.check = 'just now'; render(); toast(d.status === 'missing' ? 'TXT record still not found.' : 'Still waiting for DNS. The customer hasn’t added the records yet.'); },
+  };
+  if (acts[a]) { if (el.tagName === 'A') e.preventDefault(); acts[a](); }
+});
+document.addEventListener('keydown', e => {
+  if (!S.modal) return;
+  if (e.key === 'Escape') closeModal();
+  if (S.modal?.t === 'shot' && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { const n = shotsFor(emp(S.emp), pd(S.shotDate)).filter(s => s.kind === 'shot').length; S.modal.i = Math.max(0, Math.min(n - 1, S.modal.i + (e.key === 'ArrowLeft' ? -1 : 1))); renderModal(); }
+});
+document.addEventListener('change', e => {
+  const el = e.target, a = el.dataset.actChange; if (!a) return;
+  const R = S.rep;
+  if (a === 'preset') { S.preset = el.value; if (el.value !== 'custom') setRange(...presetRange(el.value)); S.pg.repbd = 1; render(); }
+  if ((a === 'rfrom' || a === 'rto') && el.value) { S.preset = 'custom'; setRange(pd(a === 'rfrom' ? el.value : S.from), pd(a === 'rto' ? el.value : S.to)); S.pg.repbd = 1; render(); }
+  if (a === 'pagesize') { S.ps[el.dataset.k] = +el.value; S.pg[el.dataset.k] = 1; render(); }
+  if (a === 'dept') { S.dept = el.value; S.pg.employees = 1; render(); }
+  if (a === 'repshow') { R.show[el.dataset.k] = el.checked; render(); }
+  if (a === 'reptop') { R.top = el.value; render(); }
+  if (a === 'repcat') { R.cat = el.value; render(); }
+  if (a === 'repgroup') { R.group = el.value; S.pg.repbd = 1; render(); }
+  if (a === 'repcmp') { R.compare = el.checked; render(); }
+  if ((a === 'shotnav' || a === 'stnav') && el.value) { const d = pd(el.value), k = a === 'shotnav' ? 'shotDate' : 'stDate'; S[k] = iso(d < minDate() ? minDate() : d > TODAY ? TODAY : d); S.pg[a === 'shotnav' ? 'shots' : 'stlog'] = 1; render(); }
+  if (a === 'alertfilt') { S.f.alerts = el.value; S.pg.alerts = 1; render(); }
+  if (a === 'shotapp') { S.shotApp = el.value; S.pg.shots = 1; render(); }
+  if (a === 'pzopen') { $('#pz-td').disabled = $('#pz-tt').disabled = el.checked; }
+  if (a === 'impfile' && el.files[0]) { if (el.files[0].size > 1e6) { merr('That file is over 1 MB. Split it into smaller files.'); return; } const fr = new FileReader(); fr.onload = () => { $('#imp-text').value = fr.result; $('#imp-go').disabled = true; merr(''); }; fr.readAsText(el.files[0]); }
+  if (a === 'mgr') { S.assignMgr = el.value; render(); }
+  if (a === 'teamtick') { const e2 = emp(el.dataset.id); e2.mgr = el.checked ? S.assignMgr : null; render(); toast(el.checked ? `${e2.name} added to team` : `${e2.name} removed from team`); }
+  if (a === 'userrole') { const u = USERS.find(x => x.id === el.dataset.id); u.role = el.value; if (u.role !== 'manager') EMP.forEach(e2 => { if (e2.mgr === u.id) e2.mgr = null; }); render(); toast(`${u.name} is now ${el.selectedOptions[0].text}`); }
+  if (a === 'prodcat') { S.prod.find(r => r.id === el.dataset.id).cat = el.value; render(); toast('Rule updated. Reports recalculated.'); }
+  if (a === 'minver') { S.minVer = el.value; render(); }
+  if (a === 'shon') { $('#sh-min').disabled = !el.checked; }
+  if (a === 'guide') { S.guide = el.value; render(); }
+});
+document.addEventListener('input', e => {
+  const k = e.target.dataset.q; if (k != null) { S.q[k] = e.target.value; S.pg[k] = 1; render(); return; }
+});
+document.addEventListener('submit', e => {
+  e.preventDefault();
+  const f = e.target.dataset.form, val = id => $('#' + id).value.trim();
+  if (f === 'addblock') {
+    const type = document.querySelector('[name=bl-type]:checked').value, p = val('bl-pat');
+    if (type === 'url' && !/^([a-z0-9-]+\.)+[a-z]{2,}\/\S+$/i.test(p)) return merr('Type the website and the part to block, like youtube.com/shorts.');
+    if (type === 'domain' && !/^([a-z0-9-]+\.)+[a-z]{2,}$/i.test(p)) return merr('Type just the website, like facebook.com, without http:// or anything after a /.');
+    if (S.block.some(b => b.type === type && b.pattern.toLowerCase() === p.toLowerCase())) return merr('That rule already exists.');
+    S.block.unshift({ id: uid(), type, pattern: p, reason: val('bl-why') || '—', by: ME[S.role].name }); closeModal(); render(); toast('Blocked. Computers update within 30 minutes.');
+  }
+  if (f === 'addsens') { const x = val('sens-new').toLowerCase(); if (!/^(\*\.)?([a-z0-9-]+\.)+[a-z]{2,}$/i.test(x)) return merr('Type just the website, like citybank.com.'); if (S.sensitive.includes(x)) return merr('That site is already on the list.'); S.sensitive.unshift(x); closeModal(); render(); toast(`${x} will never be recorded`); }
+  if (f === 'addprod') { const p = val('pr-p'), m = val('pr-m'); if (S.prod.some(r => r.match === m && r.pattern.toLowerCase() === p.toLowerCase())) return merr('A rule for that already exists. Change its category in the list.'); S.prod.push({ id: uid(), match: m, pattern: p, cat: val('pr-c') }); closeModal(); render(); toast('Rule added. Reports updated.'); }
+  if (f === 'invite') { const em = val('iv-email').toLowerCase(); if (!EMAIL_RE.test(em)) return merr('Enter a valid email.'); if (USERS.some(u => u.email.toLowerCase() === em)) return merr('That person already has access or an invite.'); USERS.push({ id: uid(), name: em.split('@')[0], email: em, role: document.querySelector('[name=iv-role]:checked').value, pending: true, sent: 'today' }); closeModal(); render(); toast(`Invite sent to ${em}`); }
+  if (f === 'domain') {
+    const n = val('dm-name').toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+    // shortcut: "needs 3+ labels" treats two-part endings like .com.bd as a subdomain; use a public-suffix list in the real app
+    if (!/^([a-z0-9]([a-z0-9-]*[a-z0-9])?\.){2,}[a-z]{2,}$/.test(n)) return merr('Type an address with a part in front, like monitor.nagorik.tech.');
+    if (n.endsWith('workbeat.io')) return merr('Use your own company’s domain, not workbeat.io.');
+    if (S.domain && S.domain.name === n) { closeModal(); return; }
+    S.domain = { name: n, status: 'pending', token: uid(), check: 'not yet', tries: 0 }; closeModal(); render(); toast('Saved. Now add the two DNS records shown.');
+  }
+  if (f === 'shots') {
+    if (!$('#sh-on').checked) { S.shotEvery = 0; render(); toast('Screenshots turned off. Computers stop within 30 minutes.'); return; }
+    const m = Number(val('sh-min')), lo = STEP[S.tier];
+    if (!Number.isInteger(m) || m > 480) { toast('Enter a whole number of minutes, up to 480.'); return; }
+    if (m < lo) { toast(`Your plan allows one screenshot every ${lo} minutes at most. Enter ${lo} or more.`); return; }
+    S.shotEvery = m; render(); toast(`Saved: one screenshot ${everyTxt(m)}.`);
+  }
+  if (f === 'reassign') {
+    const d = dev(S.modal.id), prev = emp(d.emp), to = val('ra-emp');
+    if (!to) return merr('Choose who gets this device.');
+    d.emp = to;
+    UC.clear(); closeModal(); render(); toast(`${d.host} now belongs to ${emp(to).name}. Earlier activity stays with ${prev ? prev.name : 'the previous person'}.`);
+  }
+  if (f === 'addemp') {
+    const em = val('ne-email').toLowerCase(), name = val('ne-name'), dept = val('ne-dept');
+    if (!name) return merr('Enter a name.');
+    if (!EMAIL_RE.test(em)) return merr('Enter a valid work email.');
+    if (EMP.some(x => x.email.toLowerCase() === em)) return merr('An employee with that email already exists.');
+    if (!dept) return merr('Enter a department.');
+    const e2 = { id: uid(), name, email: em, dept, mgr: val('ne-mgr') || null, since: TODAY }; EMP.push(e2);
+    closeModal(); render(); toast(`${name} added. Install WorkBeat on their computer and pick them in the installer.`);
+  }
+  if (f === 'company') { const n = val('co-name'); if (!n) { toast('Company name can’t be empty.'); return; } const ret = +val('co-ret'); S.co.name = n; S.companies[0].name = n; if (ret !== S.retention) { S.retention = ret; UC.clear(); setRange(pd(S.from), pd(S.to)); } render(); toast('Company settings saved'); }
+  if (f === 'pause') {
+    const e2 = emp(S.emp), from = new Date(`${val('pz-fd')}T${val('pz-ft')}`), open = $('#pz-open').checked, to = open ? null : new Date(`${val('pz-td')}T${val('pz-tt')}`);
+    if (isNaN(from)) return merr('Pick a start date and time.');
+    if (from < new Date(+NOW - 6e4)) return merr('The start can’t be in the past. Data already collected stays until the retention limit.');
+    if (!open && (isNaN(to) || to <= from)) return merr('The end must be after the start.');
+    const clash = S.pauses.find(p => p.emp === e2.id && !p.cancelled && pState(p) !== 'ended' && from < (p.to || Infinity) && (to === null || to > p.from));
+    if (clash) return merr(`This overlaps another pause (${pauseRange(clash)}). End or cancel that one first.`);
+    S.pauses.push({ id: uid(), emp: e2.id, from: from < NOW ? new Date(+NOW) : from, to, reason: val('pz-r'), note: val('pz-n'), by: ME[S.role].name });
+    UC.clear(); closeModal(); S.empTab = 'pauses'; render(); toast(from <= NOW ? `Monitoring paused for ${e2.name}. Devices stop collecting within a minute.` : `Pause scheduled for ${fDT(from)}.`);
+  }
+  if (f === 'editemp') {
+    const e2 = emp(S.emp), em = val('ee-email').toLowerCase();
+    if (!EMAIL_RE.test(em)) return merr('Enter a valid email.');
+    if (EMP.some(x => x !== e2 && x.email.toLowerCase() === em)) return merr('Another employee already uses that email.');
+    Object.assign(e2, { name: val('ee-name'), email: em, dept: val('ee-dept'), mgr: val('ee-mgr') || null }); closeModal(); render(); toast('Employee updated');
+  }
+  if (f === 'mail') {
+    const types = [...document.querySelectorAll('[name=am-type]:checked')].map(x => x.value);
+    const sel = { admin: $('#am-admin').checked, it: $('#am-it').checked, manager: $('#am-manager').checked };
+    if (!sel.admin && !sel.it && !sel.manager) return merr('Pick at least one group, or tamper alerts will go unseen.');
+    if (!types.length) return merr('Pick at least one alert type.');
+    S.alertMail = { ...sel, types, when: val('am-when') }; closeModal(); render(); toast('Alert email settings saved');
+  }
+  if (f === 'card') {
+    const num = val('cd-num').replace(/\s+/g, ''), exp = val('cd-exp'), mail = val('cd-mail');
+    if (!/^\d{16}$/.test(num)) return merr('Card number must be 16 digits.');
+    const m = exp.match(/^(0[1-9]|1[0-2])\/(\d\d)$/); if (!m || (+m[2] < 26 || (+m[2] === 26 && +m[1] < 11))) return merr('Expiry must be MM/YY and in the future.');
+    if (!EMAIL_RE.test(mail)) return merr('Enter a valid billing email.');
+    S.card = { last4: num.slice(-4), exp, email: mail }; renderModal(); render(); toast('Card updated');
+  }
+  if (f === 'plan') {
+    const c = S.companies.find(x => x.id === S.modal.id), plan = val('pl-plan'), lim = val('pl-lim');
+    if (!lim && plan !== 'Enterprise') return merr('Starter and Growth need a seat limit.');
+    if (lim && (+lim < coSeats(c))) return merr(`The limit can’t be below the ${coSeats(c)} seats in use.`);
+    Object.assign(c, { plan, limit: lim ? +lim : '∞', tier: val('pl-tier') }); if (c.id === 'c1') S.tier = c.tier.toLowerCase(); closeModal(); render(); toast(`${c.name} updated`);
+  }
+  if (f === 'publish') {
+    const plat = val('rl-plat'), ver = val('rl-ver'), file = $('#rl-file').files[0];
+    if (!/^\d+\.\d+\.\d+$/.test(ver)) return merr('Version must look like 1.0.5.');
+    const cur = S.releases.filter(r => r.plat === plat).map(r => r.ver).sort(verCmp).pop();
+    if (cur && verCmp(ver, cur) <= 0) return merr(`Version must be higher than ${plat}'s current ${cur}.`);
+    if (!file || !file.name.toLowerCase().endsWith(plat === 'Windows' ? '.msi' : '.pkg')) return merr(`Choose a signed ${plat === 'Windows' ? '.msi' : '.pkg'} file.`);
+    S.releases.forEach(r => { if (r.plat === plat && r.status === 'Current') r.status = 'Supported'; });
+    S.releases.unshift({ plat, ver, date: fDY(TODAY), status: 'Current' }); closeModal(); render(); toast(`${plat} ${ver} published. Devices update on their next check.`);
+  }
+
+});
+
+// ---------------- self-check (runs once in the console) ----------------
+(function selfTest() {
+  const ok = console.assert;
+  ok(JSON.stringify(parseCSV('a,"b,c"\r\n"x""y",z\n')) === JSON.stringify([['a', 'b,c'], ['x"y', 'z']]), 'parseCSV quotes');
+  ok(csvCell('=SUM(A1)') === "'=SUM(A1)" && csvCell('a,b') === '"a,b"', 'csvCell guards formulas and commas');
+  ok(iso(presetRange('lastweek')[0]) === '2026-11-02' && iso(presetRange('lastweek')[1]) === '2026-11-08', 'last week is Mon–Sun');
+  ok(!!pauseAt('e9', NOW) && !pauseAt('e9', new Date(2026, 10, 14, 0, 0)), 'pause end is exclusive');
+  ok(dayUsage(emp('e9'), TODAY) === null, 'fully paused day has no data');
+  ok(slugify('Bayside Dental Group!!') === 'bayside-dental-group', 'slugify');
+  ok(verCmp('1.0.10', '1.0.9') > 0, 'version compare is numeric');
+  { const p = makePDF([{ x: 1, y: 1, t: 'a (b) – c' }]), x = +p.match(/startxref\n(\d+)/)[1]; ok(p.startsWith('%PDF-1.4') && p.slice(x, x + 4) === 'xref' && p.includes('(a \\(b\\) - c)'), 'pdf xref offset and escaping'); }
+})();
+
+try { const t = localStorage.getItem('wb-theme'); if (t) document.documentElement.dataset.theme = t; } catch (_) {}
+setRange(...presetRange('thisweek'));
+S.route = location.hash.slice(1) || 'overview';
+render();
+
+</script>
