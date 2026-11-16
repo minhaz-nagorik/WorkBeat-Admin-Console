@@ -28,7 +28,7 @@ export default function Account() {
   return (
     <>
       <div className="pagehead"><div><h1>Change password</h1><p>Changing it signs you out everywhere else.</p></div></div>
-      <form className="card stack" style={{ maxWidth: 420 }} onSubmit={submit}>
+      <form method="post" className="card stack" style={{ maxWidth: 420 }} onSubmit={submit}>
         {(msg || wait > 0) && <div className={`notice ${msg?.ok ? 'ok' : 'warn'}`} role="status">{wait > 0 ? tooMany(wait) : msg?.text}</div>}
         <Field id="current_password" label="Current password" type="password" autoComplete="current-password" error={errs.cur} value={cur} onChange={(e) => setCur(e.target.value)} />
         <Field id="new_password" label="New password" type="password" autoComplete="new-password" hint={PASSWORD_HINT} error={errs.pw} value={pw} onChange={(e) => setPw(e.target.value)} />

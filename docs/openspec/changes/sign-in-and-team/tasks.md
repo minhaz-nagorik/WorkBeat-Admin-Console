@@ -14,9 +14,9 @@
 
 ## 2. team-management
 
-- [ ] 2.1 Team list from `GET /v1/team` with search
-- [ ] 2.2 Invite dialog; resend and cancel with confirmation; `409` messages
-- [ ] 2.3 Role dropdown and remove; own row read-only; demote-manager warning; last-admin `409`
-- [ ] 2.4 Manager teams card with `PATCH /v1/employees/:id`
-- [ ] 2.5 Who-can-do-what table
+- [x] 2.1 Team list from `GET /v1/team` with search
+- [x] 2.2 Invite dialog; resend and cancel with confirmation; `409` messages
+- [x] 2.3 Role dropdown and remove; own row read-only; demote-manager warning; last-admin `409`
+- [x] 2.4 Manager teams card with `PATCH /v1/employees/:id`
+- [x] 2.5 Who-can-do-what table
 - [ ] 2.6 Tests: only `company_admin` reaches the page (manager and IT redirected, `403` handled); invite duplicate; cancel accepted; last admin; moving an employee between managers

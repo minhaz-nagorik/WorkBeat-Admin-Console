@@ -5,7 +5,7 @@ work `tasks.md` top to bottom. Open backend gaps: [decisions/open-questions.md](
 
 ```
 Phase 0   Foundation            docs + 10 OpenSpec changes, --strict clean
-Phase 1   The ten changes       13 of 140 tasks (change 1 partly, sign-in of change 2)
+Phase 1   The ten changes       20 of 140 tasks (change 1 and 2, tests open)
 ```
 
 ## Phase 0

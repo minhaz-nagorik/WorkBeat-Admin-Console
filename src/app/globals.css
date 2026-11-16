@@ -318,3 +318,6 @@ input[type=password] { background: var(--surface); border: 1px solid var(--line)
 .authcard { width: min(400px, 100%); display: flex; flex-direction: column; gap: 14px; }
 .linkbtn { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; text-decoration: underline; }
 .usermenu { margin-top: auto; padding: 0 10px; display: flex; flex-direction: column; gap: 6px; }
+dialog.modal { border: 1px solid var(--line); color: var(--fg); padding: 18px; }
+dialog.modal::backdrop { background: rgba(10,15,20,.5); }
+dialog.modal:not([open]) { display: none; }

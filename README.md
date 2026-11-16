@@ -20,4 +20,5 @@ pnpm dev                     # http://localhost:3001 (the API's PORTAL_URL)
 - `src/app/(app)/layout.tsx` loads `GET /v1/me`, guards the page by role (`src/lib/nav.ts`) and
   renders the shell. Pages not built yet fall through to `src/app/(app)/[...slug]`.
 - Styles are the prototype's CSS (`src/app/globals.css`), with Tailwind utilities and no preflight.
-  shadcn/ui and zod schemas are not added yet; add them with the first page that needs them.
+  shadcn/ui and zod schemas are not added yet; dialogs use the native `<dialog>` (`src/components/confirm.tsx`).
+- Do not run `pnpm build` while `pnpm dev` runs: both write `.next` and the dev server breaks.

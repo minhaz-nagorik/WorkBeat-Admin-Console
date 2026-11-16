@@ -41,7 +41,7 @@ export default function ResetPassword() {
         ) : state === 'done' ? (
           <div className="stack"><h1>Password changed</h1><p>Every other session was signed out.</p><Link className="btn pri" href="/sign-in">Sign in</Link></div>
         ) : (
-          <form className="stack" onSubmit={submit}>
+          <form method="post" className="stack" onSubmit={submit}>
             <h1>Choose a new password</h1>
             {(msg || wait > 0) && <div className="notice warn" role="alert">{wait > 0 ? tooMany(wait) : msg}</div>}
             <Field id="new_password" label="New password" type="password" autoComplete="new-password" hint={PASSWORD_HINT} error={fieldErr} value={pw} onChange={(e) => setPw(e.target.value)} />

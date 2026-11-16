@@ -24,6 +24,7 @@ test('navigation follows the role', () => {
   assert.ok(allowed('manager', '/employees'));
   assert.ok(!allowed('manager', '/devices'));
   assert.ok(!allowed('it_admin', '/employees'));
+  assert.ok(!allowed('manager', '/team') && !allowed('it_admin', '/team') && allowed('company_admin', '/team'));
   assert.ok(!allowed('super_admin', '/overview'));
   assert.ok(allowed('super_admin', '/staff/companies'));
   assert.ok(allowed('company_admin', '/employees/123'));

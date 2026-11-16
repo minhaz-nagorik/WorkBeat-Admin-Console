@@ -82,7 +82,7 @@ export function SignIn({ company, next, expired, email: initialEmail = '' }: {
         {notice && <div className={`notice ${expired && !wait && notice.startsWith('Your session') ? 'info' : 'warn'}`} role="alert">{notice}</div>}
 
         {step.kind === 'password' && (
-          <form className="stack" onSubmit={submitPassword}>
+          <form method="post" className="stack" onSubmit={submitPassword}>
             <h1>Sign in</h1>
             <Field id="email" label="Email" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
             <Field id="password" label="Password" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
@@ -92,7 +92,7 @@ export function SignIn({ company, next, expired, email: initialEmail = '' }: {
         )}
 
         {step.kind === 'code' && (
-          <form className="stack" onSubmit={submitCode}>
+          <form method="post" className="stack" onSubmit={submitCode}>
             <h1>{step.enroll ? 'Set up your authenticator' : 'Enter your code'}</h1>
             {step.enroll ? (
               <>
@@ -111,7 +111,7 @@ export function SignIn({ company, next, expired, email: initialEmail = '' }: {
         )}
 
         {step.kind === 'forgot' && (
-          <form className="stack" onSubmit={submitForgot}>
+          <form method="post" className="stack" onSubmit={submitForgot}>
             <h1>Reset your password</h1>
             <p className="muted">Enter your email and we will send you a link to choose a new password.</p>
             <Field id="email" label="Email" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />

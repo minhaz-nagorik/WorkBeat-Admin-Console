@@ -66,7 +66,7 @@ export default function Invite() {
           : inv === 'expired' ? <p role="alert">This invitation has expired, was already used or was cancelled. Ask your admin for a new one.</p>
           : inv === 'error' ? <p role="alert">Something went wrong. <button className="linkbtn" onClick={() => location.reload()}>Try again</button></p>
           : (
-            <form className="stack" onSubmit={submit}>
+            <form method="post" className="stack" onSubmit={submit}>
               <h1>{inv.role === 'super_admin' ? "You're invited to WorkBeat staff" : `You're invited as ${article(inv.role)} ${label('role', inv.role)} of ${inv.company_name}`}</h1>
               <p className="muted">Create your account for <b>{inv.email}</b>.</p>
               {(msg || wait > 0) && <div className="notice warn" role="alert">{wait > 0 ? tooMany(wait) : msg}</div>}

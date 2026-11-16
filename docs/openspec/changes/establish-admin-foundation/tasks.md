@@ -22,8 +22,8 @@
 
 ## 3. ui-conventions
 
-- [ ] 3.1 List toolkit: search, filters (dropdown over four options), pager 10/25/50, empty and loading states
-- [ ] 3.2 Inline confirmation and danger dialog
+- [x] 3.1 List toolkit: search, filters (dropdown over four options), pager 10/25/50, empty and loading states
+- [x] 3.2 Inline confirmation and danger dialog
 - [x] 3.3 Label map for every enum the API returns, with "Other" fallback
 - [x] 3.4 Date formatting in `companies.timezone`
 - [ ] 3.5 Tests: search resets to page 1; confirm needed for every destructive action; unknown enum shows "Other"; times in company zone; axe check on every page, keyboard path through each dialog
