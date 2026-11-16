@@ -8,7 +8,6 @@ import { initials } from '@/lib/format';
 import { useList } from '@/components/list';
 import { ConfirmButton, Modal } from '@/components/confirm';
 import { Field } from '@/components/form';
-import { Boundary } from '@/components/staff/common';
 
 type User = { id: string; name: string; email: string; created_at: string };
 type Invite = { id: string; email: string; created_at: string; expires_at: string };
@@ -50,7 +49,6 @@ export default function StaffTeam() {
     <>
       <PageHead title="Staff team" sub="WorkBeat staff who can sign in to this internal console."
         right={s.data && <button className="btn pri" onClick={() => setInviting(true)}>Invite staff</button>} />
-      <Boundary />
       {note && <div className={`notice ${note.ok ? 'ok' : 'warn'}`} role="status">{note.text}</div>}
       <Loaded s={s}>{() => (
         <div className="card stack">

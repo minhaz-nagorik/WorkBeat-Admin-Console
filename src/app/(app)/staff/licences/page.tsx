@@ -4,7 +4,7 @@ import { call, message } from '@/lib/client';
 import { Loaded, PageHead, useData } from '@/lib/use-data';
 import { useList } from '@/components/list';
 import { Modal } from '@/components/confirm';
-import { Boundary, SeatsDialog, StatusPill, seats, useDebounced, type Companies, type Company } from '@/components/staff/common';
+import { SeatsDialog, StatusPill, seats, useDebounced, type Companies, type Company } from '@/components/staff/common';
 
 const mask = (last4: string) => `WB-••••-••••-••••-${last4}`;
 
@@ -20,7 +20,6 @@ export default function StaffLicences() {
   return (
     <>
       <PageHead title="Licences" sub="One licence key per company. Seats belong to the company, not the key: a reissued key keeps every seat in use." />
-      <Boundary />
       {note && <div className="notice ok" role="status">{note}</div>}
       <div className="card stack">
         <div className="toolbar">

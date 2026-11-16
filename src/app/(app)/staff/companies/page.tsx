@@ -7,7 +7,7 @@ import { dateOnly } from '@/lib/time';
 import { useList } from '@/components/list';
 import { ConfirmButton, Modal } from '@/components/confirm';
 import { Field } from '@/components/form';
-import { Boundary, SeatsDialog, StatusPill, seats, usd, useDebounced, type Companies, type Company } from '@/components/staff/common';
+import { SeatsDialog, StatusPill, seats, usd, useDebounced, type Companies, type Company } from '@/components/staff/common';
 
 const FILTERS = [['', 'All'], ['trial', 'Trial'], ['active', 'Active'], ['suspended', 'Suspended'], ['expired', 'Expired']] as const;
 
@@ -33,7 +33,6 @@ export default function StaffCompanies() {
   return (
     <>
       <PageHead title="Companies" sub="Every customer account." />
-      <Boundary />
       {note && <div className={`notice ${note.ok ? 'ok' : 'warn'}`} role="status">{note.text}</div>}
       {s.data && (
         <div className="grid g4">

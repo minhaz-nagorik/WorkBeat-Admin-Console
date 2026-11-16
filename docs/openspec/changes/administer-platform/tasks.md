@@ -5,7 +5,7 @@
 
 ## 1. staff-companies
 
-- [x] 1.1 Data-boundary notice on every staff page
+- [x] ~~1.1 Data-boundary notice on every staff page~~ (removed 16 Nov 2026)
 - [x] 1.2 Companies totals and list from `GET /v1/staff/companies`, status filter, search
 - [x] 1.3 Suspend and restore with confirmations; hidden for expired
 - [x] 1.4 Enterprise seats dialog; grace days field

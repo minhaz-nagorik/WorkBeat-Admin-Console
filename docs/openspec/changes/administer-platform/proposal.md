@@ -15,7 +15,6 @@ staff area on them.
 - **Custom domains**: every company's custom domain and its state, read-only.
 - **Agent releases**: list, publish, withdraw.
 - **Staff team**: list, invite a super admin, resend or revoke an invitation, remove a staff user.
-- A banner on every staff page: employee names, activity, URLs and screenshots are never visible.
 
 ## Capabilities
 

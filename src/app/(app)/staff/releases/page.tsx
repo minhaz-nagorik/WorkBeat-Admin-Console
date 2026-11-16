@@ -7,7 +7,6 @@ import { dateOnly } from '@/lib/time';
 import { useList } from '@/components/list';
 import { ConfirmButton, Modal } from '@/components/confirm';
 import { Field } from '@/components/form';
-import { Boundary } from '@/components/staff/common';
 import { check, minimum, state, type Release } from './logic';
 
 const PILL = { Current: 'p-ok', Supported: '', Withdrawn: 'p-bad' } as const;
@@ -30,7 +29,6 @@ export default function StaffReleases() {
     <>
       <PageHead title="Agent releases" sub="Installers available to customers. Computers below the minimum version are flagged as outdated."
         right={<button className="btn pri" onClick={() => setPublishing(true)}>Publish release</button>} />
-      <Boundary />
       {note && <div className={`notice ${note.ok ? 'ok' : 'warn'}`} role="status">{note.text}</div>}
       <Loaded s={s}>{(rs) => (
         <>

@@ -3,7 +3,7 @@ import { label } from '@/lib/labels';
 import { Loaded, PageHead, useData } from '@/lib/use-data';
 import { when } from '@/lib/time';
 import { useList } from '@/components/list';
-import { Boundary, type Companies } from '@/components/staff/common';
+import { type Companies } from '@/components/staff/common';
 
 const PILL = { pending: 'p-warn', active: 'p-ok', failed: 'p-bad' } as const;
 
@@ -15,7 +15,6 @@ export default function StaffDomains() {
   return (
     <>
       <PageHead title="Custom domains" sub="Domains customers have added. Certificates are issued once the DNS checks pass." />
-      <Boundary />
       <div className="card stack">
         <div className="toolbar">{L.search('Search domains or companies')}</div>
         <Loaded s={s}>{() => (

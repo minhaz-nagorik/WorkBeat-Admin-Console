@@ -5,9 +5,9 @@ estimated revenue, and the actions staff may take on it.
 
 ## ADDED Requirements
 
-### Requirement: Staff pages state the data boundary
-<!-- source: D41 · backend `staff-data-boundary` · Prototype "Companies" -->
-Every staff page SHALL open with a notice that employee names, activity, URLs and screenshots are never visible here, and MUST show no employee, device, activity, URL or screenshot data. Staff pages MUST be open to `super_admin` only.
+### Requirement: Staff pages show no employee data
+<!-- source: D41 · backend `staff-data-boundary` · product owner 16 Nov 2026 (no notice) -->
+Staff pages SHALL show no employee, device, activity, URL or screenshot data, and MUST be open to `super_admin` only.
 
 #### Scenario: A company admin opens a staff address
 - **WHEN** a `company_admin` opens `/staff/companies`

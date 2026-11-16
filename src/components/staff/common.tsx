@@ -17,11 +17,6 @@ export type Company = {
 };
 export type Companies = { items: Company[]; totals: { companies: number; seats_used: number; mrr_estimate: number; suspended: number } };
 
-/** The data-boundary notice every staff page opens with (D41). */
-export const Boundary = () => (
-  <div className="notice info"><div><b>Internal console.</b> WorkBeat staff can manage companies, licences and plans. Employee names, activity, URLs and screenshots are never visible here.</div></div>
-);
-
 /** `value`, settled for `ms` (search sent as `q` without a call per keystroke). */
 export function useDebounced<T>(value: T, ms = 300): T {
   const [v, setV] = useState(value);
