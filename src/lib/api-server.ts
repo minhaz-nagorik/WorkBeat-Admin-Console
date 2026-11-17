@@ -13,7 +13,8 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<ApiR
   const headers = new Headers(init.headers);
   if (token) headers.set('authorization', `Bearer ${token}`);
   if (init.body && !headers.has('content-type')) headers.set('content-type', 'application/json');
-  const res = await fetch(`${API_BASE}${path}`, { ...init, headers, cache: 'no-store' });
+  const res = await fetch(`${API_BASE}${path}`, { ...init, headers, cache: 'no-store' }).catch(() => null);
+  if (!res) return { status: 0, data: null, error: { code: 'NETWORK' } }; // API unreachable (down or restarting)
   const body = res.status === 204 ? null : await res.json().catch(() => null);
   if (res.ok) return { status: res.status, data: (body?.data ?? null) as T, error: null };
   return { status: res.status, data: null, error: { code: body?.code ?? 'INTERNAL', fields: body?.fields } };

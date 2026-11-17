@@ -9,7 +9,15 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const path = (await headers()).get('x-pathname') ?? '/';
   const me = await api<Me>('/v1/me');
   if (me.status === 401) redirect(`/sign-in?expired=1&next=${encodeURIComponent(path)}`);
-  if (!me.data) throw new Error('Could not load your account');
+  if (!me.data) return ( // API down, restarting or failing: say so instead of crashing the page
+    <div className="authwrap">
+      <div className="card authcard">
+        <h1>WorkBeat can&apos;t be reached</h1>
+        <p className="muted">Your account couldn&apos;t be loaded. The service may be restarting. Try again in a moment.</p>
+        <a className="btn pri" href={path}>Try again</a>
+      </div>
+    </div>
+  );
   const user = me.data;
   if (user.must_change_password && path !== '/account') redirect('/account'); // temporary password: change it first
   if (!allowed(user.role, path)) redirect(landing(user.role));
