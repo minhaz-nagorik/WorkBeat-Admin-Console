@@ -76,12 +76,21 @@ export default function DevicePage() {
             </div>
             <div className="card stack">
               <h2>Employee</h2>
-              <p>Set up for <b>{me.role === 'company_admin' ? <Link href={`/employees/${d.employee.id}`}>{d.employee.name}</Link> : d.employee.name}</b>.</p>
-              <p className="small muted">This never changes while the device is monitored. To give this computer to someone else, release it here, then run WorkBeat Setup on it and pick the new employee. That uses a seat.</p>
+              {['released', 'deactivated'].includes(d.status) ? (
+                <>
+                  <p>Was set up for <b><Link href={`/employees/${d.employee.id}`}>{d.employee.name}</Link></b>. {d.employee.name} is no longer monitored on this computer.</p>
+                  <p className="small muted">The link is kept for history. To monitor someone on this computer again, run WorkBeat Setup on it and pick the employee. That uses a seat.</p>
+                </>
+              ) : (
+                <>
+                  <p>Set up for <b><Link href={`/employees/${d.employee.id}`}>{d.employee.name}</Link></b>.</p>
+                  <p className="small muted">This never changes while the device is monitored. To give this computer to someone else, release it here, then run WorkBeat Setup on it and pick the new employee. That uses a seat.</p>
+                </>
+              )}
             </div>
           </div>
 
-          <Access d={d} />
+          {!['released', 'deactivated'].includes(d.status) && <Access d={d} />}
           <Health d={d} tz={me.tz} />
 
           {d.status !== 'released' && (

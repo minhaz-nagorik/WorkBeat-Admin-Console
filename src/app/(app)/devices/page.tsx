@@ -90,9 +90,10 @@ function Devices() {
                     <tr key={d.id} className="click" onClick={() => router.push(`/devices/${d.id}`)}>
                       <td><Link href={`/devices/${d.id}`} className="mono" onClick={(e) => e.stopPropagation()}>{d.hostname}</Link>
                         <div className="small muted">{label('os', d.os)} {d.os_version}</div></td>
-                      <td>{me.role === 'company_admin'
-                        ? <Link href={`/employees/${d.employee.id}`} onClick={(e) => e.stopPropagation()}>{d.employee.name}</Link>
-                        : d.employee.name}</td>
+                      <td>{['released', 'deactivated'].includes(d.status) && <span className="small muted">Was: </span>}
+                        {me.role !== 'manager'
+                          ? <Link href={`/employees/${d.employee.id}`} onClick={(e) => e.stopPropagation()}>{d.employee.name}</Link>
+                          : d.employee.name}</td>
                       <td><StatusPill s={d.status} /></td>
                       <td>{ended(d) ? <span className="muted small">None</span> : <Badges d={d} />}</td>
                       <td className="mono">{d.agent_version}</td>
