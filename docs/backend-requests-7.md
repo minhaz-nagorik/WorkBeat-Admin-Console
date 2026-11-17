@@ -1,5 +1,9 @@
 # Backend requests from WorkBeat Admin — round 7: a download link for each screenshot
 
+> **Answered (17 Nov 2026)** in `WorkBeat-Backend/docs/integration/admin-requests-7-response.md`:
+> `download_url` on every item, checked from the console (R2 answers `Content-Disposition: attachment`
+> with the file name). Local-disk screenshots are gone, so the console only follows `download_url`.
+
 **From:** WorkBeat Admin (the web console) · **To:** WorkBeat-Backend · **Date:** 17 November 2026
 **Follows:** round 6, answered.
 
