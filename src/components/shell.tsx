@@ -15,6 +15,7 @@ export function Shell({ me, nav, status, children }: {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const [alerts, setAlerts] = useState(0);
+  const [approvals, setApprovals] = useState(0); // pending IT Admin changes, for Company Admins
   const [dark, setDark] = useState<boolean | null>(null); // known only in the browser
   useEffect(() => setDark(isDark()), []);
   const tz = me.company?.timezone ?? 'UTC';
@@ -24,6 +25,7 @@ export function Shell({ me, nav, status, children }: {
     if (!seesAlerts) return;
     call<{ counts: Record<string, number> }>('GET', `/v1/alerts?state=open&from=${encodeURIComponent(startOfToday(tz))}`)
       .then((r) => { if (r.ok) setAlerts(Object.values(r.data.counts).reduce((a, b) => a + b, 0)); });
+    if (me.role === 'company_admin') call<unknown[]>('GET', '/v1/changes?status=pending').then((r) => { if (r.ok) setApprovals(r.data.length); });
   });
 
   async function signOut() {
@@ -46,6 +48,7 @@ export function Shell({ me, nav, status, children }: {
               return (
                 <Link key={i.href} href={i.href} className={`nav ${on ? 'on' : ''}`} aria-current={on ? 'page' : undefined} onClick={() => setOpen(false)}>
                   <Icon name={i.icon} />{i.label}
+                  {i.href === '/approvals' && approvals > 0 && <span className="cnt" title="Changes waiting for your approval" aria-label={`${approvals} changes waiting for approval`}>{approvals}</span>}
                   {i.href === '/alerts' && alerts > 0 && <span className="cnt" title="Open alerts today" aria-label={`${alerts} open alerts today`}>{alerts}</span>}
                 </Link>
               );

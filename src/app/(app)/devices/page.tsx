@@ -1,4 +1,5 @@
 'use client';
+import { PendingList } from '@/components/pending';
 import { Suspense, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -28,7 +29,7 @@ function Devices() {
   if (f.status && !BROWSER_ONLY.includes(f.status)) api.set('status', f.status);
   for (const k of ['badge', 'os', 'employee_id'] as const) if (f[k]) api.set(k, f[k]);
   const s = useData<Device[]>(`/v1/devices${api.size ? `?${api}` : ''}`, { poll: true });
-  const lic = useData<{ seat_limit: number | null; seats_used: number }>('/v1/license', { poll: true });
+  const lic = useData<{ seat_limit: number | null; seats_used: number }>(me.role === 'company_admin' ? '/v1/license' : null, { poll: true }); // IT Admin: no licence access (A14)
 
   // Employee choices from every list seen, so picking one keeps the others in the dropdown.
   const people = useRef(new Map<string, string>());
@@ -56,6 +57,7 @@ function Devices() {
         {lic.data ? `${lic.data.seats_used} of ${lic.data.seat_limit ?? 'unlimited'} seats used. ` : ''}
         Releasing or deactivating a device frees its seat at once. To give a computer to someone else, release it, then run WorkBeat Setup for the new person.
       </>} />
+      <PendingList resource="device" />
       <Loaded s={s}>{() => (
         <div className="card stack">
           <div className="toolbar">

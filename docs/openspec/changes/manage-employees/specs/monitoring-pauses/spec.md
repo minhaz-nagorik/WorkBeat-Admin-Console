@@ -22,8 +22,8 @@ The tab and the schedule dialog SHALL say that while paused nothing is collected
 - **THEN** the dialog states that blocking is lifted and tamper alerts keep working
 
 ### Requirement: A company admin schedules a pause with an end
-<!-- source: D31 · backend `monitoring-pauses` · Prototype "Pause monitoring" -->
-A `company_admin` SHALL schedule a pause with start date and time (default now), a required end, a reason and an optional note, with presets Rest of today, Tomorrow and Next 7 days, through `POST /v1/employees/:id/pauses`. There MUST be no open-ended option. `422` MUST say the start can't be in the past or the end must be after the start; `409 CONFLICT` MUST say it overlaps another pause.
+<!-- source: D31 · A14 · backend `monitoring-pauses` · Prototype "Pause monitoring" -->
+A `company_admin` or `it_admin` SHALL schedule a pause with start date and time (default now), a required end, a reason and an optional note, with presets Rest of today, Tomorrow and Next 7 days, through `POST /v1/employees/:id/pauses`. There MUST be no open-ended option. `422` MUST say the start can't be in the past or the end must be after the start; `409 CONFLICT` MUST say it overlaps another pause.
 
 #### Scenario: Overlapping pause
 - **WHEN** the admin schedules a pause that overlaps a scheduled one
@@ -36,3 +36,11 @@ An active pause SHALL offer Extend (new end via `PATCH .../pauses/:pause_id`) an
 #### Scenario: Ending a pause now
 - **WHEN** the admin confirms End now on an active pause
 - **THEN** the pause shows as Cancelled and the employee's status no longer shows Paused after the next refresh
+
+### Requirement: An IT Admin's pause change waits for approval
+<!-- source: A14 · product owner 17 Nov 2026 · backend round 6 `POST /v1/employees/:id/pauses` -->
+For `it_admin` schedule, extend, end now and cancel SHALL use the same dialogs and confirmations and, on `202 { change }`, show "Waiting for approval" per `change-approvals` and leave the list unchanged.
+
+#### Scenario: IT schedules leave
+- **WHEN** an `it_admin` schedules a week of annual leave and the API answers `202`
+- **THEN** no new pause is listed and the tab says it waits for approval

@@ -13,6 +13,14 @@ The employee page SHALL be open to `company_admin` for any employee and to `mana
 - **WHEN** a `manager` opens an employee outside their team
 - **THEN** the page shows the not-found message and no data
 
+### Requirement: IT Admins open the employee page without reports
+<!-- source: A14 · product owner 17 Nov 2026 · backend round 6 · backend `role-access` -->
+For `it_admin` the employee page SHALL show the header (name, department, email, status, devices) and only the What is collected and Pause monitoring tabs. It MUST NOT show or call reports, calendar, timesheet, screenshots, exports or notice acknowledgements.
+
+#### Scenario: IT opens an employee
+- **WHEN** an `it_admin` opens Ada Lovelace's employee page
+- **THEN** only What is collected and Pause monitoring tabs show and no report route is called
+
 #### Scenario: An employee with no device
 - **WHEN** an admin opens an employee with no bound device
 - **THEN** the header says no computer is set up yet and to run WorkBeat Setup for this person

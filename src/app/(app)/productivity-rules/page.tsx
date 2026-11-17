@@ -4,6 +4,7 @@ import { call, message } from '@/lib/client';
 import { label, options } from '@/lib/labels';
 import { useMe } from '@/lib/me';
 import { useData, Loaded, PageHead } from '@/lib/use-data';
+import { isPending, PendingList, SENT } from '@/components/pending';
 import { useList } from '@/components/list';
 import { ConfirmButton, Modal } from '@/components/confirm';
 import { Field } from '@/components/form';
@@ -18,7 +19,7 @@ const CONFLICT = 'A rule for this app or website already exists.';
 
 export default function ProductivityRules() {
   const me = useMe();
-  const canEdit = me.role === 'company_admin';
+  const canEdit = me.role === 'company_admin' || me.role === 'it_admin'; // IT Admin changes wait for approval (A14)
   const rules = useData<Rule[]>('/v1/productivity-rules');
   const [cat, setCat] = useState<Cat | 'all'>('all');
   const [adding, setAdding] = useState(false);
@@ -29,6 +30,7 @@ export default function ProductivityRules() {
 
   async function change(r: Rule, category: Cat) {
     const res = await call<Rule>('PATCH', `/v1/productivity-rules/${r.id}`, { category });
+    if (isPending(res)) return setNote({ ok: true, text: SENT });
     if (res.ok) { rules.set((d) => d && d.map((x) => (x.id === r.id ? res.data : x))); return setNote({ ok: true, text: `${r.pattern} now counts as ${label('category', category).toLowerCase()}. ${RECALC}` }); }
     if (res.status === 404) rules.set((d) => d && d.filter((x) => x.id !== r.id));
     setNote({ ok: false, text: res.status === 404 ? 'This rule was already deleted.' : message(res.status, res.err.code) });
@@ -36,6 +38,7 @@ export default function ProductivityRules() {
 
   async function remove(r: Rule) {
     const res = await call('DELETE', `/v1/productivity-rules/${r.id}`);
+    if (isPending(res)) return setNote({ ok: true, text: SENT });
     if (res.ok || res.status === 404) {
       rules.set((d) => d && d.filter((x) => x.id !== r.id));
       return setNote({ ok: true, text: res.ok ? `Rule for ${r.pattern} deleted. It now counts as neutral. ${RECALC}` : 'This rule was already deleted.' });
@@ -51,6 +54,7 @@ export default function ProductivityRules() {
           : 'Read-only. Your Company Admin sets these rules. Anything without a rule counts as neutral.'}
         right={canEdit && <button className="btn pri" onClick={() => setAdding(true)}>Add rule</button>} />
       {note && <div className={`notice ${note.ok ? 'ok' : 'warn'}`} role="status">{note.text}</div>}
+      <PendingList resource="productivity_rule" />
 
       <Loaded s={rules}>{(data) => (
         <div className="card stack">
@@ -87,12 +91,13 @@ export default function ProductivityRules() {
       )}</Loaded>
 
       <AddDialog open={adding} onClose={() => setAdding(false)}
-        onSaved={(r) => { setAdding(false); rules.set((d) => d && [r, ...d]); setNote({ ok: true, text: `Rule added for ${r.pattern}. ${RECALC}` }); }} />
+        onSaved={(r) => { setAdding(false); rules.set((d) => d && [r, ...d]); setNote({ ok: true, text: `Rule added for ${r.pattern}. ${RECALC}` }); }}
+        onSent={() => { setAdding(false); setNote({ ok: true, text: SENT }); }} />
     </>
   );
 }
 
-function AddDialog({ open, onClose, onSaved }: { open: boolean; onClose: () => void; onSaved: (r: Rule) => void }) {
+function AddDialog({ open, onClose, onSaved, onSent }: { open: boolean; onClose: () => void; onSaved: (r: Rule) => void; onSent: () => void }) {
   const [match, setMatch] = useState<Rule['match_type']>('app');
   const [category, setCategory] = useState<Cat>('productive');
   const [pattern, setPattern] = useState('');
@@ -104,6 +109,7 @@ function AddDialog({ open, onClose, onSaved }: { open: boolean; onClose: () => v
     e.preventDefault(); setBusy(true); setErr({});
     const r = await call<Rule>('POST', '/v1/productivity-rules', { match_type: match, pattern: pattern.trim(), category });
     setBusy(false);
+    if (isPending(r)) return onSent();
     if (r.ok) return onSaved(r.data);
     if (r.status === 409) return setErr({ pattern: CONFLICT });
     if (r.status === 422 || r.status === 400) return setErr({ pattern: match === 'domain' ? 'Type just the website, like notion.so.' : 'Type the app’s name, like Microsoft Word.' });

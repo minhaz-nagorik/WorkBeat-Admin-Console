@@ -17,7 +17,7 @@ it.
 | Read | For |
 |---|---|
 | **[../CLAUDE.md](../CLAUDE.md)** | The ten rules. **Read it first** |
-| [decisions/admin-decisions.md](decisions/admin-decisions.md) | **A1–A12**, this repository's rulings |
+| [decisions/admin-decisions.md](decisions/admin-decisions.md) | **A1–A14**, this repository's rulings |
 | [design/README.md](design/README.md) | The prototype, and where the plan overrides it |
 | [BUILD-ORDER.md](BUILD-ORDER.md) | What to build next |
 | [decisions/open-questions.md](decisions/open-questions.md) | What the pages need that the API does not give yet |

@@ -23,7 +23,7 @@ export async function markStep(step: 'download_downloader' | 'copy_license_key')
 
 export function SetupChecklist() {
   const me = useMe();
-  const s = useData<{ step: string; done: boolean }[]>(CAN.includes(me.role) ? '/v1/company/setup' : null, { poll: true });
+  const s = useData<{ step: string; done: boolean }[]>(me.role === 'company_admin' ? '/v1/company/setup' : null, { poll: true }); // Company Admin only (A14)
   const { reload } = s;
   useEffect(() => {
     const on = () => { reload(); };
@@ -74,7 +74,7 @@ export function RolloutCard({ compact, head }: { compact?: boolean; head?: React
   const router = useRouter();
   const ok = CAN.includes(me.role);
   const r = useData<Rollout>(ok ? '/v1/rollout' : null, { poll: true });
-  const lic = useData<{ seat_limit: number | null }>(ok ? '/v1/license' : null);
+  const lic = useData<{ seat_limit: number | null }>(me.role === 'company_admin' ? '/v1/license' : null); // IT Admin has no licence access (A14)
   if (!ok) return null;
   const d = r.data;
   const enrolled = d ? Object.values(d.status).reduce((a, b) => a + b, 0) : 0;

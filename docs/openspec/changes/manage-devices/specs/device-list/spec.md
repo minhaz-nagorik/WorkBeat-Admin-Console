@@ -7,7 +7,7 @@ Company Admin and the IT Admin.
 
 ### Requirement: Admin and IT list the company's devices
 <!-- source: Plan-v3.5 §4.5 "Devices" · backend `device-status` · Prototype "Devices" -->
-Devices SHALL be shown to `company_admin` and `it_admin` only, listing `GET /v1/devices`: hostname with OS and version, the bound employee's name (linking to the employee for a Company Admin), status, badges, agent version and last seen. The header MUST show `seats_used` of `seat_limit` from `GET /v1/license`.
+Devices SHALL be shown to `company_admin` and `it_admin` only, listing `GET /v1/devices`: hostname with OS and version, the bound employee's name (linking to the employee page), status, badges, agent version and last seen. For `company_admin` the header MUST show `seats_used` of `seat_limit` from `GET /v1/license`; for `it_admin` it MUST NOT call that route (A14).
 
 #### Scenario: The device list
 - **WHEN** IT opens Devices

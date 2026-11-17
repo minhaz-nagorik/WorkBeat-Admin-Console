@@ -4,20 +4,20 @@
 work `tasks.md` top to bottom. Open backend gaps: [decisions/open-questions.md](decisions/open-questions.md).
 
 ```
-Phase 0   Foundation            docs + 10 OpenSpec changes, --strict clean
-Phase 1   The ten changes       106 of 140 tasks: every page built; automated tests and error reporting open
+Phase 0   Foundation            docs + 11 OpenSpec changes, --strict clean
+Phase 1   The eleven changes    106 of 157 tasks: every page built; automated tests and error reporting open
 ```
 
 ## Phase 0
 
 | # | Step | Status |
 |---|---|---|
-| 0.1 | `docs/`: rules, decisions A1–A12, design reference and deviations | ✅ |
+| 0.1 | `docs/`: rules, decisions A1–A14, design reference and deviations | ✅ |
 | 0.2 | Ten OpenSpec changes: 33 capability deltas, 156 requirements, `--strict` clean | ✅ |
 | 0.3 | `git init`, API base URL per environment (`API_BASE_URL`, see `.env.example`); Vercel project ⬜ | 🟡 |
 | 0.4 | Backend answers to the gaps in [open-questions.md](decisions/open-questions.md) marked **blocks** (rounds 1 and 2, 16 Nov 2026) | ✅ |
 
-## Phase 1 — the ten changes
+## Phase 1 — the eleven changes
 
 | # | Change | Deltas | Reqs | Depends on | Parallel-safe with |
 |---|---|---|---|---|---|
@@ -31,6 +31,7 @@ Phase 1   The ten changes       106 of 140 tasks: every page built; automated te
 | 8 | [edit-policies](openspec/changes/edit-policies/) | 4 | 17 | 2 | 5, 7 |
 | 9 | [configure-company](openspec/changes/configure-company/) | 3 | 12 | 2 | 6 |
 | 10 | [administer-platform](openspec/changes/administer-platform/) | 5 | 19 | 2 | any company change |
+| 11 | [approve-it-admin-changes](openspec/changes/approve-it-admin-changes/) | 2 | 11 | 2 | — |
 
 **Gate to pilot** (Plan-v3.5 §7 phase 3): end-to-end purchase → licence key → (simulated) device
 appears; a staff account reads no employee data.

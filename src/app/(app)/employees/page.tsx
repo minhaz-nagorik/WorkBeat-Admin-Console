@@ -1,4 +1,5 @@
 'use client';
+import { PendingList, SENT } from '@/components/pending';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useData, Loaded, PageHead } from '@/lib/use-data';
@@ -15,6 +16,7 @@ const PILL: Record<string, string> = { active: 'p-ok', idle: 'p-warn', offline: 
 export default function Employees() {
   const { role, tz } = useMe();
   const admin = role === 'company_admin';
+  const edit = admin || role === 'it_admin'; // IT Admin changes wait for approval (A14)
   const [removed, setRemoved] = useState(false);
   const s = useData<Employee[]>(removed ? '/v1/employees?archived=true' : '/v1/employees', { poll: true });
   const team = useData<{ users: (Manager & { role: string })[] }>(admin ? '/v1/team' : null);
@@ -31,19 +33,20 @@ export default function Employees() {
   const rows = byDept.filter((e) => removed || !status || e.presence === status);
   const L = useList(rows, (e) => [e.name, e.email, e.department, ...e.devices.map((d) => d.hostname)].join(' '));
   const mgrName = (id: string | null) => managers.find((m) => m.id === id)?.name;
-  const cols = admin ? 6 : 4;
+  const cols = 4 + (admin ? 1 : 0) + (edit ? 1 : 0);
 
   return (
     <>
       <PageHead title="Employees"
-        sub={admin ? 'Everyone monitored on a company computer.' : 'People assigned to you. This list is read only: you can view their reports but not edit them.'}
-        right={admin && !removed && (
+        sub={edit ? 'Everyone monitored on a company computer.' : 'People assigned to you. This list is read only: you can view their reports but not edit them.'}
+        right={edit && !removed && (
           <div className="row">
             <button className="btn" onClick={() => setImporting(true)}>Import CSV</button>
             <button className="btn pri" onClick={() => setEditing(null)}>Add employee</button>
           </div>
         )} />
       {note && <div className="notice ok" role="status">{note}</div>}
+      <PendingList resource={['employee', 'employee_import']} />
 
       <Loaded s={s}>{() => (
         <div className="card stack">
@@ -59,7 +62,7 @@ export default function Employees() {
                 {options('presence').map(([k, l]) => <option key={k} value={k}>{l} ({byDept.filter((e) => e.presence === k).length})</option>)}
               </select>
             )}
-            {admin && (
+            {edit && (
               <label className="row small" style={{ gap: 6 }}>
                 <input type="checkbox" checked={removed} onChange={(e) => { setRemoved(e.target.checked); setStatus(''); setNote(null); }} /> Show removed employees
               </label>
@@ -69,10 +72,10 @@ export default function Employees() {
             <table>
               <thead><tr>
                 <th>Name</th><th>Department</th>{admin && <th>Manager</th>}<th>Computers</th>
-                <th>{removed ? 'Removed' : 'Status'}</th>{admin && <th><span className="sr-only">Actions</span></th>}
+                <th>{removed ? 'Removed' : 'Status'}</th>{edit && <th><span className="sr-only">Actions</span></th>}
               </tr></thead>
               <tbody>
-                {!L.rows.length ? <tr><td colSpan={cols} className="muted">{all.length ? 'Nobody matches.' : removed ? 'No removed employees.' : admin ? 'No employees yet. Add one or import a CSV.' : 'No one is assigned to you yet.'}</td></tr>
+                {!L.rows.length ? <tr><td colSpan={cols} className="muted">{all.length ? 'Nobody matches.' : removed ? 'No removed employees.' : edit ? 'No employees yet. Add one or import a CSV.' : 'No one is assigned to you yet.'}</td></tr>
                   : L.rows.map((e) => (
                     <tr key={e.id}>
                       <td><div className="who"><span className="av" aria-hidden="true">{initials(e.name)}</span>
@@ -81,10 +84,10 @@ export default function Employees() {
                       {admin && <td>{mgrName(e.manager_user_id) ?? <span className="muted">None</span>}</td>}
                       <td className="mono">{e.devices.map((d) => d.hostname).join(', ') || <span className="muted">None</span>}</td>
                       <td>{removed && e.archived_at ? dateOnly(e.archived_at, tz) : <span className={`pill ${PILL[e.presence] ?? ''}`}>{label('presence', e.presence)}</span>}</td>
-                      {admin && <td>{!removed && (
+                      {edit && <td>{!removed && (
                         <div className="row">
                           <button className="btn sm" onClick={() => setEditing(e)} aria-label={`Edit ${e.name}`}>Edit</button>
-                          <RemoveEmployee emp={e} onRemoved={() => { setNote(`${e.name} was removed. Their history is kept under the retention setting.`); s.reload(); }} />
+                          <RemoveEmployee emp={e} onRemoved={() => { setNote(`${e.name} was removed. Their history is kept under the retention setting.`); s.reload(); }} onSent={() => setNote(SENT)} />
                         </div>
                       )}</td>}
                     </tr>
@@ -96,11 +99,12 @@ export default function Employees() {
         </div>
       )}</Loaded>
 
-      {admin && (
+      {edit && (
         <>
           <EmployeeDialog open={editing !== undefined} emp={editing} managers={managers} departments={depts}
             onClose={() => setEditing(undefined)}
-            onSaved={(e, added) => { setEditing(undefined); setNote(added ? `${e.name} was added.` : `${e.name} was saved.`); s.reload(); }} />
+            onSaved={(e, added) => { setEditing(undefined); setNote(added ? `${e.name} was added.` : `${e.name} was saved.`); s.reload(); }}
+            onSent={() => { setEditing(undefined); setNote(SENT); }} />
           <ImportDialog open={importing} onClose={() => setImporting(false)} onDone={() => s.reload()} />
         </>
       )}

@@ -18,12 +18,16 @@ The Block list page SHALL call `GET /v1/block-rules` and show each rule's `patte
 - **THEN** its Added by cell shows "—"
 
 ### Requirement: Admins and IT edit the block list; managers read it
-<!-- source: backend `role-access` · backend `block-rules` · Plan-v3.5 §4.5 -->
-Add, edit and delete SHALL be shown to `company_admin` and `it_admin`. A `manager` MUST see the same list read-only with no Add, Edit or Delete control. A `super_admin` MUST NOT see the page.
+<!-- source: backend `role-access` · backend `block-rules` · Plan-v3.5 §4.5 · A14 -->
+Add, edit and delete SHALL be shown to `company_admin` and `it_admin`; an `it_admin`'s change answers `202 { change }` and MUST leave the list unchanged and show "Waiting for approval" per `change-approvals`. A `manager` MUST see the same list read-only with no Add, Edit or Delete control. A `super_admin` MUST NOT see the page.
 
 #### Scenario: A manager opens the block list
 - **WHEN** a `manager` opens Block list
 - **THEN** the rules are listed and no control changes them
+
+#### Scenario: IT adds a rule
+- **WHEN** an `it_admin` adds `facebook.com` and the API answers `202`
+- **THEN** the list does not show the rule and the page says it waits for approval
 
 ### Requirement: A rule is added as a whole website or one part of a website
 <!-- source: D39 · Plan-v3.5 §4.3 · backend `block-rules` · Prototype "Block list" -->
@@ -50,5 +54,5 @@ When the address is a regular expression, the dialog SHALL send `type` `regex` a
 Edit SHALL change a rule's `pattern` or `reason` through `PATCH /v1/block-rules/:id`, and Delete MUST confirm inline before `DELETE /v1/block-rules/:id`. After any change the page MUST say computers update within 30 minutes. A `404 NOT_FOUND` MUST remove the row and say it was already deleted.
 
 #### Scenario: Deleting a rule
-- **WHEN** an IT admin confirms Delete on `bet365.com`
+- **WHEN** a Company Admin confirms Delete on `bet365.com`
 - **THEN** the row disappears and a message says computers update within 30 minutes

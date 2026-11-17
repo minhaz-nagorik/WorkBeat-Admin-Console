@@ -6,8 +6,8 @@ sees of the list.
 ## ADDED Requirements
 
 ### Requirement: The Employees page lists the role's employees
-<!-- source: Plan-v3.5 §4.5 · B12 · backend `employee-directory` · backend `manager-teams` · Prototype "Employees" -->
-The Employees page SHALL be open to `company_admin` (every non-archived employee) and `manager` (own team only, from `GET /v1/employees`), showing name, email, department, manager name (from `GET /v1/team`, admin only) and the hostnames in each employee's `devices`. `it_admin` MUST have no Employees page. Search MUST match name, email, department and hostname; a department dropdown MUST filter.
+<!-- source: Plan-v3.5 §4.5 · B12 · A14 · backend `employee-directory` · backend `manager-teams` · Prototype "Employees" -->
+The Employees page SHALL be open to `company_admin` and `it_admin` (every non-archived employee) and `manager` (own team only), from `GET /v1/employees`, showing name, email, department, manager name (from `GET /v1/team`, `company_admin` only) and the hostnames in each employee's `devices`. Search MUST match name, email, department and hostname; a department dropdown MUST filter.
 
 #### Scenario: A manager opens Employees
 - **WHEN** a `manager` opens the Employees page
@@ -15,11 +15,11 @@ The Employees page SHALL be open to `company_admin` (every non-archived employee
 
 #### Scenario: An IT admin
 - **WHEN** an `it_admin` opens `/employees`
-- **THEN** the app shows Overview
+- **THEN** every employee is listed with Add, Import, Edit and Remove, and no manager column
 
 ### Requirement: Each employee shows a live status
 <!-- source: A4 · backend `employee-directory` (`presence`) · Prototype "Employees" -->
-For `company_admin` and `manager` the list SHALL show each employee's `presence` from `GET /v1/employees` as "Active", "Idle", "Offline", "Monitoring paused", "Tamper" or "No device", and a status filter with those values and their counts. The page MUST NOT derive status from `GET /v1/devices`.
+For `company_admin`, `it_admin` and `manager` the list SHALL show each employee's `presence` from `GET /v1/employees` as "Active", "Idle", "Offline", "Monitoring paused", "Tamper" or "No device", and a status filter with those values and their counts. The page MUST NOT derive status from `GET /v1/devices`.
 
 #### Scenario: A manager's team
 - **WHEN** a `manager` opens Employees
@@ -40,6 +40,14 @@ A `company_admin` SHALL add and edit an employee in a dialog with name and work 
 #### Scenario: A duplicate email
 - **WHEN** the admin saves an email held by another employee
 - **THEN** the dialog stays open with the duplicate-email message under the email field
+
+### Requirement: IT Admins request employee changes
+<!-- source: A14 · product owner 17 Nov 2026 · backend round 6 `POST /v1/employees` -->
+For `it_admin` add, edit, CSV import and remove SHALL use the same dialogs and checks, without the manager field, and on `202 { change }` show "Waiting for approval" per `change-approvals` and leave the list unchanged. A CSV import MUST still list invalid lines on `422` before anything is stored.
+
+#### Scenario: IT adds an employee
+- **WHEN** an `it_admin` saves a new employee and the API answers `202`
+- **THEN** the list does not show them yet and the page says the addition waits for approval
 
 ### Requirement: Employees are imported from CSV after a check
 <!-- source: backend `employee-directory` · A12 · Prototype "Import employees from CSV" -->

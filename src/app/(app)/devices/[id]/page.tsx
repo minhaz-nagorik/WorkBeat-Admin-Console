@@ -1,4 +1,5 @@
 'use client';
+import { isPending, PendingList, SENT } from '@/components/pending';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -37,6 +38,7 @@ export default function DevicePage() {
 
   async function act(kind: 'release' | 'deactivate', d: Detail) {
     const r = await call<Detail>('POST', `/v1/devices/${d.id}/${kind}`);
+    if (isPending(r)) return setNote({ ok: true, text: SENT });
     if (r.ok) {
       s.set(() => r.data);
       return setNote({ ok: true, text: kind === 'release' ? `${d.hostname} was released. Its seat is free.` : `${d.hostname} was deactivated. Its seat is free.` });
@@ -60,6 +62,7 @@ export default function DevicePage() {
         <>
           <PageHead title={d.hostname} sub={`${label('os', d.os)} ${d.os_version} · ${d.arch} · WorkBeat ${d.agent_version}`} />
           {note && <div className={`notice ${note.ok ? 'ok' : 'warn'}`} role="status">{note.text}</div>}
+          <PendingList resource="device" />
 
           <div className="grid g2">
             <div className="card stack">

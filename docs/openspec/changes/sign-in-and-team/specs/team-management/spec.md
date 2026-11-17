@@ -50,9 +50,13 @@ The Manager teams card SHALL pick one manager, load their team with `GET /v1/emp
 - **THEN** the employee's manager becomes Rafiq and they leave Sadia's team
 
 ### Requirement: The page explains who can do what
-<!-- source: backend `role-access` · Prototype "Team & roles" -->
-The page SHALL show a read-only table of actions against Company Admin, Manager and IT Admin that matches the permission matrix in `role-access`, including that IT Admins see no reports or screenshots and Managers only their own team.
+<!-- source: backend `role-access` · A14 · Prototype "Team & roles" -->
+The page SHALL show a read-only table of actions against Company Admin, Manager and IT Admin that matches the permission matrix in `role-access`, including that IT Admins see no reports or screenshots, that their changes to employees, devices, alerts and policies read "Needs approval", that they have no Deployment, and Managers only their own team.
 
 #### Scenario: Reading the table
 - **WHEN** the admin reads the Screenshots row
 - **THEN** it shows Company Admin Yes, Manager Own team, IT Admin No
+
+#### Scenario: Reading the remove-employee row
+- **WHEN** the admin reads the Remove employee row
+- **THEN** it shows Company Admin Yes, Manager No, IT Admin Needs approval

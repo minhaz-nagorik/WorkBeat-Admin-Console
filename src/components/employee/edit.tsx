@@ -1,4 +1,5 @@
 'use client';
+import { isPending } from '@/components/pending';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { call, message } from '@/lib/client';
@@ -15,9 +16,9 @@ export type Employee = {
 export type Manager = { id: string; name: string };
 
 /** Add (no `emp`) or edit an employee (D47, A12). Company admin only; the API refuses anyone else. */
-export function EmployeeDialog({ open, emp, managers, departments, onClose, onSaved }: {
+export function EmployeeDialog({ open, emp, managers, departments, onClose, onSaved, onSent }: {
   open: boolean; emp?: Employee | null; managers: Manager[]; departments: string[];
-  onClose: () => void; onSaved: (e: Employee, added: boolean) => void;
+  onClose: () => void; onSaved: (e: Employee, added: boolean) => void; onSent: () => void;
 }) {
   const [f, setF] = useState({ name: '', email: '', department: '', manager_user_id: '' });
   const [err, setErr] = useState<{ name?: string; email?: string; manager?: string; form?: string }>({});
@@ -36,6 +37,7 @@ export function EmployeeDialog({ open, emp, managers, departments, onClose, onSa
     const body = { name: f.name.trim(), email: f.email.trim(), department: f.department.trim() || null, manager_user_id: f.manager_user_id || null };
     const r = emp ? await call<Employee>('PATCH', `/v1/employees/${emp.id}`, body) : await call<Employee>('POST', '/v1/employees', body);
     setBusy(false);
+    if (isPending(r)) return onSent();
     if (r.ok) return onSaved(r.data, !emp);
     // PATCH 409 is a taken email or an archived employee; an unchanged email means the latter.
     if (r.status === 409 && emp && (emp.email ?? null) === body.email) return setErr({ form: 'This employee was removed and can’t be edited.' });
@@ -77,11 +79,12 @@ export function EmployeeDialog({ open, emp, managers, departments, onClose, onSa
 }
 
 /** Remove = archive (D46). Devices must be released first; no reassign (D48). */
-export function RemoveEmployee({ emp, onRemoved }: { emp: Employee; onRemoved: () => void }) {
+export function RemoveEmployee({ emp, onRemoved, onSent }: { emp: Employee; onRemoved: () => void; onSent: () => void }) {
   const [blocked, setBlocked] = useState<string | null>(null);
   const hosts = emp.devices.map((d) => d.hostname).join(', ');
   async function remove() {
     const r = await call('DELETE', `/v1/employees/${emp.id}`);
+    if (isPending(r)) return onSent();
     if (r.ok) return onRemoved();
     setBlocked(r.status === 409 && r.err.code === 'EMPLOYEE_HAS_DEVICES' ? 'devices' : message(r.status, r.err.code));
   }

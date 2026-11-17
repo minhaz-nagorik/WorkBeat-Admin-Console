@@ -13,13 +13,17 @@ The Productivity rules page SHALL call `GET /v1/productivity-rules` and show eac
 - **WHEN** a user picks the Unproductive filter
 - **THEN** only rules with `category` `unproductive` show
 
-### Requirement: Only a Company Admin edits; managers read
-<!-- source: backend `productivity-rules` · backend `role-access` -->
-Add, category change and delete SHALL be shown to `company_admin` only. A `manager` MUST see the list read-only with the subtitle "Read-only. Your Company Admin sets these rules". An `it_admin` MUST NOT see the page or its navigation item.
+### Requirement: Admins edit, IT requests, managers read
+<!-- source: backend `productivity-rules` · backend `role-access` · A14 -->
+Add, category change and delete SHALL be shown to `company_admin` and `it_admin`; an `it_admin`'s change answers `202 { change }` and MUST leave the list unchanged and show "Waiting for approval" per `change-approvals`. A `manager` MUST see the list read-only with the subtitle "Read-only. Your Company Admin sets these rules".
 
 #### Scenario: A manager opens the page
 - **WHEN** a `manager` opens Productivity rules
 - **THEN** categories show as text and no control changes them
+
+#### Scenario: IT changes a category
+- **WHEN** an `it_admin` changes YouTube to Unproductive and the API answers `202`
+- **THEN** the row still shows Neutral and the page says the change waits for approval
 
 ### Requirement: A rule is added and changed in place
 <!-- source: backend `productivity-rules` · A7 · A12 -->

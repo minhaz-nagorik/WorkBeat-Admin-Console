@@ -4,6 +4,7 @@ import { call, message } from '@/lib/client';
 import { useMe } from '@/lib/me';
 import { when, full } from '@/lib/time';
 import { useData, Loaded, PageHead } from '@/lib/use-data';
+import { isPending, PendingList, SENT } from '@/components/pending';
 import { useList } from '@/components/list';
 import { Confirm, ConfirmButton, Modal } from '@/components/confirm';
 import { Field } from '@/components/form';
@@ -29,6 +30,7 @@ export default function BlockList() {
 
   async function remove(r: Rule) {
     const res = await call('DELETE', `/v1/block-rules/${r.id}`);
+    if (isPending(res)) return setNote({ ok: true, text: SENT });
     if (res.ok || res.status === 404) {
       rules.set((d) => d && d.filter((x) => x.id !== r.id));
       return setNote({ ok: true, text: res.ok ? `${r.pattern} is no longer blocked. ${SYNC}` : 'This rule was already deleted.' });
@@ -49,6 +51,7 @@ export default function BlockList() {
       <PageHead title="Block list" sub="Websites employees can’t open on company computers. New rules reach every computer within 30 minutes."
         right={canEdit && <button className="btn pri" onClick={() => setEditing('new')}>Add rule</button>} />
       {note && <div className={`notice ${note.ok ? 'ok' : 'warn'}`} role="status">{note.text}</div>}
+      <PendingList resource={['block_rule', 'sensitive_domain']} />
 
       <Loaded s={rules}>{(data) => (
         <div className="card stack">
@@ -78,9 +81,9 @@ export default function BlockList() {
         </div>
       )}</Loaded>
 
-      {me.role !== 'it_admin' && <PrivateSites canEdit={me.role === 'company_admin'} />}
+      <PrivateSites canEdit={me.role !== 'manager'} />
 
-      <RuleDialog rule={editing} onClose={() => setEditing(null)} onSaved={saved} />
+      <RuleDialog rule={editing} onClose={() => setEditing(null)} onSaved={saved} onSent={() => { setEditing(null); setNote({ ok: true, text: SENT }); }} />
       <Modal title="Rules created" open={!!created} onClose={() => setCreated(null)}>
         <div className="stack">
           <p>The pattern was turned into {created?.length === 1 ? 'this website rule' : 'these website rules'}:</p>
@@ -93,7 +96,7 @@ export default function BlockList() {
   );
 }
 
-function RuleDialog({ rule, onClose, onSaved }: { rule: Rule | 'new' | null; onClose: () => void; onSaved: (r: Rule | Rule[], isNew: boolean) => void }) {
+function RuleDialog({ rule, onClose, onSaved, onSent }: { rule: Rule | 'new' | null; onClose: () => void; onSaved: (r: Rule | Rule[], isNew: boolean) => void; onSent: () => void }) {
   const isNew = rule === 'new';
   const [type, setType] = useState<'domain' | 'url'>('domain');
   const [pattern, setPattern] = useState('');
@@ -116,6 +119,7 @@ function RuleDialog({ rule, onClose, onSaved }: { rule: Rule | 'new' | null; onC
       ? await call<Rule | Rule[]>('POST', '/v1/block-rules', { type: regex ? 'regex' : type, pattern: p, reason: reason.trim() || undefined })
       : await call<Rule>('PATCH', `/v1/block-rules/${(rule as Rule).id}`, { pattern: p, reason: reason.trim() });
     setBusy(false);
+    if (isPending(r)) return onSent();
     if (r.ok) return onSaved(r.data, isNew);
     if (r.status === 409) return setErr({ pattern: 'This rule already exists.' });
     if (r.status === 422 || r.status === 400) return setErr({ pattern: regex
@@ -165,6 +169,7 @@ function PrivateSites({ canEdit }: { canEdit: boolean }) {
   async function remove(s: Site) {
     const r = await call('DELETE', `/v1/sensitive-domains/${s.id}`);
     setRemoving(null);
+    if (isPending(r)) return setNote({ ok: true, text: SENT });
     if (r.ok || r.status === 404) {
       sites.set((d) => d && d.filter((x) => x.id !== s.id));
       return setNote({ ok: true, text: r.ok ? `${s.pattern} was removed. ${SYNC}` : 'This site was already removed.' });
@@ -202,12 +207,13 @@ function PrivateSites({ canEdit }: { canEdit: boolean }) {
         </>
       )}</Loaded>
       <SiteDialog open={adding} onClose={() => setAdding(false)}
-        onSaved={(s) => { setAdding(false); sites.set((d) => d && [s, ...d]); setNote({ ok: true, text: `${s.pattern} added. ${SYNC}` }); }} />
+        onSaved={(s) => { setAdding(false); sites.set((d) => d && [s, ...d]); setNote({ ok: true, text: `${s.pattern} added. ${SYNC}` }); }}
+        onSent={() => { setAdding(false); setNote({ ok: true, text: SENT }); }} />
     </div>
   );
 }
 
-function SiteDialog({ open, onClose, onSaved }: { open: boolean; onClose: () => void; onSaved: (s: Site) => void }) {
+function SiteDialog({ open, onClose, onSaved, onSent }: { open: boolean; onClose: () => void; onSaved: (s: Site) => void; onSent: () => void }) {
   const [pattern, setPattern] = useState('');
   const [err, setErr] = useState<{ pattern?: string; form?: string }>({});
   const [busy, setBusy] = useState(false);
@@ -217,6 +223,7 @@ function SiteDialog({ open, onClose, onSaved }: { open: boolean; onClose: () => 
     e.preventDefault(); setBusy(true); setErr({});
     const r = await call<Site>('POST', '/v1/sensitive-domains', { pattern: pattern.trim() });
     setBusy(false);
+    if (isPending(r)) return onSent();
     if (r.ok) return onSaved(r.data);
     if (r.status === 409) return setErr({ pattern: 'That site is already on the list.' });
     if (r.status === 422 || r.status === 400) return setErr({ pattern: 'Type just the website, like citybank.com.' });

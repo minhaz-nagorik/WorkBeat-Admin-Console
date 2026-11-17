@@ -1,4 +1,5 @@
 'use client';
+import { SENT } from '@/components/pending';
 import { useEffect, useState } from 'react';
 import { message } from '@/lib/client';
 import { Modal } from '@/components/confirm';
@@ -32,8 +33,9 @@ export function ImportDialog({ open, onClose, onDone }: { open: boolean; onClose
   const [checked, setChecked] = useState<string[][] | null>(null);
   const [err, setErr] = useState<React.ReactNode>(null);
   const [result, setResult] = useState<Result | null>(null);
+  const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
-  useEffect(() => { if (open) { setText(''); setChecked(null); setErr(null); setResult(null); } }, [open]);
+  useEffect(() => { if (open) { setText(''); setChecked(null); setErr(null); setResult(null); setSent(false); } }, [open]);
 
   const edit = (t: string) => { setText(t); setChecked(null); setErr(null); };
   const tooBig = () => new Blob([text]).size > MAX_BYTES;
@@ -63,6 +65,7 @@ export function ImportDialog({ open, onClose, onDone }: { open: boolean; onClose
     } catch { setBusy(false); return setErr(message(0, 'NETWORK')); }
     const json = await res.json().catch(() => null);
     setBusy(false);
+    if (res.status === 202) { setSent(true); return onDone(); } // IT Admin: the file waits for approval
     if (res.ok) { setResult(json?.data as Result); return onDone(); }
     if (res.status === 401) return location.assign(`/sign-in?expired=1&next=${encodeURIComponent(location.pathname)}`);
     setChecked(null);
@@ -80,7 +83,12 @@ export function ImportDialog({ open, onClose, onDone }: { open: boolean; onClose
 
   return (
     <Modal title="Import employees from CSV" open={open} onClose={onClose}>
-      {result ? (
+      {sent ? (
+        <div className="stack">
+          <div className="notice info" role="status">{SENT}</div>
+          <div className="mf"><button className="btn pri" onClick={onClose}>Done</button></div>
+        </div>
+      ) : result ? (
         <div className="stack">
           <div className="notice ok" role="status">{result.created} {result.created === 1 ? 'employee' : 'employees'} added, {result.skipped} skipped.</div>
           {result.skipped > 0 && <p className="small">Skipped because an employee already uses the email: <span className="mono">{result.skipped_emails.join(', ')}</span></p>}

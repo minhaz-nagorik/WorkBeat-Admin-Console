@@ -1,4 +1,5 @@
 'use client';
+import { isPending, PendingList, SENT } from '@/components/pending';
 import { useEffect, useState } from 'react';
 import { call, message } from '@/lib/client';
 import { useData, Loaded } from '@/lib/use-data';
@@ -31,7 +32,7 @@ const length = (a: string, b: string) => {
 };
 
 export function PausesTab({ employeeId, tz, role, archived }: TabProps) {
-  const act = role === 'company_admin' && !archived;
+  const act = (role === 'company_admin' || role === 'it_admin') && !archived; // IT Admin changes wait for approval (A14)
   const s = useData<Pause[]>(`/v1/employees/${employeeId}/pauses`, { poll: true });
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
@@ -43,6 +44,7 @@ export function PausesTab({ employeeId, tz, role, archived }: TabProps) {
 
   async function cancel(p: Pause) {
     const r = await call<Pause>('POST', `${base}/${p.id}/cancel`);
+    if (isPending(r)) return setNote({ ok: true, text: SENT });
     setNote(r.ok ? { ok: true, text: p.status === 'active' ? 'Pause ended. Monitoring resumes on their computers.' : 'Pause cancelled.' }
       : { ok: false, text: r.status === 409 ? gone : message(r.status, r.err.code) });
     s.reload();
@@ -51,6 +53,7 @@ export function PausesTab({ employeeId, tz, role, archived }: TabProps) {
   async function extend(p: Pause) {
     setExtErr(null);
     const r = await call<Pause>('PATCH', `${base}/${p.id}`, { ends_at: instant(end, tz).toISOString() });
+    if (isPending(r)) { setExtending(null); return setNote({ ok: true, text: SENT }); }
     if (r.ok) { setExtending(null); setNote({ ok: true, text: `The pause now ends ${when(r.data.ends_at, tz)}.` }); return s.reload(); }
     if (r.status === 422 || r.status === 400) return setExtErr('The new end must be after now and after the start.');
     if (r.status === 409) { setExtending(null); setNote({ ok: false, text: `${gone} Or the new end overlaps another pause.` }); return s.reload(); }
@@ -66,6 +69,7 @@ export function PausesTab({ employeeId, tz, role, archived }: TabProps) {
       </div>
       <div className="notice info"><div>{WHAT}</div></div>
       {note && <div className={`notice ${note.ok ? 'ok' : 'warn'}`} role="status">{note.text}</div>}
+      <PendingList resource="pause" />
       <Loaded s={s}>{() => (
         <div className="tablewrap"><table>
           <thead><tr><th>When</th><th>Length</th><th>Reason</th><th>Status</th><th>Scheduled by</th>{act && <th><span className="sr-only">Actions</span></th>}</tr></thead>
@@ -102,12 +106,13 @@ export function PausesTab({ employeeId, tz, role, archived }: TabProps) {
         </table></div>
       )}</Loaded>
       {act && <PauseDialog open={open} tz={tz} base={base} onClose={() => setOpen(false)}
-        onDone={(p) => { setOpen(false); setNote({ ok: true, text: `Pause scheduled: ${when(p.starts_at, tz)} to ${when(p.ends_at, tz)}.` }); s.reload(); }} />}
+        onDone={(p) => { setOpen(false); setNote({ ok: true, text: `Pause scheduled: ${when(p.starts_at, tz)} to ${when(p.ends_at, tz)}.` }); s.reload(); }}
+        onSent={() => { setOpen(false); setNote({ ok: true, text: SENT }); }} />}
     </div>
   );
 }
 
-function PauseDialog({ open, tz, base, onClose, onDone }: { open: boolean; tz: string; base: string; onClose: () => void; onDone: (p: Pause) => void }) {
+function PauseDialog({ open, tz, base, onClose, onDone, onSent }: { open: boolean; tz: string; base: string; onClose: () => void; onDone: (p: Pause) => void; onSent: () => void }) {
   const [f, setF] = useState({ start: '', end: '', reason: 'annual_leave', note: '' });
   const [err, setErr] = useState<{ start?: string; end?: string; form?: string }>({});
   const [busy, setBusy] = useState(false);
@@ -132,6 +137,7 @@ function PauseDialog({ open, tz, base, onClose, onDone }: { open: boolean; tz: s
       ...(startsNow ? {} : { starts_at: start.toISOString() }), ends_at: end.toISOString(), reason: f.reason, ...(f.note.trim() ? { note: f.note.trim() } : {}),
     });
     setBusy(false);
+    if (isPending(r)) return onSent();
     if (r.ok) return onDone(r.data);
     if (r.status === 409) return setErr({ form: 'This pause overlaps another pause. Change the dates or extend the other pause.' });
     if (r.status === 422 || r.status === 400) return setErr({ form: "The start can't be in the past, and the end must be after the start." });

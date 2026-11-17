@@ -13,9 +13,9 @@ The Alerts page SHALL call `GET /v1/alerts` and show one table row per event, ne
 - **WHEN** the feed returns a `hosts_modified` and an `offline` event
 - **THEN** each is one table row with time, label, person, computer and description, newest first
 
-#### Scenario: An IT admin sees a person
-- **WHEN** an `it_admin` views an alert for Kamal Uddin
-- **THEN** the Person column shows "Kamal Uddin" as text, not a link
+#### Scenario: A manager sees another team's person
+- **WHEN** a person on the alert is not one the user may open
+- **THEN** the Person column shows the name as text, not a link
 
 ### Requirement: Alert types read in plain language
 <!-- source: A4 · D24 · backend `tamper-ingestion` · Prototype "Alerts" -->
@@ -46,12 +46,16 @@ The Alerts page SHALL be open to `company_admin`, `it_admin` and `manager`, show
 - **THEN** only alerts for computers of employees on their team are shown
 
 ### Requirement: Admins and IT resolve an alert
-<!-- source: backend `alerts-feed` · A7 -->
-For `company_admin` and `it_admin` each open row SHALL offer Resolve, which calls `POST /v1/alerts/:id/resolve` and then shows the row as resolved with when and by whom (`resolved_by_name`, or "a removed user" when `null`). A `manager` MUST NOT see the Resolve control. Resolving MUST NOT need a confirmation, since it deletes nothing.
+<!-- source: backend `alerts-feed` · A7 · A14 -->
+For `company_admin` and `it_admin` each open row SHALL offer Resolve, which calls `POST /v1/alerts/:id/resolve`; on `200` it shows the row as resolved with when and by whom (`resolved_by_name`, or "a removed user" when `null`). A `manager` MUST NOT see the Resolve control. Resolving MUST NOT need a confirmation, since it deletes nothing. On `202 { change }` (an `it_admin`) the row MUST stay open and the page show "Waiting for approval" per `change-approvals`.
 
-#### Scenario: IT resolves a tamper alert
-- **WHEN** an `it_admin` clicks Resolve on an open alert
+#### Scenario: An admin resolves a tamper alert
+- **WHEN** a `company_admin` clicks Resolve on an open alert
 - **THEN** the row leaves the Open view and shows in Resolved with their name and the time
+
+#### Scenario: IT requests a resolve
+- **WHEN** an `it_admin` clicks Resolve and the API answers `202`
+- **THEN** the row stays in the Open view and the page says the resolve waits for approval
 
 ### Requirement: The page explains each alert and refreshes itself
 <!-- source: A5 · A4 · Prototype "Alerts" -->

@@ -7,11 +7,19 @@ edited by the Company Admin within the company's screenshot tier.
 
 ### Requirement: The employee page has a monitoring settings tab
 <!-- source: D37 · Plan-v3.5 §4.5 · backend `monitoring-settings` -->
-The employee page SHALL have a "What is collected" tab showing, from `GET /v1/employees/:id/monitoring-settings`, switches for activity, app usage, window titles and website visits, and the screenshot interval. A `company_admin` MUST be able to change them and save with `PUT`; a `manager` MUST see them read only.
+The employee page SHALL have a "What is collected" tab showing, from `GET /v1/employees/:id/monitoring-settings`, switches for activity, app usage, window titles and website visits, and the screenshot interval. A `company_admin` or `it_admin` MUST be able to change them and save with `PUT`; a `manager` MUST see them read only.
 
 #### Scenario: A manager views settings
 - **WHEN** a `manager` opens the tab for a team member
 - **THEN** the switches and interval are shown disabled with no Save button
+
+### Requirement: An IT Admin's settings change waits for approval
+<!-- source: A14 · product owner 17 Nov 2026 · backend round 6 `PUT /v1/employees/:id/monitoring-settings` -->
+For `it_admin` a save answering `202 { change }` SHALL show "Waiting for approval" per `change-approvals` and the stored values. The interval MUST offer Off, 10, 30 and 60 minutes without calling `GET /v1/billing`, and a `422` MUST show the plan message.
+
+#### Scenario: IT turns on window titles
+- **WHEN** an `it_admin` turns window titles on and saves
+- **THEN** the tab says the change waits for approval and the switch shows the stored value
 
 ### Requirement: The screenshot interval stays within the tier
 <!-- source: B11 · backend `monitoring-settings` · backend `subscription-sync` · Prototype "Company settings" -->

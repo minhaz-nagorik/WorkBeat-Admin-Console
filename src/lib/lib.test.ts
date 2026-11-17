@@ -23,7 +23,8 @@ test('unknown enum shows Other', () => {
 test('navigation follows the role', () => {
   assert.ok(allowed('manager', '/employees'));
   assert.ok(!allowed('manager', '/devices'));
-  assert.ok(!allowed('it_admin', '/employees'));
+  assert.ok(allowed('it_admin', '/employees') && allowed('it_admin', '/approvals') && allowed('it_admin', '/downloads'));
+  assert.ok(!allowed('it_admin', '/deployment') && !allowed('company_admin', '/downloads') && !allowed('manager', '/approvals'));
   assert.ok(!allowed('manager', '/team') && !allowed('it_admin', '/team') && allowed('company_admin', '/team'));
   assert.ok(!allowed('super_admin', '/overview'));
   assert.ok(allowed('super_admin', '/staff/companies'));

@@ -8,14 +8,16 @@ const A: Role = 'company_admin', M: Role = 'manager', I: Role = 'it_admin', S: R
 export const NAV: { group: string; items: Item[] }[] = [
   { group: 'Company', items: [
     { href: '/overview', label: 'Overview', icon: 'overview', roles: CO },
-    { href: '/employees', label: 'Employees', icon: 'employees', roles: [A, M] },
+    { href: '/employees', label: 'Employees', icon: 'employees', roles: [A, M, I] },
     { href: '/devices', label: 'Devices', icon: 'devices', roles: [A, I] },
     { href: '/alerts', label: 'Alerts', icon: 'alerts', roles: CO },
     { href: '/block-list', label: 'Block list', icon: 'blocklist', roles: CO },
-    { href: '/productivity-rules', label: 'Productivity rules', icon: 'productivity', roles: [A, M] },
+    { href: '/productivity-rules', label: 'Productivity rules', icon: 'productivity', roles: [A, M, I] },
   ] },
   { group: 'Setup', items: [
-    { href: '/deployment', label: 'Deployment', icon: 'deployment', roles: [A, I] },
+    { href: '/deployment', label: 'Deployment', icon: 'deployment', roles: [A] },
+    { href: '/downloads', label: 'Downloads', icon: 'deployment', roles: [I] },
+    { href: '/approvals', label: 'Approvals', icon: 'admin', roles: [A, I] },
     { href: '/team', label: 'Team & roles', icon: 'team', roles: [A] },
     { href: '/company-settings', label: 'Company settings', icon: 'company', roles: [A] },
   ] },

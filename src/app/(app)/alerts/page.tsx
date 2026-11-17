@@ -1,4 +1,5 @@
 'use client';
+import { isPending, PendingList, SENT } from '@/components/pending';
 import { use, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { call, message, usePoll } from '@/lib/client';
@@ -110,6 +111,7 @@ export default function Alerts({ searchParams }: { searchParams: Promise<{ emplo
 
   async function resolve(a: Alert) {
     const r = await call<Alert>('POST', `/v1/alerts/${a.id}/resolve`);
+    if (isPending(r)) return setNote(SENT);
     if (!r.ok) return setNote(r.status === 404 ? 'This alert no longer exists.' : message(r.status, r.err.code));
     setNote(null);
     setPages((p) => p && p.map((pg) => pg.map((x) => (x.id === a.id ? r.data : x))));
@@ -125,7 +127,8 @@ export default function Alerts({ searchParams }: { searchParams: Promise<{ emplo
       <PageHead title="Alerts"
         sub={<>Signs that WorkBeat was interfered with, or a computer stopped connecting.{mail && ` ${emailSentence(mail)}`}</>}
         right={isAdmin && <button className="btn" disabled={!mail} onClick={() => setMailing(true)}>Email settings</button>} />
-      {note && <div className="notice warn" role="status">{note}</div>}
+      {note && <div className={`notice ${note === SENT ? 'info' : 'warn'}`} role="status">{note}</div>}
+      <PendingList resource="alert" />
 
       <div className="card stack">
         <div className="toolbar">

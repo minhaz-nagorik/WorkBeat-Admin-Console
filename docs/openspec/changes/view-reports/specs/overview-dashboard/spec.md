@@ -22,12 +22,16 @@ For `company_admin` and `manager`, Overview SHALL show today's tracked time and 
 - **THEN** the split bar and tracked total reload for that range
 
 ### Requirement: IT admins see device health, not activity
-<!-- source: B18 · Plan-v3.5 §5.9 · backend `device-status` -->
-For `it_admin`, Overview SHALL say activity reports are not available to IT Admins, show the device cards and the rollout table from `GET /v1/rollout` (healthy, each status and badge with its count, plain labels), each row linking to the Devices page filtered to it. No tracked time, activity or split MUST appear.
+<!-- source: B18 · A14 · Plan-v3.5 §5.9 · backend `device-status` -->
+For `it_admin`, Overview SHALL say activity reports are not available to IT Admins, show the device cards and the rollout table from `GET /v1/rollout` (healthy, each status and badge with its count, plain labels), each row linking to the Devices page filtered to it. No tracked time, activity, split or setup checklist MUST appear.
 
 #### Scenario: Permission pending row
 - **WHEN** an IT admin clicks the "Permission pending" row
 - **THEN** the Devices page opens filtered to the `permission_pending` badge
+
+#### Scenario: A new company
+- **WHEN** an IT admin of a company with no device opens Overview
+- **THEN** no setup checklist is shown and no `GET /v1/company/setup` call is made
 
 ### Requirement: Cards link to their lists
 <!-- source: Prototype "Overview" -->

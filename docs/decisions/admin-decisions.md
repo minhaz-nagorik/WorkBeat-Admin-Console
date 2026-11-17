@@ -1,4 +1,4 @@
-# Admin decisions — A1–A12
+# Admin decisions — A1–A14
 
 Rulings this repository made where Plan v3.5 and the backend specs are silent. Each must agree with
 Plan v3.5 and its D-numbers and with the backend's B-numbers; a disagreement is a defect. Cite them
@@ -19,3 +19,4 @@ as `A<n>` in specs.
 | A11 | WCAG 2.2 AA: every control has a label, every action is keyboard reachable, focus is visible and returns after a dialog closes, colour is never the only signal (pills carry text), charts have a text alternative | Prototype already does this; never cut |
 | A12 | An API error is shown in plain language next to what caused it: field errors (`422 VALIDATION_FAILED` with field names) beside the field, `409` codes as a sentence that says what to do next, `403` as "You don't have access", `401` returns to sign-in, `5xx` and network errors as a retry message. The raw `code` is never shown | Backend `api-envelope`; A4 |
 | A13 | No second factor for anyone. Staff (`super_admin`) sign in with email and password, like company users; there is no authenticator set-up, code step or authenticator reset. Decided by the product owner on 16 Nov 2026, waiving the MFA part of Plan-v3.5 D41 and §4.6. | Product owner, 16 Nov 2026; supersedes backend B23 |
+| A14 | An IT Admin may add, edit, remove and import employees, change monitoring settings and pauses, release and deactivate devices, resolve alerts and change the block list, private sites and productivity rules, but every such write answers `202 { change }` and applies only when a Company Admin approves it on the Approvals page; a Company Admin's writes apply at once. An IT Admin has no Deployment page (licence key, uninstall token, minimum agent version, setup checklist), only Downloads, and still sees no activity, reports, calendar, timesheets, screenshots or notice acknowledgements | Product owner, 17 Nov 2026; contract in [backend-requests-6.md](../backend-requests-6.md); amends the IT Admin column of `role-access` and B18 |

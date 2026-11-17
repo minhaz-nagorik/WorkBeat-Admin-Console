@@ -6,13 +6,17 @@ how a suspended, expired or trial company is told about its state.
 ## ADDED Requirements
 
 ### Requirement: Navigation follows the signed-in role
-<!-- source: D41 · A3 · backend `user-authentication` · Prototype "navigation" -->
-After sign-in the app SHALL call `GET /v1/me` and show only the navigation the role allows: Company (Overview, Employees, Devices, Alerts, Block list, Productivity rules) and Setup (Deployment, Team & roles, Company settings) per the permission matrix, and for `super_admin` only the staff group (Companies, Licences, Custom domains, Agent releases, Company admins, Staff team).
+<!-- source: D41 · A3 · A14 · backend `user-authentication` · Prototype "navigation" -->
+After sign-in the app SHALL call `GET /v1/me` and show only the navigation the role allows: Company (Overview, Employees, Devices, Alerts, Block list, Productivity rules, Approvals) and Setup (Deployment, Downloads, Team & roles, Company settings) per the permission matrix, and for `super_admin` only the staff group (Companies, Licences, Custom domains, Agent releases, Company admins, Staff team).
 
 #### Scenario: An IT admin signs in
 - **WHEN** a user with role `it_admin` signs in
-- **THEN** the sidebar shows Overview, Devices, Alerts, Block list and Deployment
-- **AND** it shows no Employees, Productivity rules, Team & roles, Company settings or staff item
+- **THEN** the sidebar shows Overview, Employees, Devices, Alerts, Block list, Productivity rules, Approvals and Downloads
+- **AND** it shows no Deployment, Team & roles, Company settings or staff item
+
+#### Scenario: A company admin signs in
+- **WHEN** a `company_admin` signs in
+- **THEN** the sidebar shows every Company item including Approvals, and Deployment, Team & roles and Company settings, but no Downloads
 
 #### Scenario: A manager signs in
 - **WHEN** a user with role `manager` signs in

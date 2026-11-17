@@ -1,4 +1,5 @@
 'use client';
+import { isPending, PendingList, SENT } from '@/components/pending';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { call, message } from '@/lib/client';
@@ -19,9 +20,9 @@ const BY_TIER: Record<string, number[]> = { off: [0], light: [0, 3600], standard
 
 export function MonitoringSettingsTab({ employeeId, role, archived }: TabProps) {
   const admin = role === 'company_admin';
-  const edit = admin && !archived;
+  const edit = (admin || role === 'it_admin') && !archived; // IT Admin changes wait for approval (A14)
   const s = useData<Settings>(`/v1/employees/${employeeId}/monitoring-settings`);
-  const bill = useData<{ screenshot_tier: string }>(edit ? '/v1/billing' : null); // managers never call billing
+  const bill = useData<{ screenshot_tier: string }>(admin && edit ? '/v1/billing' : null); // only Company Admins read billing
   const [f, setF] = useState<Settings | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
@@ -29,7 +30,8 @@ export function MonitoringSettingsTab({ employeeId, role, archived }: TabProps) 
   useEffect(() => { setF(s.data); }, [s.data]);
 
   const tier = bill.data?.screenshot_tier;
-  const choices = tier ? BY_TIER[tier] ?? [0] : [];
+  // IT Admin can't read the plan: offer every interval; the API's 422 refuses one the plan doesn't allow.
+  const choices = tier ? BY_TIER[tier] ?? [0] : role === 'it_admin' ? BY_TIER.intensive : [];
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -38,6 +40,7 @@ export function MonitoringSettingsTab({ employeeId, role, archived }: TabProps) 
     setBusy(true); setNote(null); setIvErr(null);
     const r = await call<Settings>('PUT', `/v1/employees/${employeeId}/monitoring-settings`, f);
     setBusy(false);
+    if (isPending(r)) { setF(s.data); return setNote({ ok: true, text: SENT }); }
     if (r.ok) {
       s.set(() => r.data);
       const on = SWITCHES.filter(([k]) => r.data[k] && !old[k]);
@@ -62,6 +65,7 @@ export function MonitoringSettingsTab({ employeeId, role, archived }: TabProps) 
         <div><h2>What is collected</h2>
           <p className="small muted">{edit ? 'Choose what WorkBeat collects from this person’s computers.' : 'What WorkBeat collects from this person’s computers. Only a Company Admin can change it.'}</p></div>
         {note && <div className={`notice ${note.ok ? 'ok' : 'warn'}`} role="status">{note.text}</div>}
+        <PendingList resource="monitoring_settings" />
         {SWITCHES.map(([k, l, d]) => (
           <div key={k} className="row between" style={{ flexWrap: 'nowrap' }}>
             <div><b id={`ms-${k}`}>{l}</b><div className="small muted">{d}</div></div>
@@ -73,7 +77,7 @@ export function MonitoringSettingsTab({ employeeId, role, archived }: TabProps) 
         <div className="field" style={{ maxWidth: 280 }}>
           <label htmlFor="ms-iv">Screenshots</label>
           {!edit ? <span id="ms-iv">{label('interval', String(f.screenshot_interval_seconds))}</span> : (
-            <select id="ms-iv" value={f.screenshot_interval_seconds} disabled={!tier} aria-invalid={!!ivErr} aria-describedby={ivErr ? 'ms-iv-err' : undefined}
+            <select id="ms-iv" value={f.screenshot_interval_seconds} disabled={!choices.length} aria-invalid={!!ivErr} aria-describedby={ivErr ? 'ms-iv-err' : undefined}
               onChange={(e) => { setF({ ...f, screenshot_interval_seconds: +e.target.value }); setIvErr(null); }}>
               {/* keep the stored value visible even if the tier no longer allows it */}
               {[...new Set([...choices, f.screenshot_interval_seconds])].sort((a, b) => a - b)
