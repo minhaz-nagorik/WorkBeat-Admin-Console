@@ -1,5 +1,11 @@
 # Backend requests from WorkBeat Admin — round 4: build what is specified
 
+> **Answered (17 Nov 2026)** in `WorkBeat-Backend/docs/integration/admin-requests-4-response.md`.
+> Built and checked from the console: the staff API (sections 1), custom domain, `hosts/resolve`,
+> `timesheet.pdf`, `min_agent_version` on `GET /v1/license`, and items 3.2–3.5. Waiting for Stripe:
+> `PUT /v1/billing/screenshot-tier` and `POST /v1/billing/portal-session` (the console keeps its
+> messages). Domain checks stay `pending` until the backend's `/cron/domain-verify` exists.
+
 **From:** WorkBeat Admin (the web console)
 **To:** the backend owner, WorkBeat-Backend
 **Date:** 17 November 2026

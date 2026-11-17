@@ -174,6 +174,8 @@ function MinVersion() {
   const v = useData<Record<'macos' | 'windows', string[]>>('/v1/agent-versions');
   const [pick, setPick] = useState<string | null>(null);
   const [saved, setSaved] = useState<string | null | undefined>(undefined);
+  const lic = useData<{ min_agent_version: string | null }>('/v1/license');
+  const current = saved !== undefined ? saved : lic.data?.min_agent_version;
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -206,7 +208,7 @@ function MinVersion() {
           <button className="btn pri" disabled={busy || pick === null}>{busy ? 'Saving…' : 'Save'}</button>
         </div>
       )}</Loaded>
-      {saved !== undefined && <p className="small">Now: {saved ?? 'no minimum'}</p>}
+      {current !== undefined && <p className="small">Now: {current ?? 'no minimum'}</p>}
       {note && <div className={`notice ${note.ok ? 'ok' : 'warn'}`} role="status">{note.text}</div>}
     </form>
   );

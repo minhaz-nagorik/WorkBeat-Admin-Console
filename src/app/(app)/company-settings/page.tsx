@@ -167,11 +167,6 @@ function DomainCard({ slug }: { slug: string }) {
     setNote(message(r.status, r.err.code));
   }
 
-  // shortcut: a 404 means the backend route isn't built yet (portal-api.md "Not built yet"); drop once it ships.
-  if (s.status === 404) return (
-    <div className="card stack"><h2>Custom domain</h2><p className="small">Custom domains aren&apos;t available yet. Your dashboard opens at <span className="mono">{home}</span>.</p></div>
-  );
-
   if (s.status) return <Loaded s={s}>{() => null}</Loaded>;
   if (s.loading) return <Skeleton rows={4} />; // data null is a real state here: no domain
   const d = s.data;

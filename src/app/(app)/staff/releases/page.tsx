@@ -104,7 +104,7 @@ function PublishDialog({ open, onClose, onDone }: { open: boolean; onClose: () =
     const u = await call<{ upload_url: string; storage_path: string }>('POST', '/v1/staff/agent-releases/upload-url', { product, platform, arch, version });
     if (!u.ok) { setBusy(null); return setErr({ form: u.status === 409 ? 'This version is already published for that platform.' : message(u.status, u.err.code) }); }
     // Signed storage URL, straight from the browser; never logged or kept (rule 4).
-    const put = await fetch(u.data.upload_url, { method: 'PUT', body: file }).catch(() => null);
+    const put = await fetch(u.data.upload_url, { method: 'PUT', headers: { 'content-type': 'application/octet-stream' }, body: file }).catch(() => null);
     if (!put?.ok) { setBusy(null); setUploadFailed(true); return setErr({ form: 'The upload failed. Nothing was published.' }); }
     setBusy('Publishing…');
     const r = await call<Release>('POST', '/v1/staff/agent-releases', {
