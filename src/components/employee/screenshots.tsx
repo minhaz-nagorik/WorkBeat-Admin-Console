@@ -10,27 +10,35 @@ import { addDays, clock, fmtDay, longDay, today, useRetainedFrom } from '@/compo
 
 // view_url is a 5-minute signed link (A6, rule 4): it lives only in this component's memory and in <img src>,
 // never in storage, logs or our address. An expired link or a failed image refetches the day's list.
-type Shot = { id: string; captured_at: string; device_id: string; hostname: string; view_url: string; expires_at: string };
+type Shot = { id: string; captured_at: string; device_id: string; hostname: string; view_url: string; download_url?: string; expires_at: string };
 type Day = { screenshots_enabled: boolean; items: Shot[] };
 
 const every = (s: number) => (s % 3600 === 0 ? (s === 3600 ? 'every hour' : `every ${s / 3600} hours`) : `every ${Math.round(s / 60)} minutes`);
 const expired = (s: Shot) => new Date(s.expires_at).getTime() - Date.now() < 5_000;
 
+const fileName = (s: Shot, tz: string) => `${s.hostname}-${dayKey(new Date(s.captured_at), tz)}-${clock(s.captured_at, tz).replace(':', '')}.jpg`;
+
 /**
- * Save the image as a file. The signed link is on the API's host, where the browser won't honour a
- * download name, so it is fetched through our same-origin proxy and saved from memory.
- * Name: hostname-YYYY-MM-DD-HHMM.jpg in the company's time.
+ * Save the image as a file (hostname-YYYY-MM-DD-HHMM.jpg in company time).
+ * 1. `download_url` (signed to force a download, backend round 7): just follow it.
+ * 2. Otherwise fetch the view link and save it from memory: works for the API's own storage
+ *    (through our same-origin proxy) and for a bucket that allows this site (CORS).
+ * 3. Otherwise open the image in a new tab, where it can be saved.
  */
-async function save(s: Shot, tz: string): Promise<boolean> {
-  const u = new URL(s.view_url);
-  const res = await fetch(`/api${u.pathname}${u.search}`).catch(() => null);
-  if (!res?.ok) return false;
-  const href = URL.createObjectURL(await res.blob());
+async function save(s: Shot, tz: string): Promise<'saved' | 'opened'> {
   const a = document.createElement('a');
-  a.href = href; a.download = `${s.hostname}-${dayKey(new Date(s.captured_at), tz)}-${clock(s.captured_at, tz).replace(':', '')}.jpg`;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(href), 1000);
-  return true;
+  if (s.download_url) { a.href = s.download_url; a.download = fileName(s, tz); a.click(); return 'saved'; }
+  const u = new URL(s.view_url);
+  const src = u.pathname.startsWith('/v1/storage/') ? `/api${u.pathname}${u.search}` : s.view_url;
+  const res = await fetch(src).catch(() => null);
+  if (res?.ok) {
+    const href = URL.createObjectURL(await res.blob());
+    a.href = href; a.download = fileName(s, tz); a.click();
+    setTimeout(() => URL.revokeObjectURL(href), 1000);
+    return 'saved';
+  }
+  window.open(s.view_url, '_blank', 'noopener,noreferrer');
+  return 'opened';
 }
 
 export function EmployeeScreenshots({ employeeId, tz, role }: TabProps) {
@@ -116,7 +124,9 @@ function Grid({ items, tz, onOpen, onBroken }: { items: Shot[]; tz: string; onOp
 function Viewer({ items, id, setId, tz, refresh }: { items: Shot[]; id: string | null; setId: (id: string | null) => void; tz: string; refresh: () => Promise<void> }) {
   const i = items.findIndex((s) => s.id === id), s = items[i];
   const [saving, setSaving] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [opened, setOpened] = useState(false);
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
   // Stepping onto an expired link refetches first; the new list carries fresh links for the same ids.
   const step = async (n: number) => { const next = items[i + n]; if (!next) return; if (expired(next)) await refresh(); setId(next.id); };
   return (
@@ -132,12 +142,14 @@ function Viewer({ items, id, setId, tz, refresh }: { items: Shot[]; id: string |
             <span className="small muted" style={{ alignSelf: 'center' }}>{i + 1} of {items.length}</span>
             <button className="btn" disabled={i === items.length - 1} onClick={() => step(1)}>Next ›</button>
             <button className="btn pri" disabled={saving} onClick={async () => {
-              setSaving(true); setFailed(false);
-              if (expired(s) || !(await save(s, tz))) { await refresh(); setFailed(true); } // stale link: fresh list, try again
+              setSaving(true); setOpened(false);
+              if (expired(s)) await refresh(); // the list comes back with fresh links for the same screenshot
+              const fresh = itemsRef.current.find((x) => x.id === s.id) ?? s;
+              setOpened((await save(fresh, tz)) === 'opened');
               setSaving(false);
             }}>{saving ? 'Downloading…' : 'Download'}</button>
           </div>
-          {failed && <p className="small muted" role="status">The link had expired and was renewed. Press Download again.</p>}
+          {opened && <p className="small muted" role="status">The screenshot opened in a new tab. Save it there (right-click → Save image).</p>}
         </>
       )}
     </Modal>
