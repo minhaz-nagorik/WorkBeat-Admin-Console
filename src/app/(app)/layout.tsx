@@ -11,6 +11,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (me.status === 401) redirect(`/sign-in?expired=1&next=${encodeURIComponent(path)}`);
   if (!me.data) throw new Error('Could not load your account');
   const user = me.data;
+  if (user.must_change_password && path !== '/account') redirect('/account'); // temporary password: change it first
   if (!allowed(user.role, path)) redirect(landing(user.role));
 
   const status = user.company ? (await api<StatusInfo>('/v1/company/status')).data : null;

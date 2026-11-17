@@ -19,7 +19,7 @@ export function SignIn({ company, next, expired, email: initialEmail = '' }: {
   const [busy, setBusy] = useState(false);
   const [wait, setWait] = useCooldown();
 
-  const land = (u: Me) => location.replace(next ?? (u.role === 'super_admin' ? '/staff/companies' : '/overview'));
+  const land = (u: Me) => location.replace(u.must_change_password ? '/account' : next ?? (u.role === 'super_admin' ? '/staff/companies' : '/overview'));
 
   function fail(r: { status: number; retryAfter?: number }, fallback = SOMETHING) {
     if (r.status === 429) { setWait(r.retryAfter ?? 60); setMsg(''); return true; }

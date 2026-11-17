@@ -7,6 +7,7 @@ import { dateOnly } from '@/lib/time';
 import { useList } from '@/components/list';
 import { ConfirmButton, Modal } from '@/components/confirm';
 import { Field } from '@/components/form';
+import { AddCompanyDialog } from '@/components/staff/add-company';
 import { SeatsDialog, StatusPill, seats, usd, useDebounced, type Companies, type Company } from '@/components/staff/common';
 
 const FILTERS = [['', 'All'], ['trial', 'Trial'], ['active', 'Active'], ['suspended', 'Suspended'], ['expired', 'Expired']] as const;
@@ -21,6 +22,7 @@ export default function StaffCompanies() {
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
   const [seatsFor, setSeatsFor] = useState<Company | null>(null);
   const [graceFor, setGraceFor] = useState<Company | null>(null);
+  const [adding, setAdding] = useState(false);
 
   async function act(c: Company, kind: 'suspend' | 'restore') {
     const r = await call<Company>('POST', `/v1/staff/companies/${c.id}/${kind}`);
@@ -32,7 +34,7 @@ export default function StaffCompanies() {
 
   return (
     <>
-      <PageHead title="Companies" sub="Every customer account." />
+      <PageHead title="Companies" sub="Every customer account." right={<button className="btn pri" onClick={() => setAdding(true)}>Add company</button>} />
       {note && <div className={`notice ${note.ok ? 'ok' : 'warn'}`} role="status">{note.text}</div>}
       {s.data && (
         <div className="grid g4">
@@ -83,6 +85,8 @@ export default function StaffCompanies() {
       </div>
       <SeatsDialog c={seatsFor} onClose={() => setSeatsFor(null)} onSaved={(c) => saved(`${c.name} is on Enterprise with ${seats(c)} seats.`)} />
       <GraceDialog c={graceFor} onClose={() => setGraceFor(null)} onSaved={(c) => saved(`${c.name}: blocking grace period set to ${c.expired_blocking_grace_days} days.`)} />
+      <AddCompanyDialog open={adding} onClose={() => setAdding(false)}
+        onCreated={(c, email) => { setAdding(false); setNote({ ok: true, text: `${c.name} was created. The licence key and a link to create their account were emailed to ${email}.` }); s.reload(); }} />
     </>
   );
 }

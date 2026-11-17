@@ -21,6 +21,7 @@ export async function call<T>(method: string, path: string, body?: unknown): Pro
   if (res.status === 401 && !path.startsWith('/v1/auth/') && !path.startsWith('/v1/invitations/')) {
     location.assign(`/sign-in?expired=1&next=${encodeURIComponent(location.pathname + location.search)}`);
   }
+  if (res.status === 403 && json?.code === 'PASSWORD_CHANGE_REQUIRED' && location.pathname !== '/account') location.assign('/account');
   return { ok: false, status: res.status, err: json ?? { code: 'INTERNAL' }, retryAfter: Number(res.headers.get('retry-after')) || undefined };
 }
 

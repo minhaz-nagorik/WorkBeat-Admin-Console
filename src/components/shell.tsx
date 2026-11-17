@@ -18,7 +18,7 @@ export function Shell({ me, nav, status, children }: {
   const [dark, setDark] = useState<boolean | null>(null); // known only in the browser
   useEffect(() => setDark(isDark()), []);
   const tz = me.company?.timezone ?? 'UTC';
-  const seesAlerts = me.role !== 'super_admin';
+  const seesAlerts = me.role !== 'super_admin' && !me.must_change_password;
 
   usePoll(() => {
     if (!seesAlerts) return;

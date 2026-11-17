@@ -34,3 +34,10 @@
 - [x] 5.2 Invite, resend, revoke, remove with confirmations
 - [x] ~~5.3 Reset authenticator~~ (removed 16 Nov 2026 with staff MFA)
 - [ ] 5.4 Tests: no Remove on own row; last-admin `409` message; role test — super admin only
+
+## 6. Create companies and temporary passwords (product owner, 17 Nov 2026)
+
+- [ ] 6.1 Add company dialog with all settings and a required Company Admin email (`POST /v1/staff/companies`)
+- [ ] 6.2 Company admins page with search (`GET /v1/staff/company-admins`)
+- [ ] 6.3 Reset password: temporary password shown once with Copy, also emailed
+- [ ] 6.4 Tests: taken address and email messages; temporary password cleared on close; no other role listed

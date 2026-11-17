@@ -25,6 +25,7 @@ staff area on them.
 - `staff-domains`: the Custom domains page.
 - `agent-releases`: the Agent releases page.
 - `staff-team`: the Staff team page.
+- `staff-company-admins`: the Company admins page and temporary passwords.
 
 ### Modified Capabilities
 

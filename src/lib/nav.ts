@@ -24,7 +24,8 @@ export const NAV: { group: string; items: Item[] }[] = [
     { href: '/staff/licences', label: 'Licences', icon: 'pricing', roles: [S] },
     { href: '/staff/domains', label: 'Custom domains', icon: 'company', roles: [S] },
     { href: '/staff/releases', label: 'Agent releases', icon: 'deployment', roles: [S] },
-    { href: '/staff/team', label: 'Staff team', icon: 'team', roles: [S] },
+    { href: '/staff/admins', label: 'Company admins', icon: 'team', roles: [S] },
+    { href: '/staff/team', label: 'Staff team', icon: 'admin', roles: [S] },
   ] },
 ];
 

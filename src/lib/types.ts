@@ -4,6 +4,7 @@ export type CompanyStatus = 'trial' | 'active' | 'suspended' | 'expired';
 
 export type Me = {
   id: string; email: string; name: string; role: Role;
+  must_change_password?: boolean; // signed in with a temporary password (backend round 5)
   company: { id: string; name: string; slug: string; status: CompanyStatus; timezone: string } | null;
 };
 

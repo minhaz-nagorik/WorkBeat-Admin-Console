@@ -104,3 +104,11 @@ For an invitation with role `super_admin` the page SHALL say "You're invited to 
 #### Scenario: An expired link
 - **WHEN** lookup returns `INVITATION_EXPIRED`
 - **THEN** the page shows the expired message and no form
+
+### Requirement: A temporary password must be replaced at sign-in
+<!-- source: product owner 17 Nov 2026 · backend round 5 `must_change_password` -->
+When the signed-in user has `must_change_password` true, the app SHALL show only the Choose a new password page, asking the temporary password and a new one (10–200 characters, not the same) and calling `POST /v1/auth/password`; every other page MUST redirect to it, and a `403 PASSWORD_CHANGE_REQUIRED` MUST open it. On success the user MUST land on their role's page.
+
+#### Scenario: Signing in with a temporary password
+- **WHEN** a Company Admin signs in with the temporary password from their email
+- **THEN** they see Choose a new password and no other page until they save one

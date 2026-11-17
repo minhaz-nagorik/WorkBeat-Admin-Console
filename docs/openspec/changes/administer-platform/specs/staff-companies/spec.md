@@ -44,3 +44,19 @@ The company dialog SHALL edit `expired_blocking_grace_days` (0–365, default 30
 #### Scenario: A longer grace period
 - **WHEN** staff set 60 days
 - **THEN** the page sends `expired_blocking_grace_days` 60 and confirms
+
+### Requirement: Staff create a company with its first Company Admin
+<!-- source: product owner 17 Nov 2026 · backend round 5 `POST /v1/staff/companies` -->
+"Add company" SHALL open a dialog asking name, address (`slug`), plan, seats (unlimited only for Enterprise), screenshot plan, trial or active (with trial days), time zone, data retention and a required Company Admin email, and send `POST /v1/staff/companies`. On `201` the company MUST appear in the list and the page MUST say the licence key and sign-up link were emailed to that address.
+
+#### Scenario: A new customer
+- **WHEN** staff add "Nagorik Technologies" with admin `ceo@nagorik.tech`
+- **THEN** the company is listed and the page says the licence key and sign-up link went to `ceo@nagorik.tech`
+
+### Requirement: A refused new company says what to fix
+<!-- source: backend round 5 · A12 -->
+A `409 CONFLICT` naming `slug` SHALL show "This address is already taken" under the address, and naming `admin_email` "This email already has an account or an open invitation" under the email; a `422` MUST show beside each named field. The dialog MUST stay open with what was typed.
+
+#### Scenario: A taken address
+- **WHEN** the address `acme` is already used
+- **THEN** the dialog shows the taken-address message under the address and creates nothing
