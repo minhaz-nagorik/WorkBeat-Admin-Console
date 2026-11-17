@@ -73,7 +73,6 @@ export default function Alerts({ searchParams }: { searchParams: Promise<{ emplo
 
   const isAdmin = me.role === 'company_admin';
   const canResolve = isAdmin || me.role === 'it_admin';
-  const canOpenEmployee = isAdmin || me.role === 'manager';
   const settings = useData<{ alert_email: AlertEmail }>(isAdmin ? '/v1/company/settings' : null);
 
   useEffect(() => { const t = setTimeout(() => setQ(qInput), 300); return () => clearTimeout(t); }, [qInput]);
@@ -168,7 +167,7 @@ export default function Alerts({ searchParams }: { searchParams: Promise<{ emplo
                       <td className="small muted" style={{ whiteSpace: 'nowrap' }} title={full(a.occurred_at, me.tz)}>{when(a.occurred_at, me.tz)}</td>
                       <td><span className={`pill ${SEV(a.event_type)}`}>{label('alert', a.event_type)}</span></td>
                       <td>{!a.employee ? <span className="muted">—</span>
-                        : canOpenEmployee ? <Link href={`/employees/${a.employee.id}`}>{a.employee.name}</Link> : a.employee.name}</td>
+                        : <Link href={`/employees/${a.employee.id}`}>{a.employee.name}</Link>}</td>
                       <td className="small mono">{a.hostname}</td>
                       <td className="small">{describe(a, me.tz)}</td>
                       <td className="small">{a.resolved_at ? (

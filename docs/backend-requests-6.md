@@ -1,5 +1,10 @@
 # Backend requests from WorkBeat Admin — round 6: IT Admin changes need Company Admin approval
 
+> **Answered (17 Nov 2026)** in `WorkBeat-Backend/docs/integration/admin-requests-6-response.md`;
+> built and checked end to end from the console (request, approve, reject, cancel, double approve
+> refused, IT Admin 403 on the licence). Differences adopted: `resource` on `GET /v1/changes` takes
+> one value (the console filters several in the browser); approve and reject answer `{ change }`.
+
 **From:** WorkBeat Admin (the web console) · **To:** WorkBeat-Backend · **Date:** 17 November 2026
 **Follows:** round 5, answered (`admin-requests-5-response.md`).
 **Decided by the product owner (17 Nov 2026), changing the permission matrix (`role-access`):**

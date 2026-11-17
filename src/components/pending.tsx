@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { useEffect } from 'react';
 import { call, type CallResult } from '@/lib/client';
 import { useData } from '@/lib/use-data';
 import { useMe } from '@/lib/me';
@@ -11,7 +12,12 @@ import type { Change } from '@/lib/types';
 export const SENT = 'Sent to your Company Admin for approval. It shows as waiting for approval until they decide.';
 
 /** True when the write was stored as a change waiting for approval instead of applied. */
-export const isPending = <T,>(r: CallResult<T>) => r.ok && r.status === 202;
+export function isPending<T>(r: CallResult<T>) {
+  const sent = r.ok && r.status === 202;
+  if (sent) window.dispatchEvent(new Event(CHANGED)); // the Waiting for approval lists refresh at once
+  return sent;
+}
+const CHANGED = 'wb:changes';
 
 /**
  * "Waiting for approval" card for one kind of record, shown to IT Admins (their own requests,
@@ -20,10 +26,17 @@ export const isPending = <T,>(r: CallResult<T>) => r.ok && r.status === 202;
 export function PendingList({ resource, onChange }: { resource: string | string[]; onChange?: () => void }) {
   const me = useMe();
   const seen = me.role === 'company_admin' || me.role === 'it_admin';
-  const kinds = Array.isArray(resource) ? resource.join(',') : resource;
-  const s = useData<Change[]>(seen ? `/v1/changes?status=pending&resource=${kinds}` : null, { poll: true });
+  const kinds = Array.isArray(resource) ? resource : [resource];
+  const s = useData<Change[]>(seen ? '/v1/changes?status=pending' : null, { poll: true });
+  const mine = (s.data ?? []).filter((c) => kinds.includes(c.resource)); // the API filters one resource at a time
   const hint = me.role === 'it_admin' && <p className="small muted">Changes you make here wait for your Company Admin’s approval.</p>;
-  if (!s.data?.length) return hint || null;
+  const { reload } = s;
+  useEffect(() => {
+    const on = () => { reload(); };
+    window.addEventListener(CHANGED, on);
+    return () => window.removeEventListener(CHANGED, on);
+  }, [reload]);
+  if (!mine.length) return hint || null;
 
   async function cancel(c: Change) {
     await call('DELETE', `/v1/changes/${c.id}`); // a 409 means it was decided meanwhile: the reload shows that
@@ -40,7 +53,7 @@ export function PendingList({ resource, onChange }: { resource: string | string[
       <div className="tablewrap">
         <table>
           <tbody>
-            {s.data.map((c) => (
+            {mine.map((c) => (
               <tr key={c.id}>
                 <td><span className="pill p-warn">Waiting for approval</span></td>
                 <td>{c.summary}<div className="small muted">Asked by {c.requested_by.name}, {when(c.requested_at, me.tz)}</div></td>

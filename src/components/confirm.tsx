@@ -18,13 +18,14 @@ export function Confirm({ question, action, onConfirm, onCancel }: {
 }
 
 /** A destructive button that asks first. */
-export function ConfirmButton({ label, question, action = label, onConfirm }: {
+export function ConfirmButton({ label, question, action = label, onConfirm, positive }: {
   label: string; question: React.ReactNode; action?: string; onConfirm: () => void | Promise<void>;
+  /** Not destructive (e.g. Approve): primary style instead of danger. */ positive?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const btn = useRef<HTMLButtonElement>(null);
   if (open) return <Confirm question={question} action={action} onConfirm={async () => { await onConfirm(); setOpen(false); }} onCancel={() => { setOpen(false); setTimeout(() => btn.current?.focus()); }} />;
-  return <button ref={btn} className="btn sm danger" onClick={() => setOpen(true)}>{label}</button>;
+  return <button ref={btn} className={`btn sm ${positive ? 'pri' : 'danger'}`} onClick={() => setOpen(true)}>{label}</button>;
 }
 
 /** Modal dialog on the native <dialog>: focus trap, Escape, focus returns to the opener (A11). */

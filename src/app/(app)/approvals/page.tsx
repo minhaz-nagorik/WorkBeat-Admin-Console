@@ -26,8 +26,8 @@ export default function Approvals() {
   const pendingCount = (s.data ?? []).filter((c) => c.status === 'pending').length;
 
   async function approve(c: Change) {
-    const r = await call<Change>('POST', `/v1/changes/${c.id}/approve`);
-    if (r.ok && r.data.status === 'failed') setNote({ ok: false, text: `Couldn’t apply “${c.summary}”: ${r.data.error?.message ?? 'it no longer applies'}.` });
+    const r = await call<{ change: Change }>('POST', `/v1/changes/${c.id}/approve`);
+    if (r.ok && r.data.change.status === 'failed') setNote({ ok: false, text: `Couldn’t apply “${c.summary}”: ${r.data.change.error?.message ?? 'it no longer applies'}.` });
     else if (r.ok) setNote({ ok: true, text: `Approved: ${c.summary}.` });
     else setNote({ ok: false, text: r.status === 409 ? 'This request was already decided or cancelled.' : message(r.status, r.err.code) });
     s.reload();
@@ -51,8 +51,7 @@ export default function Approvals() {
             <button className={view === 'decided' ? 'on' : ''} aria-pressed={view === 'decided'} onClick={() => setView('decided')}>Decided</button>
           </div>
         </div>
-        {/* shortcut: 404 until backend round 6 ships /v1/changes; drop then. */}
-        {s.status === 404 ? <p className="muted">Approvals aren’t available yet.</p> : <Loaded s={s}>{() => (
+        <Loaded s={s}>{() => (
           <>
             <div className="tablewrap">
               <table>
@@ -70,7 +69,7 @@ export default function Approvals() {
                         <td>{c.status !== 'pending' ? null : admin ? (
                           <div className="row">
                             <button className="btn sm" onClick={() => setRejecting(c)}>Reject</button>
-                            <ConfirmButton label="Approve" action="Approve" question={`Approve “${c.summary}”? It takes effect now.`} onConfirm={() => approve(c)} />
+                            <ConfirmButton positive label="Approve" action="Approve" question={`Approve “${c.summary}”? It takes effect now.`} onConfirm={() => approve(c)} />
                           </div>
                         ) : c.requested_by.id === me.id
                           ? <ConfirmButton label="Cancel request" question="Cancel this request? Nothing changes." onConfirm={() => cancel(c)} />
@@ -82,7 +81,7 @@ export default function Approvals() {
             </div>
             {L.pager}
           </>
-        )}</Loaded>}
+        )}</Loaded>
       </div>
       <RejectDialog c={rejecting} onClose={() => setRejecting(null)}
         onDone={(c, text) => { setRejecting(null); setNote(text ? { ok: false, text } : { ok: true, text: `Rejected: ${c.summary}.` }); s.reload(); }} />

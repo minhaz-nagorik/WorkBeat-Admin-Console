@@ -255,16 +255,19 @@ function ManagerTeams({ managers, emps, onChange, say }: {
   );
 }
 
+// IT Admin changes wait for a Company Admin's approval (A14).
 const MATRIX: [string, string, string, string][] = [
-  ['View employees and live status', 'Yes', 'Own team', 'No'],
-  ['Add, edit or remove employees', 'Yes', 'No', 'No'],
-  ['Pause monitoring for an employee', 'Yes', 'See only', 'No'],
+  ['View employees and live status', 'Yes', 'Own team', 'Yes'],
+  ['Add, edit or remove employees', 'Yes', 'No', 'Needs approval'],
+  ['Pause monitoring, what is collected', 'Yes', 'See only', 'Needs approval'],
   ['Usage, website history, calendar, timesheets', 'Yes', 'Own team', 'No'],
   ['Screenshots', 'Yes', 'Own team', 'No'],
-  ['Tamper and offline alerts', 'Yes', 'Own team', 'Yes'],
-  ['Block list', 'Yes', 'Read', 'Yes'],
-  ['Devices and deployment', 'Yes', 'No', 'Yes'],
-  ['Productivity rules', 'Edit', 'Read', 'No'],
+  ['Tamper and offline alerts', 'Yes', 'Own team', 'Needs approval to resolve'],
+  ['Block list and private sites', 'Yes', 'Read', 'Needs approval'],
+  ['Devices: release, deactivate', 'Yes', 'No', 'Needs approval'],
+  ['Productivity rules', 'Edit', 'Read', 'Needs approval'],
+  ['Licence key, deployment settings', 'Yes', 'No', 'Downloads only'],
+  ['Approve IT Admin changes', 'Yes', 'No', 'No'],
   ['Team, custom domain, billing, company settings', 'Yes', 'No', 'No'],
 ];
 
