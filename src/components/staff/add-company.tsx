@@ -67,44 +67,52 @@ export function AddCompanyDialog({ open, onClose, onCreated }: {
   }
 
   return (
-    <Modal title="Add company" open={open} onClose={onClose} wide>
+    <Modal title="Add company" open={open} onClose={onClose}>
       <form method="post" className="stack" onSubmit={submit} noValidate>
-        <div className="form">
+        <div className="fgrid">
           <Field id="nc-name" label="Company name" required maxLength={100} autoFocus value={f.name} error={err.name} onChange={(e) => set('name', e.target.value)} />
           <Field id="nc-slug" label="Address" required maxLength={32} spellCheck={false} value={f.slug} error={err.slug}
-            hint={f.slug ? `${f.slug}.workbeat.io` : 'name.workbeat.io'} onChange={(e) => { setSlugTouched(true); set('slug', e.target.value.toLowerCase()); }} />
-        </div>
-        <div className="form">
+            hint={`${f.slug || 'name'}.workbeat.io`} onChange={(e) => { setSlugTouched(true); set('slug', e.target.value.toLowerCase()); }} />
+
           <div className="field"><label htmlFor="nc-plan">Plan</label>
             <select id="nc-plan" value={f.plan} onChange={(e) => set('plan', e.target.value)}>
               {options('plan').map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select></div>
-          <Field id="nc-seats" label="Seats" inputMode="numeric" disabled={f.unlimited && f.plan === 'enterprise'} value={f.seats} error={err.seats} onChange={(e) => set('seats', e.target.value)} />
-          {f.plan === 'enterprise' && (
-            <label className="row" style={{ gap: 8, alignSelf: 'end', paddingBottom: 8 }}>
-              <input type="checkbox" checked={f.unlimited} onChange={(e) => set('unlimited', e.target.checked)} /> Unlimited seats
-            </label>
-          )}
+          <div className="field">
+            <label htmlFor="nc-seats">Seats</label>
+            <input id="nc-seats" type="text" inputMode="numeric" disabled={f.unlimited && f.plan === 'enterprise'} value={f.seats}
+              aria-invalid={!!err.seats} onChange={(e) => set('seats', e.target.value)} />
+            {err.seats ? <span className="err" role="alert">{err.seats}</span>
+              : f.plan === 'enterprise'
+                ? <label className="row small" style={{ gap: 6 }}><input type="checkbox" checked={f.unlimited} onChange={(e) => set('unlimited', e.target.checked)} /> Unlimited</label>
+                : <span className="hint">Unlimited only on Enterprise</span>}
+          </div>
+
           <div className="field"><label htmlFor="nc-tier">Screenshots</label>
             <select id="nc-tier" value={f.screenshot_tier} onChange={(e) => set('screenshot_tier', e.target.value)}>
               {options('tier').map(([v, l]) => <option key={v} value={v}>{l}</option>)}
             </select></div>
-        </div>
-        <div className="form">
           <div className="field"><label htmlFor="nc-status">Start as</label>
             <select id="nc-status" value={f.status} onChange={(e) => set('status', e.target.value)}>
               <option value="trial">{label('companyStatus', 'trial')}</option>
               <option value="active">{label('companyStatus', 'active')}</option>
             </select></div>
-          {f.status === 'trial' && <Field id="nc-trial" label="Trial days" inputMode="numeric" value={f.trial_days} error={err.trial_days} hint="1 to 90" onChange={(e) => set('trial_days', e.target.value)} />}
+
+          <Field id="nc-trial" label="Trial days" inputMode="numeric" disabled={f.status !== 'trial'} value={f.trial_days} error={err.trial_days}
+            hint={f.status === 'trial' ? '1 to 90' : 'Only for a trial'} onChange={(e) => set('trial_days', e.target.value)} />
           <div className="field"><label htmlFor="nc-tz">Time zone</label>
             <input id="nc-tz" type="text" list="nc-tz-list" value={f.timezone} onChange={(e) => set('timezone', e.target.value)} />
             <datalist id="nc-tz-list">{zones.map((z) => <option key={z} value={z} />)}</datalist>
-            {err.timezone && <span className="err" role="alert">{err.timezone}</span>}</div>
+            {err.timezone ? <span className="err" role="alert">{err.timezone}</span> : <span className="hint">Type to search</span>}</div>
+
           <Field id="nc-ret" label="Keep activity for (days)" inputMode="numeric" value={f.data_retention_days} error={err.data_retention_days} hint="1 to 365" onChange={(e) => set('data_retention_days', e.target.value)} />
+          <div aria-hidden="true" />
+
+          <div className="span2">
+            <Field id="nc-admin" label="Company Admin email" type="email" required maxLength={254} value={f.admin_email} error={err.admin_email}
+              hint="We email the licence key and a link to create their account to this address." onChange={(e) => set('admin_email', e.target.value)} />
+          </div>
         </div>
-        <Field id="nc-admin" label="Company Admin email" type="email" required maxLength={254} value={f.admin_email} error={err.admin_email}
-          hint="We email the licence key and a link to create their account to this address." onChange={(e) => set('admin_email', e.target.value)} />
         {err.form && <div className="err" role="alert">{err.form}</div>}
         <div className="mf">
           <button type="button" className="btn" onClick={onClose}>Cancel</button>

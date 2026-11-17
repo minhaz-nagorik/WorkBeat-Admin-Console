@@ -7,7 +7,7 @@ export function Field({ id, label, error, hint, ...input }: React.InputHTMLAttri
   return (
     <div className="field">
       <label htmlFor={id}>{label}</label>
-      <input id={id} name={id} aria-invalid={!!error} aria-describedby={error ? `${id}-err` : undefined} {...input} />
+      <input id={id} name={id} type="text" aria-invalid={!!error} aria-describedby={error ? `${id}-err` : undefined} {...input} />
       {hint && !error && <span className="hint">{hint}</span>}
       {error && <span className="err" id={`${id}-err`} role="alert">{error}</span>}
     </div>
