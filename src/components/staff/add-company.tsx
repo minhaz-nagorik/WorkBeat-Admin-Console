@@ -15,15 +15,15 @@ const EMPTY: Form = {
   name: '', slug: '', plan: 'growth', seats: '10', unlimited: false, screenshot_tier: 'standard',
   status: 'trial', trial_days: '14', timezone: 'UTC', data_retention_days: '90', admin_email: '',
 };
-const SLUG = /^[a-z0-9](?:[a-z0-9-]{1,38}[a-z0-9])$/;
-const slugOf = (name: string) => name.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/; // companies.slug rule: 3–32, no double dash
+const slugOf = (name: string) => name.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').slice(0, 32).replace(/^-+|-+$/g, '');
 const whole = (v: string, min: number, max: number) => /^\d+$/.test(v) && +v >= min && +v <= max;
 
 /** Client-side checks; the API is the real control and its 409/422 land beside the same fields. */
 export function check(f: Form): Partial<Record<keyof Form, string>> {
   const e: Partial<Record<keyof Form, string>> = {};
   if (!f.name.trim() || f.name.trim().length > 100) e.name = 'Enter the company name (up to 100 characters).';
-  if (!SLUG.test(f.slug)) e.slug = 'Use 3 to 40 lower-case letters, digits or dashes, not starting or ending with a dash.';
+  if (!SLUG.test(f.slug) || f.slug.length < 3 || f.slug.length > 32) e.slug = 'Use 3 to 32 lower-case letters or digits, with single dashes between words.';
   if (!(f.unlimited && f.plan === 'enterprise') && !whole(f.seats, 1, 100000)) e.seats = 'Enter a number of seats, 1 or more.';
   if (f.status === 'trial' && !whole(f.trial_days, 1, 90)) e.trial_days = 'Use 1 to 90 days.';
   if (!whole(f.data_retention_days, 1, 365)) e.data_retention_days = 'Use 1 to 365 days.';
@@ -63,7 +63,7 @@ export function AddCompanyDialog({ open, onClose, onCreated }: {
       for (const k of fields) e2[(k === 'seat_limit' ? 'seats' : k) as keyof Form] = 'Check this value.';
       return setErr(e2);
     }
-    setErr({ form: r.status === 404 && !r.err.code ? 'Creating companies isn’t available yet.' : message(r.status, r.err.code) });
+    setErr({ form: message(r.status, r.err.code) });
   }
 
   return (
@@ -71,7 +71,7 @@ export function AddCompanyDialog({ open, onClose, onCreated }: {
       <form method="post" className="stack" onSubmit={submit} noValidate>
         <div className="form">
           <Field id="nc-name" label="Company name" required maxLength={100} autoFocus value={f.name} error={err.name} onChange={(e) => set('name', e.target.value)} />
-          <Field id="nc-slug" label="Address" required maxLength={40} spellCheck={false} value={f.slug} error={err.slug}
+          <Field id="nc-slug" label="Address" required maxLength={32} spellCheck={false} value={f.slug} error={err.slug}
             hint={f.slug ? `${f.slug}.workbeat.io` : 'name.workbeat.io'} onChange={(e) => { setSlugTouched(true); set('slug', e.target.value.toLowerCase()); }} />
         </div>
         <div className="form">

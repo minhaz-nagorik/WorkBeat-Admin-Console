@@ -8,7 +8,6 @@ import { useList } from '@/components/list';
 import { Modal } from '@/components/confirm';
 import { useDebounced } from '@/components/staff/common';
 
-// shortcut: a 404 means the round-5 route isn't built yet; drop the check once it ships.
 // GET /v1/staff/company-admins (backend round 5): Company Admins only, no other role or employee data (D41).
 type Admin = { id: string; name: string; email: string; company: { id: string; name: string; slug: string }; created_at: string; must_change_password: boolean };
 
@@ -26,7 +25,7 @@ export default function StaffCompanyAdmins() {
         <div className="toolbar">
           <input type="search" className="search" placeholder="Search name, email or company" aria-label="Search name, email or company" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
-        {s.status === 404 ? <p className="muted">This list isn’t available yet: the backend route is coming (round 5).</p> : <Loaded s={s}>{(d) => (
+        <Loaded s={s}>{(d) => (
           <>
             <div className="tablewrap">
               <table>
@@ -46,7 +45,7 @@ export default function StaffCompanyAdmins() {
             </div>
             {L.pager}
           </>
-        )}</Loaded>}
+        )}</Loaded>
       </div>
       <ResetDialog a={resetFor} onClose={() => { setResetFor(null); s.reload(); }} />
     </>
@@ -67,7 +66,7 @@ function ResetDialog({ a, onClose }: { a: Admin | null; onClose: () => void }) {
     const r = await call<{ temporary_password: string }>('POST', `/v1/staff/users/${a.id}/temporary-password`);
     setBusy(false);
     if (r.ok) return setPw(r.data.temporary_password);
-    setErr(r.status === 404 && !r.err.code ? 'Resetting passwords isn’t available yet.' : message(r.status, r.err.code));
+    setErr(message(r.status, r.err.code));
   }
 
   return (

@@ -12,7 +12,7 @@
 - [x] 1.5 Invitation page: lookup, accept, token removed from the URL, invalid and expired messages
 - [ ] 1.6 Tests: each role lands on its page; wrong password message; change password wrong current and short new; staff sign in with password and land on Companies; reset invalid and expired links; `429` countdown; Back after sign-out; invitation valid, invalid, expired, weak password
 
-- [ ] 1.7 Temporary password: force Choose a new password while `must_change_password` (product owner, 17 Nov 2026)
+- [x] 1.7 Temporary password: force Choose a new password while `must_change_password` (product owner, 17 Nov 2026)
 
 ## 2. team-management
 

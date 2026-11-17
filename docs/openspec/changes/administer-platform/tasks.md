@@ -37,7 +37,7 @@
 
 ## 6. Create companies and temporary passwords (product owner, 17 Nov 2026)
 
-- [ ] 6.1 Add company dialog with all settings and a required Company Admin email (`POST /v1/staff/companies`)
-- [ ] 6.2 Company admins page with search (`GET /v1/staff/company-admins`)
-- [ ] 6.3 Reset password: temporary password shown once with Copy, also emailed
+- [x] 6.1 Add company dialog with all settings and a required Company Admin email (`POST /v1/staff/companies`)
+- [x] 6.2 Company admins page with search (`GET /v1/staff/company-admins`)
+- [x] 6.3 Reset password: temporary password shown once with Copy, also emailed
 - [ ] 6.4 Tests: taken address and email messages; temporary password cleared on close; no other role listed

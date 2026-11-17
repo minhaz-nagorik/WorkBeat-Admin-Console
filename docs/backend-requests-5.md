@@ -1,5 +1,10 @@
 # Backend requests from WorkBeat Admin — round 5: create companies, temporary passwords
 
+> **Answered (17 Nov 2026)** in `WorkBeat-Backend/docs/integration/admin-requests-5-response.md`;
+> all four items built and checked from the console. Differences adopted: address (`slug`) is 3–32
+> characters, `^[a-z0-9]+(-[a-z0-9]+)*$`; temporary passwords are `xxxx-xxxx-xxxx-xxxx`; a new
+> password equal to the current one is refused for every change.
+
 **From:** WorkBeat Admin (the web console) · **To:** WorkBeat-Backend · **Date:** 17 November 2026
 **Follows:** round 4, answered (`admin-requests-4-response.md`).
 **Decided by the product owner (17 Nov 2026):**
