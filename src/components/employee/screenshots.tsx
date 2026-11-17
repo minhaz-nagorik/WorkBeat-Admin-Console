@@ -4,7 +4,7 @@ import { useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useData, Loaded } from '@/lib/use-data';
 import { Modal } from '@/components/confirm';
-import { full } from '@/lib/time';
+import { dayKey, full } from '@/lib/time';
 import type { TabProps } from './tabs';
 import { addDays, clock, fmtDay, longDay, today, useRetainedFrom } from '@/components/reports/kit';
 
@@ -15,6 +15,23 @@ type Day = { screenshots_enabled: boolean; items: Shot[] };
 
 const every = (s: number) => (s % 3600 === 0 ? (s === 3600 ? 'every hour' : `every ${s / 3600} hours`) : `every ${Math.round(s / 60)} minutes`);
 const expired = (s: Shot) => new Date(s.expires_at).getTime() - Date.now() < 5_000;
+
+/**
+ * Save the image as a file. The signed link is on the API's host, where the browser won't honour a
+ * download name, so it is fetched through our same-origin proxy and saved from memory.
+ * Name: hostname-YYYY-MM-DD-HHMM.jpg in the company's time.
+ */
+async function save(s: Shot, tz: string): Promise<boolean> {
+  const u = new URL(s.view_url);
+  const res = await fetch(`/api${u.pathname}${u.search}`).catch(() => null);
+  if (!res?.ok) return false;
+  const href = URL.createObjectURL(await res.blob());
+  const a = document.createElement('a');
+  a.href = href; a.download = `${s.hostname}-${dayKey(new Date(s.captured_at), tz)}-${clock(s.captured_at, tz).replace(':', '')}.jpg`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(href), 1000);
+  return true;
+}
 
 export function EmployeeScreenshots({ employeeId, tz, role }: TabProps) {
   const sp = useSearchParams();
@@ -98,6 +115,8 @@ function Grid({ items, tz, onOpen, onBroken }: { items: Shot[]; tz: string; onOp
 
 function Viewer({ items, id, setId, tz, refresh }: { items: Shot[]; id: string | null; setId: (id: string | null) => void; tz: string; refresh: () => Promise<void> }) {
   const i = items.findIndex((s) => s.id === id), s = items[i];
+  const [saving, setSaving] = useState(false);
+  const [failed, setFailed] = useState(false);
   // Stepping onto an expired link refetches first; the new list carries fresh links for the same ids.
   const step = async (n: number) => { const next = items[i + n]; if (!next) return; if (expired(next)) await refresh(); setId(next.id); };
   return (
@@ -112,8 +131,13 @@ function Viewer({ items, id, setId, tz, refresh }: { items: Shot[]; id: string |
             <button className="btn" disabled={i === 0} onClick={() => step(-1)}>‹ Previous</button>
             <span className="small muted" style={{ alignSelf: 'center' }}>{i + 1} of {items.length}</span>
             <button className="btn" disabled={i === items.length - 1} onClick={() => step(1)}>Next ›</button>
-            <button className="btn pri" onClick={async () => { if (expired(s)) await refresh(); else window.open(s.view_url, '_blank', 'noopener,noreferrer'); }}>Download</button>
+            <button className="btn pri" disabled={saving} onClick={async () => {
+              setSaving(true); setFailed(false);
+              if (expired(s) || !(await save(s, tz))) { await refresh(); setFailed(true); } // stale link: fresh list, try again
+              setSaving(false);
+            }}>{saving ? 'Downloading…' : 'Download'}</button>
           </div>
+          {failed && <p className="small muted" role="status">The link had expired and was renewed. Press Download again.</p>}
         </>
       )}
     </Modal>
