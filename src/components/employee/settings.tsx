@@ -66,26 +66,33 @@ export function MonitoringSettingsTab({ employeeId, role, archived }: TabProps) 
           <p className="small muted">{edit ? 'Choose what WorkBeat collects from this person’s computers.' : 'What WorkBeat collects from this person’s computers. Only a Company Admin can change it.'}</p></div>
         {note && <div className={`notice ${note.ok ? 'ok' : 'warn'}`} role="status">{note.text}</div>}
         <PendingList resource="monitoring_settings" />
-        {SWITCHES.map(([k, l, d]) => (
-          <div key={k} className="row between" style={{ flexWrap: 'nowrap' }}>
-            <div><b id={`ms-${k}`}>{l}</b><div className="small muted">{d}</div></div>
-            <button type="button" role="switch" aria-checked={f[k]} aria-labelledby={`ms-${k}`} disabled={!edit}
-              className={`mock-toggle ${f[k] ? 'on' : ''}`} onClick={() => setF({ ...f, [k]: !f[k] })} />
-            <span className="small" aria-hidden="true" style={{ minWidth: 24 }}>{f[k] ? 'On' : 'Off'}</span>
+        <div className="setlist">
+          {SWITCHES.map(([k, l, d]) => (
+            <div key={k} className="setrow">
+              <div><b id={`ms-${k}`}>{l}</b><div className="small muted">{d}</div></div>
+              <div className="setctl">
+                <span className="small" aria-hidden="true">{f[k] ? 'On' : 'Off'}</span>
+                <button type="button" role="switch" aria-checked={f[k]} aria-labelledby={`ms-${k}`} disabled={!edit}
+                  className={`mock-toggle ${f[k] ? 'on' : ''}`} onClick={() => setF({ ...f, [k]: !f[k] })} />
+              </div>
+            </div>
+          ))}
+          <div className="setrow">
+            <div><label htmlFor="ms-iv"><b>Screenshots</b></label>
+              <div className="small muted">How often a screenshot is taken. Never faster than your plan allows.</div>
+              {ivErr && <span className="err" id="ms-iv-err" role="alert">{ivErr}</span>}
+              {edit && tier === 'off' && <span className="hint">Your plan doesn&apos;t include screenshots. <Link href="/company-settings#billing">Billing</Link></span>}</div>
+            <div className="setctl">
+              {!edit ? <span id="ms-iv">{label('interval', String(f.screenshot_interval_seconds))}</span> : (
+                <select id="ms-iv" style={{ width: 200 }} value={f.screenshot_interval_seconds} disabled={!choices.length} aria-invalid={!!ivErr} aria-describedby={ivErr ? 'ms-iv-err' : undefined}
+                  onChange={(e) => { setF({ ...f, screenshot_interval_seconds: +e.target.value }); setIvErr(null); }}>
+                  {/* keep the stored value visible even if the tier no longer allows it */}
+                  {[...new Set([...choices, f.screenshot_interval_seconds])].sort((a, b) => a - b)
+                    .map((v) => <option key={v} value={v} disabled={!choices.includes(v)}>{label('interval', String(v))}</option>)}
+                </select>
+              )}
+            </div>
           </div>
-        ))}
-        <div className="field" style={{ maxWidth: 280 }}>
-          <label htmlFor="ms-iv">Screenshots</label>
-          {!edit ? <span id="ms-iv">{label('interval', String(f.screenshot_interval_seconds))}</span> : (
-            <select id="ms-iv" value={f.screenshot_interval_seconds} disabled={!choices.length} aria-invalid={!!ivErr} aria-describedby={ivErr ? 'ms-iv-err' : undefined}
-              onChange={(e) => { setF({ ...f, screenshot_interval_seconds: +e.target.value }); setIvErr(null); }}>
-              {/* keep the stored value visible even if the tier no longer allows it */}
-              {[...new Set([...choices, f.screenshot_interval_seconds])].sort((a, b) => a - b)
-                .map((v) => <option key={v} value={v} disabled={!choices.includes(v)}>{label('interval', String(v))}</option>)}
-            </select>
-          )}
-          {ivErr && <span className="err" id="ms-iv-err" role="alert">{ivErr}</span>}
-          {edit && tier === 'off' && <span className="hint">Your plan doesn&apos;t include screenshots. <Link href="/company-settings#billing">Billing</Link></span>}
         </div>
         {edit && <div className="row"><button className="btn pri" disabled={busy}>{busy ? 'Saving…' : 'Save'}</button></div>}
       </form>
