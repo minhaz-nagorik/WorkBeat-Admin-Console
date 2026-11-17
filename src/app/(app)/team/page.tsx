@@ -221,13 +221,15 @@ function ManagerTeams({ managers, emps, onChange, say }: {
   return (
     <div className="card stack">
       <div className="cardhead">
-        <div><h2>Manager teams</h2><p className="small muted">Managers only see the employees ticked here. Each employee has at most one manager.</p></div>
+        <div><h2>Manager teams</h2><p className="small muted">Pick a manager, then tick the employees on their team. Managers only see those employees; each employee has at most one manager.</p></div>
         {managers.length > 0 && (
           <div className="row">
             {L.search('Search employees')}
-            <select aria-label="Manager" style={{ maxWidth: 240 }} value={current} onChange={(e) => setMgr(e.target.value)}>
-              {managers.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
-            </select>
+            <label className="row" style={{ gap: 6 }}>Team of
+              <select style={{ maxWidth: 280 }} value={current} onChange={(e) => setMgr(e.target.value)}>
+                {managers.map((m) => <option key={m.id} value={m.id}>{m.name} ({m.email})</option>)}
+              </select>
+            </label>
           </div>
         )}
       </div>
