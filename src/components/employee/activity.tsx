@@ -1,7 +1,8 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useData, Loaded, type DataState } from '@/lib/use-data';
+import { useData, Loaded } from '@/lib/use-data';
+import { call, message } from '@/lib/client';
 import { useMe } from '@/lib/me';
 import { hm } from '@/lib/format';
 import { label, options } from '@/lib/labels';
@@ -46,18 +47,13 @@ export function EmployeeActivity({ employeeId, tz }: TabProps) {
   const q = `from=${range.from}&to=${range.to}&employee_id=${employeeId}`;
   const n = daysIn(range.from, range.to);
   const pq = `from=${addDays(range.from, -n)}&to=${addDays(range.from, -1)}&employee_id=${employeeId}`;
-  const limit = prefs.top === 'all' || prefs.cat !== 'all' ? 100 : +prefs.top; // category filter runs here, so ask for the most
+  // The API ranks, filters by category and pages (usage-reports); All reads pages of 100.
+  const ranked = `${q}&limit=${prefs.top === 'all' ? 100 : +prefs.top}${prefs.cat !== 'all' ? `&category=${prefs.cat}` : ''}`;
   const act = useData<Activity>(`/v1/reports/activity?${q}&group_by=${group}`);
   const prod = useData<Prod>(`/v1/reports/productivity?${q}&group_by=${group}`);
-  const apps = useData<{ apps: (Item & { app_name: string })[] }>(`/v1/reports/apps?${q}&limit=${limit}`);
-  const sites = useData<{ websites: (Item & { domain: string })[] }>(`/v1/reports/websites?${q}&limit=${limit}`);
   const pAct = useData<Activity>(compare ? `/v1/reports/activity?${pq}` : null);
   const pProd = useData<Prod>(compare ? `/v1/reports/productivity?${pq}` : null);
 
-  const pick = <T extends Item>(xs: T[]) => {
-    const f = prefs.cat === 'all' ? xs : xs.filter((x) => x.category === prefs.cat);
-    return prefs.top === 'all' ? f : f.slice(0, +prefs.top);
-  };
   async function exp(kind: string) {
     setNote(null);
     setNote(await download(`/v1/exports/${kind}.csv?${q}`, `workbeat-${kind}-${range.from}-${range.to}.csv`));
@@ -137,8 +133,8 @@ export function EmployeeActivity({ employeeId, tz }: TabProps) {
 
           {(show.apps || show.sites) && (
             <div className={`grid ${show.apps && show.sites ? 'g2' : ''}`}>
-              {show.apps && <div className="card"><h2>Applications</h2><Bars s={apps} rows={(d) => pick(d.apps).map((x) => ({ name: x.app_name, ...x }))} /></div>}
-              {show.sites && <div className="card"><h2>Websites</h2><Bars mono s={sites} rows={(d) => pick(d.websites).map((x) => ({ name: x.domain, ...x }))} />
+              {show.apps && <div className="card"><h2>Applications</h2><Ranked kind="apps" query={ranked} all={prefs.top === 'all'} /></div>}
+              {show.sites && <div className="card"><h2>Websites</h2><Ranked mono kind="websites" query={ranked} all={prefs.top === 'all'} />
                 <p className="small muted" style={{ marginTop: 10 }}>Sites on the company&apos;s private list are not logged.</p></div>}
             </div>
           )}
@@ -176,25 +172,56 @@ function ShareCard({ title, s, t, color, d }: { title: string; s: number; t: num
   return <div className="card stat"><span className="label">{title}</span><span className="v" style={{ color }}>{t ? `${Math.round((s / t) * 100)}%` : '—'}</span><span className="s">{hm(s)}</span>{d}</div>;
 }
 
-function Bars<T>({ s, rows, mono }: { s: DataState<T>; rows: (d: T) => { name: string; seconds: number; category: string }[]; mono?: boolean }) {
+type RankedPage = { apps?: (Item & { app_name: string })[]; websites?: (Item & { domain: string })[]; next_offset: number | null };
+
+/** Apps or websites ranked by the API; with All, Show more appends the next page of 100. */
+function Ranked({ kind, query, all, mono }: { kind: 'apps' | 'websites'; query: string; all: boolean; mono?: boolean }) {
+  const path = `/v1/reports/${kind}?${query}`;
+  const first = useData<RankedPage>(path);
+  const [extra, setExtra] = useState<{ path: string; rows: Item[]; next: number | null } | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [note, setNote] = useState<string | null>(null);
+  const pathRef = useRef(path);
+  pathRef.current = path;
+  const name = (x: Item & { app_name?: string; domain?: string }) => (kind === 'apps' ? x.app_name : x.domain) ?? '';
+
   return (
-    <Loaded s={s} rows={3}>{(d) => {
-      const r = rows(d), max = r[0]?.seconds || 1;
+    <Loaded s={first} rows={3}>{(d) => {
+      const mine = extra?.path === path ? extra : null; // pages for an older range or filter are dropped
+      const r = [...(d[kind] ?? []), ...(mine?.rows ?? [])].map((x) => ({ ...x, name: name(x) }));
+      const next = mine ? mine.next : d.next_offset;
+      async function more() {
+        if (next === null) return;
+        setBusy(true);
+        const p = path, res = await call<RankedPage>('GET', `${p}&offset=${next}`);
+        setBusy(false);
+        if (p !== pathRef.current) return;
+        if (!res.ok) return setNote(message(res.status, res.err.code));
+        setNote(null);
+        setExtra({ path: p, rows: [...(mine?.rows ?? []), ...(res.data[kind] ?? [])], next: res.data.next_offset });
+      }
       if (!r.length) return <p className="small muted">Nothing recorded in this range.</p>;
+      const max = r[0]?.seconds || 1;
       return (
-        <ul className="stack" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-          {r.map((x) => (
-            <li key={x.name} className="hbar">
-              <span className={`row ${mono ? 'mono' : ''}`} style={{ gap: 6, flexWrap: 'nowrap', minWidth: 0 }}>
-                <span className="dot" style={{ background: CATCOL[x.category] }} aria-hidden="true" />
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={x.name}>{x.name}</span>
-                <span className="small muted" style={{ flexShrink: 0 }}>{label('category', x.category)}</span>
-              </span>
-              <span className="t" aria-hidden="true"><i style={{ width: `${(x.seconds / max) * 100}%`, background: CATCOL[x.category] }} /></span>
-              <span className="n">{hm(x.seconds)}</span>
-            </li>
-          ))}
-        </ul>
+        <>
+          <ul className="stack" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+            {r.map((x) => (
+              <li key={x.name} className="hbar">
+                <span className={`row ${mono ? 'mono' : ''}`} style={{ gap: 6, flexWrap: 'nowrap', minWidth: 0 }}>
+                  <span className="dot" style={{ background: CATCOL[x.category] }} aria-hidden="true" />
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={x.name}>{x.name}</span>
+                  <span className="small muted" style={{ flexShrink: 0 }}>{label('category', x.category)}</span>
+                </span>
+                <span className="t" aria-hidden="true"><i style={{ width: `${(x.seconds / max) * 100}%`, background: CATCOL[x.category] }} /></span>
+                <span className="n">{hm(x.seconds)}</span>
+              </li>
+            ))}
+          </ul>
+          {note && <p className="small" role="alert">{note}</p>}
+          {all && next !== null && (
+            <button className="btn sm" style={{ marginTop: 10 }} disabled={busy} onClick={more}>{busy ? 'Loading…' : `Show more (${r.length} shown)`}</button>
+          )}
+        </>
       );
     }}</Loaded>
   );

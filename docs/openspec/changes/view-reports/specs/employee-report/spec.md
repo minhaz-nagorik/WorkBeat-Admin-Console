@@ -59,11 +59,19 @@ The employee page SHALL show the newest five alerts from `GET /v1/alerts?employe
 
 ### Requirement: The report can be customised
 <!-- source: Prototype "Employee → Report" -->
-Customize SHALL let the reader show or hide summary, hourly chart, breakdown, applications and websites, choose how many apps and sites to list (5, 8, 15, all, passed as `limit` up to 100), filter them by category, and reset to the default. The choice MUST be kept per reader in the browser only.
+Customize SHALL let the reader show or hide summary, hourly chart, breakdown, applications and websites, choose how many apps and sites to list (5, 8, 15 or all, passed as `limit`), filter them by category (passed as `category`), and reset to the default. The choice MUST be kept per reader in the browser only.
 
 #### Scenario: Top 15 productive apps
 - **WHEN** the reader picks Top 15 and Productive only
 - **THEN** the applications list shows up to 15 productive apps
+
+### Requirement: All apps and sites load a page at a time
+<!-- source: backend `usage-reports` -->
+With All chosen, the applications and websites lists SHALL each request pages of 100 and show a Show more control while `next_offset` is not null, appending the next page below.
+
+#### Scenario: More than 100 websites
+- **WHEN** the reader picks All and the range has 230 domains
+- **THEN** 100 are listed with Show more, and two presses list all 230
 
 ### Requirement: Reports export as CSV
 <!-- source: backend `data-export` · A12 -->
