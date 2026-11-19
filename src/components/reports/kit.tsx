@@ -32,6 +32,8 @@ export const PRESETS = [['today', 'Today'], ['yesterday', 'Yesterday'], ['thiswe
   ['thismonth', 'This month'], ['last30', 'Last 30 days'], ['custom', 'Custom range']] as const;
 export type Preset = (typeof PRESETS)[number][0];
 export type Range = { preset: Preset; from: string; to: string };
+/** The API refuses a range over 90 days, the longest retention (backend B13). */
+export const MAX_RANGE_DAYS = 90;
 export function presetRange(p: Preset, tz: string, cur?: Range): Range {
   const t = today(tz);
   const r: Record<Exclude<Preset, 'custom'>, [string, string]> = {
@@ -44,15 +46,21 @@ export function presetRange(p: Preset, tz: string, cur?: Range): Range {
 
 export function RangePicker({ value, onChange, tz, min }: { value: Range; onChange: (r: Range) => void; tz: string; min?: string }) {
   const t = today(tz);
-  const set = (from: string, to: string) => { if (from && to) onChange({ preset: 'custom', from: from <= to ? from : to, to: from <= to ? to : from }); };
+  const floor = min ?? addDays(t, -(MAX_RANGE_DAYS - 1));
+  const set = (a: string, b: string) => {
+    if (!a || !b) return;
+    const to = a <= b ? b : a, from = a <= b ? a : b;
+    const earliest = addDays(to, -(MAX_RANGE_DAYS - 1)); // keep the range within 90 days
+    onChange({ preset: 'custom', from: from < earliest ? earliest : from, to });
+  };
   return (
     <div className="row rangepick">
       <select aria-label="Date range" value={value.preset} onChange={(e) => onChange(presetRange(e.target.value as Preset, tz, value))}>
         {PRESETS.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
       </select>
-      <input type="date" aria-label="From date" value={value.from} min={min} max={t} onChange={(e) => set(e.target.value, value.to)} />
+      <input type="date" aria-label="From date" value={value.from} min={floor} max={t} onChange={(e) => set(e.target.value, value.to)} />
       <span className="muted">to</span>
-      <input type="date" aria-label="To date" value={value.to} min={min} max={t} onChange={(e) => set(value.from, e.target.value)} />
+      <input type="date" aria-label="To date" value={value.to} min={floor} max={t} onChange={(e) => set(value.from, e.target.value)} />
     </div>
   );
 }
@@ -61,12 +69,12 @@ export const rangeLabel = (from: string, to: string) => from === to ? fmtDay(fro
   : `${fmtDay(from, { day: 'numeric', month: 'short' })} – ${fmtDay(to, { day: 'numeric', month: 'short', year: 'numeric' })} · ${daysIn(from, to)} days`;
 
 /**
- * First retained company day for this scope: the reports clamp `from` to it, so a 366-day ask returns it.
+ * First retained company day for this scope: the reports clamp `from` to it, so a 90-day ask (the longest allowed) returns it.
  * shortcut: one extra report call per tab, upgrade when the API exposes retention to managers.
  */
 export function useRetainedFrom(tz: string, employeeId?: string): string | undefined {
   const t = today(tz);
-  const q = `from=${addDays(t, -365)}&to=${t}${employeeId ? `&employee_id=${employeeId}` : ''}`;
+  const q = `from=${addDays(t, -(MAX_RANGE_DAYS - 1))}&to=${t}${employeeId ? `&employee_id=${employeeId}` : ''}`;
   return useData<{ from: string }>(`/v1/reports/productivity?${q}`).data?.from;
 }
 

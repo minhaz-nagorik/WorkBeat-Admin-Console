@@ -6,7 +6,7 @@
 ## 1. company-settings
 
 - [x] 1.1 Company form: name, read-only address, time zone picker, idle threshold in minutes
-- [x] 1.2 Retention 1–365 with quick picks and shorten confirmation naming the date
+- [x] 1.2 Retention as 30, 60 or 90 days, with a shorten confirmation naming the date
 - [ ] 1.3 Tests: `422` beside fields; out-of-range idle refused; shorten confirmation date; role test — only company admin reaches the page
 
 ## 2. custom-domain

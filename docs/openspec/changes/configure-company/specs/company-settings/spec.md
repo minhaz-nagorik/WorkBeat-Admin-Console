@@ -27,7 +27,7 @@ The form SHALL edit `name` (1–100 characters), `timezone` (a searchable list o
 
 ### Requirement: Retention is chosen in days and shortening is confirmed
 <!-- source: B13 · backend `company-settings` · backend `data-retention` · A7 -->
-The form SHALL edit `data_retention_days` as a whole number from 1 to 365 with quick picks 30, 60, 90 (default), 180 and 365. Saving a shorter value MUST first confirm that activity and screenshots older than the new limit, naming the date, are deleted at the next nightly run.
+The form SHALL edit `data_retention_days` as one of three choices: 30, 60 or 90 days (default), and offer no other value. Saving a shorter value MUST first confirm that activity and screenshots older than the new limit, naming the date, are deleted at the next nightly run.
 
 #### Scenario: From 90 to 30 days
 - **WHEN** an admin lowers retention from 90 to 30 days and saves

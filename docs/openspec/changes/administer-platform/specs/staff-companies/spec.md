@@ -49,6 +49,10 @@ The company dialog SHALL edit `expired_blocking_grace_days` (0–365, default 30
 <!-- source: product owner 17 Nov 2026 · backend round 5 `POST /v1/staff/companies` -->
 "Add company" SHALL open a dialog asking name, address (`slug`), plan, seats (unlimited only for Enterprise), screenshot plan, trial or active (with trial days), time zone, data retention and a required Company Admin email, and send `POST /v1/staff/companies`. On `201` the company MUST appear in the list and the page MUST say the licence key and sign-up link were emailed to that address.
 
+#### Scenario: Data retention for a new company
+- **WHEN** staff open "Add company"
+- **THEN** data retention offers 30, 60 and 90 days, with 90 chosen
+
 #### Scenario: A new customer
 - **WHEN** staff add "Nagorik Technologies" with admin `ceo@nagorik.tech`
 - **THEN** the company is listed and the page says the licence key and sign-up link went to `ceo@nagorik.tech`

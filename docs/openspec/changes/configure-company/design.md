@@ -14,8 +14,8 @@ plan's fastest to 480 minutes), a retention dropdown, and a card form inside a b
   applying it at once.
 - **Card details never enter WorkBeat.** The prototype's card form is replaced by a link to the
   Stripe billing portal (`POST /v1/billing/portal-session`).
-- **Retention is a number from 1 to 365**, not the prototype's five presets, because backend
-  `company-settings` accepts any whole number in that range; presets stay as quick picks.
+- **Retention is 30, 60 or 90 days**, not the prototype's five presets: the product owner removed
+  180 and 365 on 19 Nov 2026, and backend `company-settings` accepts only these three (B13).
 - **Time zone and idle threshold are added.** B19 and backend `company-settings` make both
   company settings; the prototype has neither.
 

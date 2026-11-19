@@ -30,8 +30,12 @@ For `it_admin` the employee page SHALL show the header (name, department, email,
 The Report tab SHALL offer presets Today, Yesterday, This week, Last 7 days, This month, Last 30 days and a custom from–to in the company's days, and an option to compare with the previous period of the same length. When the response's effective `from` differs from the chosen one, the tab MUST say data before that day was deleted by the retention setting.
 
 #### Scenario: A range past retention
-- **WHEN** the admin picks a range starting 120 days ago with 90-day retention
+- **WHEN** the admin picks a range starting 60 days ago with 30-day retention
 - **THEN** the report shows the retained days and says earlier data was deleted
+
+#### Scenario: A custom range over 90 days
+- **WHEN** the admin picks a custom range longer than 90 days
+- **THEN** its start moves so the range is 90 days, the most the API accepts
 
 ### Requirement: The report shows time, activity and productivity
 <!-- source: D1 · backend `usage-reports` · Prototype "Employee → Report" -->

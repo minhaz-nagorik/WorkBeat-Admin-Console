@@ -8,7 +8,7 @@ and leaves the interval to each employee's monitoring settings.
 
 ## What Changes
 
-- **Company settings**: name, read-only address (slug), data retention 1–365 days, time zone,
+- **Company settings**: name, read-only address (slug), data retention of 30, 60 or 90 days, time zone,
   idle threshold 60–3600 s.
 - **Custom domain**: add, change and remove a domain; show the CNAME and TXT records with copy
   buttons; pending, active and failed states.

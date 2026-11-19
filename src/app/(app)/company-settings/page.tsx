@@ -37,12 +37,12 @@ export default function CompanySettings() {
 
 // ---------- Company form ----------
 
-const RETENTION_PICKS = [30, 60, 90, 180, 365];
+const RETENTION_CHOICES = [30, 60, 90]; // B13: the only values the API accepts
 const FIELD_ERR: Record<string, string> = {
   name: 'Use 1 to 100 characters.',
   timezone: 'Pick a time zone from the list.',
   idle_threshold_seconds: 'Use a whole number of minutes from 1 to 60.',
-  data_retention_days: 'Use a whole number of days from 1 to 365.',
+  data_retention_days: 'Pick 30, 60 or 90 days.',
 };
 const whole = (v: string, min: number, max: number) => /^\d+$/.test(v) && +v >= min && +v <= max;
 
@@ -64,7 +64,7 @@ function CompanyForm({ s, onSaved }: { s: Settings; onSaved: (d: Settings) => vo
     if (!name.trim() || name.trim().length > 100) e.name = FIELD_ERR.name;
     if (!zones.includes(zone)) e.timezone = FIELD_ERR.timezone;
     if (!whole(idle, 1, 60)) e.idle_threshold_seconds = FIELD_ERR.idle_threshold_seconds;
-    if (!whole(days, 1, 365)) e.data_retention_days = FIELD_ERR.data_retention_days;
+    if (!RETENTION_CHOICES.includes(+days)) e.data_retention_days = FIELD_ERR.data_retention_days;
     setErr(e); setSaved(false);
     return !Object.keys(e).length;
   }
@@ -105,17 +105,15 @@ function CompanyForm({ s, onSaved }: { s: Settings; onSaved: (d: Settings) => vo
       <Field id="co-idle" label="Idle after (minutes)" type="number" inputMode="numeric" min={1} max={60} step={1} style={{ maxWidth: 120 }}
         value={idle} error={err.idle_threshold_seconds} onChange={(e) => setIdle(e.target.value)}
         hint="A computer with no keyboard or mouse use for this long counts as idle. Computers pick up a change within 30 minutes. 1 to 60." />
-      <div className="stack" style={{ gap: 6 }}>
-        <Field id="co-ret" label="Keep activity data for (days)" type="number" inputMode="numeric" min={1} max={365} step={1} style={{ maxWidth: 120 }}
-          value={days} error={err.data_retention_days} onChange={(e) => setDays(e.target.value)}
-          hint="Older activity and screenshots are deleted every night. 1 to 365." />
-        <div className="row" style={{ gap: 6 }} role="group" aria-label="Quick picks for days kept">
-          {RETENTION_PICKS.map((d) => (
-            <button key={d} type="button" className="btn sm" aria-pressed={+days === d} onClick={() => setDays(String(d))}>
-              {d} days{d === 90 ? ' (default)' : ''}
-            </button>
-          ))}
-        </div>
+      <div className="field">
+        <label htmlFor="co-ret">Keep activity data for</label>
+        <select id="co-ret" style={{ maxWidth: 200 }} value={days} onChange={(e) => setDays(e.target.value)}
+          aria-invalid={!!err.data_retention_days} aria-describedby={err.data_retention_days ? 'co-ret-err' : 'co-ret-hint'}>
+          {!RETENTION_CHOICES.includes(+days) && <option value={days} disabled>{days} days</option>}
+          {RETENTION_CHOICES.map((d) => <option key={d} value={d}>{d} days{d === 90 ? ' (default)' : ''}</option>)}
+        </select>
+        {err.data_retention_days ? <span className="err" id="co-ret-err" role="alert">{err.data_retention_days}</span>
+          : <span className="hint" id="co-ret-hint">Older activity and screenshots are deleted every night.</span>}
       </div>
       {err.form && <div className="err" role="alert">{err.form}</div>}
       {confirming ? (

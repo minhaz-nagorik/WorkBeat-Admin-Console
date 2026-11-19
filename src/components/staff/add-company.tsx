@@ -26,7 +26,7 @@ export function check(f: Form): Partial<Record<keyof Form, string>> {
   if (!SLUG.test(f.slug) || f.slug.length < 3 || f.slug.length > 32) e.slug = 'Use 3 to 32 lower-case letters or digits, with single dashes between words.';
   if (!(f.unlimited && f.plan === 'enterprise') && !whole(f.seats, 1, 100000)) e.seats = 'Enter a number of seats, 1 or more.';
   if (f.status === 'trial' && !whole(f.trial_days, 1, 90)) e.trial_days = 'Use 1 to 90 days.';
-  if (!whole(f.data_retention_days, 1, 365)) e.data_retention_days = 'Use 1 to 365 days.';
+  if (!['30', '60', '90'].includes(f.data_retention_days)) e.data_retention_days = 'Pick 30, 60 or 90 days.';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.admin_email.trim())) e.admin_email = 'Enter the Company Admin’s email.';
   return e;
 }
@@ -105,7 +105,12 @@ export function AddCompanyDialog({ open, onClose, onCreated }: {
             <datalist id="nc-tz-list">{zones.map((z) => <option key={z} value={z} />)}</datalist>
             {err.timezone ? <span className="err" role="alert">{err.timezone}</span> : <span className="hint">Type to search</span>}</div>
 
-          <Field id="nc-ret" label="Keep activity for (days)" inputMode="numeric" value={f.data_retention_days} error={err.data_retention_days} hint="1 to 365" onChange={(e) => set('data_retention_days', e.target.value)} />
+          <div className="field"><label htmlFor="nc-ret">Keep activity for</label>
+            <select id="nc-ret" value={f.data_retention_days} onChange={(e) => set('data_retention_days', e.target.value)}
+              aria-invalid={!!err.data_retention_days} aria-describedby={err.data_retention_days ? 'nc-ret-err' : undefined}>
+              {[30, 60, 90].map((d) => <option key={d} value={String(d)}>{d} days{d === 90 ? ' (default)' : ''}</option>)}
+            </select>
+            {err.data_retention_days && <span className="err" id="nc-ret-err" role="alert">{err.data_retention_days}</span>}</div>
           <div aria-hidden="true" />
 
           <div className="span2">
