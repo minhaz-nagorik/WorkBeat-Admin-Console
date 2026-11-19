@@ -49,14 +49,14 @@ export default function Overview() {
               <div className="card stat"><span className="label">Tracked today</span><span className="v">{hm(d.today.tracked_seconds)}</span><span className="s">{ap(d.today.activity_percent)} activity</span></div>
             )}
           </div>
-          <div className="grid g-wide">
-            {reader ? <SplitCard tz={me.tz} admin={me.role === 'company_admin'} refresh={tick} /> : <RolloutCard compact refresh={tick} />}
+          <div className="grid g-wide" style={{ alignItems: 'start' }}>
             {d.alerts && (
               <div className="card">
                 <div className="cardhead"><h2>Recent alerts</h2><Link href="/alerts" className="small">View all</Link></div>
                 <AlertTable items={d.alerts.slice(0, 5)} tz={me.tz} empty="No alerts." linkPeople={reader} />
               </div>
             )}
+            {reader ? <SplitCard tz={me.tz} admin={me.role === 'company_admin'} refresh={tick} /> : <RolloutCard compact refresh={tick} />}
           </div>
           {me.role === 'company_admin' && <RolloutCard refresh={tick} />}
         </>
