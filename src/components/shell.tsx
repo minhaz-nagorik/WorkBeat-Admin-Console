@@ -73,7 +73,7 @@ export function Shell({ me, nav, status, children }: {
           )}
         </header>
         <main className="content">
-          {status && <Banner s={status} tz={tz} isAdmin={me.role === 'company_admin'} />}
+          {status && <Banner s={status} tz={tz} />}
           <MeProvider value={me}>{children}</MeProvider>
         </main>
       </div>
@@ -81,12 +81,12 @@ export function Shell({ me, nav, status, children }: {
   );
 }
 
-function Banner({ s, tz, isAdmin }: { s: StatusInfo; tz: string; isAdmin: boolean }) {
+function Banner({ s, tz }: { s: StatusInfo; tz: string }) {
   if (s.status === 'suspended') return (
     <div className="notice warn" role="status">
       <span><b>Company computers have stopped collecting activity.</b>{' '}
         {s.suspended_reason === 'payment_failed'
-          ? <>Payment failed. {isAdmin ? <Link href="/company-settings#billing">Update your card in Billing</Link> : 'Ask your Company Admin to update the card in Billing'}.</>
+          ? 'Payment failed. Contact WorkBeat to update the card.'
           : 'Contact WorkBeat.'}</span>
     </div>
   );

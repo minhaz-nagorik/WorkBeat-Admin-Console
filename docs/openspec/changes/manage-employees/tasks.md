@@ -32,3 +32,4 @@
 
 - [x] 4.1 Acknowledgements section for admins; current-version flag
 - [ ] 4.2 Tests: role test (manager and IT never see it); flag when latest version is behind
+- [x] A15: the interval picker reads `screenshot_tier` from monitoring settings, not `GET /v1/billing`; PUT sends only the five fields

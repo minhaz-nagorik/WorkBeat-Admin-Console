@@ -2,9 +2,11 @@
 import { useState } from 'react';
 import { call, message } from '@/lib/client';
 import { Loaded, PageHead, useData } from '@/lib/use-data';
+import { label } from '@/lib/labels';
 import { useList } from '@/components/list';
 import { Modal } from '@/components/confirm';
-import { SeatsDialog, StatusPill, seats, useDebounced, type Companies, type Company } from '@/components/staff/common';
+import { StatusPill, seats, useDebounced, type Companies, type Company } from '@/components/staff/common';
+import { PlanDialog } from '@/components/staff/plan';
 
 const mask = (last4: string) => `WB-••••-••••-••••-${last4}`;
 
@@ -39,7 +41,7 @@ export default function StaffLicences() {
                         <td className="num">{seats(c)}</td>
                         <td><StatusPill c={c} /></td>
                         <td><div className="row">
-                          <button className="btn sm" onClick={() => setSeatsFor(c)}>Enterprise seats</button>
+                          <button className="btn sm" onClick={() => setSeatsFor(c)}>Plan and seats</button>
                           <button className="btn sm danger" onClick={() => setReissue(c)}>Reissue key</button>
                         </div></td>
                       </tr>
@@ -51,7 +53,7 @@ export default function StaffLicences() {
           </>
         )}</Loaded>
       </div>
-      <SeatsDialog c={seatsFor} onClose={() => setSeatsFor(null)} onSaved={(c) => { setSeatsFor(null); setNote(`${c.name} is on Enterprise with ${seats(c)} seats.`); s.reload(); }} />
+      <PlanDialog c={seatsFor} onClose={() => setSeatsFor(null)} onSaved={(c) => { setSeatsFor(null); setNote(`${c.name} is on ${label('plan', c.plan)} with ${seats(c)} seats and ${label('tier', c.screenshot_tier)} screenshots.`); s.reload(); }} />
       <ReissueDialog c={reissue} onClose={() => { setReissue(null); s.reload(); }} />
     </>
   );

@@ -110,7 +110,7 @@ export function EmployeeScreenshots({ employeeId, tz, role }: TabProps) {
     <div className="card stack" style={{ alignItems: 'flex-start' }}>
       <h2>Screenshots are off</h2>
       <p className="muted">Your company&apos;s plan doesn&apos;t include screenshots.</p>
-      {admin && <Link className="btn pri" href="/company-settings#billing">Open billing</Link>}
+      {admin && <p className="small muted">Contact WorkBeat to change your plan.</p>}
     </div>
   );
 

@@ -1,13 +1,13 @@
 'use client';
 import { isPending, PendingList, SENT } from '@/components/pending';
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { call, message } from '@/lib/client';
 import { useData, Loaded } from '@/lib/use-data';
 import { label } from '@/lib/labels';
 import type { TabProps } from './tabs';
 
-type Settings = { activity: boolean; app_usage: boolean; window_titles: boolean; website_visits: boolean; screenshot_interval_seconds: number };
+type Settings = { activity: boolean; app_usage: boolean; window_titles: boolean; website_visits: boolean; screenshot_interval_seconds: number;
+  screenshot_tier?: string }; // the company's plan, on GET only (B29)
 type Switch = 'activity' | 'app_usage' | 'window_titles' | 'website_visits';
 const SWITCHES: [Switch, string, string][] = [
   ['activity', 'Activity', 'Whether the keyboard or mouse was used. What is typed is never recorded.'],
@@ -22,27 +22,28 @@ export function MonitoringSettingsTab({ employeeId, role, archived }: TabProps) 
   const admin = role === 'company_admin';
   const edit = (admin || role === 'it_admin') && !archived; // IT Admin changes wait for approval (A14)
   const s = useData<Settings>(`/v1/employees/${employeeId}/monitoring-settings`);
-  const bill = useData<{ screenshot_tier: string }>(admin && edit ? '/v1/billing' : null); // only Company Admins read billing
   const [f, setF] = useState<Settings | null>(null);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
   const [ivErr, setIvErr] = useState<string | null>(null);
   useEffect(() => { setF(s.data); }, [s.data]);
 
-  const tier = bill.data?.screenshot_tier;
-  // IT Admin can't read the plan: offer every interval; the API's 422 refuses one the plan doesn't allow.
-  const choices = tier ? BY_TIER[tier] ?? [0] : role === 'it_admin' ? BY_TIER.intensive : [];
+  const tier = s.data?.screenshot_tier;
+  // The plan comes with the settings (billing is staff-only). Without it, offer every interval; the API's 422 refuses one the plan doesn't allow.
+  const choices = tier ? BY_TIER[tier] ?? [0] : BY_TIER.intensive;
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!f || !s.data) return;
     const old = s.data;
     setBusy(true); setNote(null); setIvErr(null);
-    const r = await call<Settings>('PUT', `/v1/employees/${employeeId}/monitoring-settings`, f);
+    const body = { activity: f.activity, app_usage: f.app_usage, window_titles: f.window_titles, website_visits: f.website_visits,
+      screenshot_interval_seconds: f.screenshot_interval_seconds };
+    const r = await call<Settings>('PUT', `/v1/employees/${employeeId}/monitoring-settings`, body);
     setBusy(false);
     if (isPending(r)) { setF(s.data); return setNote({ ok: true, text: SENT }); }
     if (r.ok) {
-      s.set(() => r.data);
+      s.set(() => ({ ...r.data, screenshot_tier: old.screenshot_tier })); // PUT doesn't return the plan
       const on = SWITCHES.filter(([k]) => r.data[k] && !old[k]);
       const off = SWITCHES.filter(([k]) => !r.data[k] && old[k]).map(([, l]) => l.toLowerCase());
       const iv = r.data.screenshot_interval_seconds, was = old.screenshot_interval_seconds;
@@ -54,7 +55,7 @@ export function MonitoringSettingsTab({ employeeId, role, archived }: TabProps) 
         wider ? 'They will be asked to acknowledge the monitoring notice again.' : '',
       ].filter(Boolean).join(' ') });
     }
-    if (r.status === 422) { setF(old); setIvErr("That interval isn't allowed on your plan"); return bill.reload(); }
+    if (r.status === 422) { setF(old); setIvErr("That interval isn't allowed on your plan"); return s.reload(); }
     if (r.status === 409) return setNote({ ok: false, text: 'This employee was removed, so their settings can’t be changed.' });
     setNote({ ok: false, text: message(r.status, r.err.code) });
   }
@@ -81,7 +82,7 @@ export function MonitoringSettingsTab({ employeeId, role, archived }: TabProps) 
             <div><label htmlFor="ms-iv"><b>Screenshots</b></label>
               <div className="small muted">How often a screenshot is taken. Never faster than your plan allows.</div>
               {ivErr && <span className="err" id="ms-iv-err" role="alert">{ivErr}</span>}
-              {edit && tier === 'off' && <span className="hint">Your plan doesn&apos;t include screenshots. <Link href="/company-settings#billing">Billing</Link></span>}</div>
+              {edit && tier === 'off' && <span className="hint">Your plan doesn&apos;t include screenshots. Contact WorkBeat to change your plan.</span>}</div>
             <div className="setctl">
               {!edit ? <span id="ms-iv">{label('interval', String(f.screenshot_interval_seconds))}</span> : (
                 <select id="ms-iv" style={{ width: 200 }} value={f.screenshot_interval_seconds} disabled={!choices.length} aria-invalid={!!ivErr} aria-describedby={ivErr ? 'ms-iv-err' : undefined}

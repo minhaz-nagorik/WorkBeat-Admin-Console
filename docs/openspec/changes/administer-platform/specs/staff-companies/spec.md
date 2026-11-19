@@ -21,21 +21,53 @@ The Companies page SHALL call `GET /v1/staff/companies` and show totals (compani
 - **WHEN** staff pick the Suspended filter
 - **THEN** the page calls `GET /v1/staff/companies?status=suspended`
 
-### Requirement: Staff suspend and restore a company
-<!-- source: D29 · backend `staff-companies` · A7 -->
-Suspend SHALL confirm that every device of the company stops collecting and shows the employee a notice, then call `POST /v1/staff/companies/:id/suspend`; Restore MUST confirm and call `.../restore`. Neither MUST be offered for an `expired` company, and a `409 CONFLICT` MUST read "An expired company can't be suspended or restored".
+### Requirement: Each company row has one Manage button
+<!-- source: A16 · product owner 19 Nov 2026 -->
+Each company row SHALL carry a single "Manage" button. It opens a panel listing Plan and seats, Status (with the trial end), Name and retention, and Grace period, each with its current value and a "Change" button that opens that section's dialog.
 
-#### Scenario: Suspending a company
-- **WHEN** staff confirm Suspend on an active company
-- **THEN** its row shows Suspended with the reason "By WorkBeat"
+#### Scenario: Changing the grace period
+- **WHEN** staff click Manage on a company and then Change beside Grace period
+- **THEN** the panel closes and the grace period dialog opens for that company
 
-### Requirement: Staff set an Enterprise plan and seat limit
-<!-- source: D43 · backend `staff-companies` -->
-"Enterprise seats" SHALL be offered on every company and set plan `enterprise` with `seat_limit` (a number, or empty for unlimited) through `PATCH /v1/staff/companies/:id/license`, showing seats in use; a Starter or Growth company moves to Enterprise. A `409 CONFLICT` MUST read that the limit cannot go below seats in use.
+### Requirement: Staff end a trial
+<!-- source: A16 · backend `staff-companies` (B30) -->
+For a company in `trial` the Manage panel SHALL offer "End trial", which confirms and sends `PATCH /v1/staff/companies/:id` with `status` `active`. Suspending and restoring are done with Status.
+
+#### Scenario: Ending a trial
+- **WHEN** staff confirm End trial on a trial company
+- **THEN** the page sends `status` `active` and the row shows Active
+
+### Requirement: Staff set the plan, seats and screenshot plan
+<!-- source: D43 · A16 · backend `staff-companies` (B30) -->
+"Plan and seats" SHALL be offered on every company (Companies and Licences pages) and edit the plan (Starter, Growth, Enterprise), the seat limit (empty for unlimited, Enterprise only) and the screenshot plan through `PATCH /v1/staff/companies/:id/license`, showing seats in use. A `409 CONFLICT` MUST read that the limit cannot go below seats in use.
 
 #### Scenario: A limit below seats in use
 - **WHEN** staff set 40 seats for a company using 45
 - **THEN** the dialog shows the below-seats-in-use message and nothing changes
+
+#### Scenario: Unlimited on Growth
+- **WHEN** staff leave the seat limit empty on Growth
+- **THEN** the dialog refuses it beside the field and sends nothing
+
+### Requirement: A lower screenshot plan is confirmed
+<!-- source: A7 · A16 -->
+Lowering the screenshot plan SHALL first confirm that faster employees are slowed to the new plan, or that screenshots stop for Off.
+
+#### Scenario: Intensive down to Light
+- **WHEN** staff change the screenshot plan from Intensive to Light and save
+- **THEN** a confirmation says employees set faster than every 60 minutes are slowed to every 60 minutes
+
+### Requirement: Staff set the company status
+<!-- source: A16 · D29 · D36 · backend `staff-companies` (B30) -->
+"Status" SHALL be offered on every company and set Trial (with 1–90 days from today), Active, Suspended or Expired through `PATCH /v1/staff/companies/:id`, explaining what each does to the company's computers. Moving to Suspended or Expired MUST be confirmed first.
+
+#### Scenario: Expiring a company
+- **WHEN** staff pick Expired and save
+- **THEN** a confirmation says computers stop collecting and blocking ends after the grace period, before anything is sent
+
+#### Scenario: A new trial
+- **WHEN** staff pick Trial with 14 days
+- **THEN** the page sends `status` `trial` with `trial_days` 14
 
 ### Requirement: Staff set the expired-licence grace period
 <!-- source: D36 · backend `staff-companies` -->
@@ -44,6 +76,14 @@ The company dialog SHALL edit `expired_blocking_grace_days` (0–365, default 30
 #### Scenario: A longer grace period
 - **WHEN** staff set 60 days
 - **THEN** the page sends `expired_blocking_grace_days` 60 and confirms
+
+### Requirement: Staff set the company name and retention
+<!-- source: A15 · backend `staff-companies` (B29) · B13 -->
+Each company row SHALL offer "Name and retention": a dialog with the name (1–100 characters) and data retention (30, 60 or 90 days), saved with `PATCH /v1/staff/companies/:id`. Lowering retention MUST first confirm that older activity and screenshots are deleted tonight and can't be recovered.
+
+#### Scenario: Staff lower retention
+- **WHEN** staff change a company from 90 to 30 days and save
+- **THEN** a confirmation says older data is deleted tonight before the change is sent
 
 ### Requirement: Staff create a company with its first Company Admin
 <!-- source: product owner 17 Nov 2026 · backend round 5 `POST /v1/staff/companies` -->

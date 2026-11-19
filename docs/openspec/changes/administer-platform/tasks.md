@@ -41,3 +41,6 @@
 - [x] 6.2 Company admins page with search (`GET /v1/staff/company-admins`)
 - [x] 6.3 Reset password: temporary password shown once with Copy, also emailed
 - [ ] 6.4 Tests: taken address and email messages; temporary password cleared on close; no other role listed
+- [x] A15: "Name and retention" dialog on staff Companies (`PATCH /v1/staff/companies/:id`), with a confirm when retention goes down
+- [x] A16: "Plan and seats" dialog (plan, seats, screenshot plan, confirm on a lower plan) replaces "Enterprise seats"; "Status" dialog (trial days, confirm on suspend or expire)
+- [x] A16: one Manage button per company row (panel with Plan and seats, Status, Name and retention, Grace period); End trial for trial companies; Suspend and Restore row buttons removed (Status covers them)

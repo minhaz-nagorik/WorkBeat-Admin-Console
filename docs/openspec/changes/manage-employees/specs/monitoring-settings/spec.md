@@ -15,15 +15,15 @@ The employee page SHALL have a "What is collected" tab showing, from `GET /v1/em
 
 ### Requirement: An IT Admin's settings change waits for approval
 <!-- source: A14 · product owner 17 Nov 2026 · backend round 6 `PUT /v1/employees/:id/monitoring-settings` -->
-For `it_admin` a save answering `202 { change }` SHALL show "Waiting for approval" per `change-approvals` and the stored values. The interval MUST offer Off, 10, 30 and 60 minutes without calling `GET /v1/billing`, and a `422` MUST show the plan message.
+For `it_admin` a save answering `202 { change }` SHALL show "Waiting for approval" per `change-approvals` and the stored values. The interval MUST offer the choices the plan allows, as for a Company Admin, and a `422` MUST show the plan message.
 
 #### Scenario: IT turns on window titles
 - **WHEN** an `it_admin` turns window titles on and saves
 - **THEN** the tab says the change waits for approval and the switch shows the stored value
 
 ### Requirement: The screenshot interval stays within the tier
-<!-- source: B11 · backend `monitoring-settings` · backend `subscription-sync` · Prototype "Company settings" -->
-For a `company_admin` the interval SHALL offer Off, every 10, 30 or 60 minutes, limited to choices no faster than `screenshot_tier` from `GET /v1/billing` (light: 60; standard: 30, 60; intensive: 10, 30, 60); with tier `off`, Off only, "Your plan doesn't include screenshots" and a link to Billing. A `manager` MUST see only the stored interval and MUST NOT call `GET /v1/billing`.
+<!-- source: B11 · A15 · backend `monitoring-settings` (B29) -->
+For a `company_admin` the interval SHALL offer Off, every 10, 30 or 60 minutes, limited to choices no faster than `screenshot_tier` from `GET /v1/employees/:id/monitoring-settings` (light: 60; standard: 30, 60; intensive: 10, 30, 60); with tier `off`, Off only and "Your plan doesn't include screenshots. Contact WorkBeat to change your plan." No role calls `GET /v1/billing`. A `manager` MUST see only the stored interval.
 
 #### Scenario: Standard tier
 - **WHEN** the tier is `standard`

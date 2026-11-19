@@ -22,3 +22,4 @@
 - [x] 3.2 Tier change via `PUT /v1/billing/screenshot-tier`, scheduled tier and date shown
 - [x] 3.3 Stripe portal button via `POST /v1/billing/portal-session`
 - [ ] 3.4 Tests: estimate per tier; scheduled tier shown; no card field anywhere; works while suspended; role test — only company admin sees billing
+- [x] 3.5 A15: Company settings holds only time zone and idle threshold; Billing card, custom domain card, notice editor, name and retention removed; billing links in the shell banner and screenshot tab replaced by "contact WorkBeat"

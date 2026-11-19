@@ -29,3 +29,4 @@
 - [x] 4.2 Ask-again confirmation; unchanged text message
 - [x] 4.3 Template download built in the browser
 - [ ] 4.4 Tests: empty text refused; version shown after save; template has signature lines; role test — only company admin sees it or calls the route
+- [x] A15: the notice editor and template are removed from the company area (`PUT /v1/settings/notice` is refused, backend B29)

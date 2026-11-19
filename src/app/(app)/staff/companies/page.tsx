@@ -5,10 +5,13 @@ import { label } from '@/lib/labels';
 import { Loaded, PageHead, useData } from '@/lib/use-data';
 import { dateOnly } from '@/lib/time';
 import { useList } from '@/components/list';
-import { ConfirmButton, Modal } from '@/components/confirm';
+import { Modal } from '@/components/confirm';
 import { Field } from '@/components/form';
+import { PlanDialog, StatusDialog } from '@/components/staff/plan';
 import { AddCompanyDialog } from '@/components/staff/add-company';
-import { SeatsDialog, StatusPill, seats, usd, useDebounced, type Companies, type Company } from '@/components/staff/common';
+import { DetailsDialog } from '@/components/staff/details';
+import { ManageDialog, type ManageKind } from '@/components/staff/manage';
+import { StatusPill, seats, usd, useDebounced, type Companies, type Company } from '@/components/staff/common';
 
 const FILTERS = [['', 'All'], ['trial', 'Trial'], ['active', 'Active'], ['suspended', 'Suspended'], ['expired', 'Expired']] as const;
 
@@ -22,15 +25,21 @@ export default function StaffCompanies() {
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
   const [seatsFor, setSeatsFor] = useState<Company | null>(null);
   const [graceFor, setGraceFor] = useState<Company | null>(null);
+  const [detailsFor, setDetailsFor] = useState<Company | null>(null);
+  const [statusFor, setStatusFor] = useState<Company | null>(null);
+  const [manageFor, setManageFor] = useState<Company | null>(null);
   const [adding, setAdding] = useState(false);
 
-  async function act(c: Company, kind: 'suspend' | 'restore') {
-    const r = await call<Company>('POST', `/v1/staff/companies/${c.id}/${kind}`);
-    if (r.ok) setNote({ ok: true, text: kind === 'suspend' ? `${c.name} is suspended. Its computers stop collecting.` : `${c.name} is restored.` });
-    else setNote({ ok: false, text: r.status === 409 ? "An expired company can't be suspended or restored." : message(r.status, r.err.code) });
+  // From the Manage panel: close it, then open the chosen dialog.
+  const OPEN: Record<ManageKind, (c: Company) => void> = { plan: setSeatsFor, status: setStatusFor, details: setDetailsFor, grace: setGraceFor };
+  const pick = (kind: ManageKind, c: Company) => { setManageFor(null); OPEN[kind](c); };
+  async function endTrial(c: Company) {
+    const r = await call<Company>('PATCH', `/v1/staff/companies/${c.id}`, { status: 'active' });
+    setManageFor(null);
+    setNote(r.ok ? { ok: true, text: `${c.name}'s trial has ended. It is now active.` } : { ok: false, text: message(r.status, r.err.code) });
     s.reload();
   }
-  const saved = (text: string) => { setSeatsFor(null); setGraceFor(null); setNote({ ok: true, text }); s.reload(); };
+  const saved = (text: string) => { setSeatsFor(null); setGraceFor(null); setDetailsFor(null); setStatusFor(null); setNote({ ok: true, text }); s.reload(); };
 
   return (
     <>
@@ -66,13 +75,7 @@ export default function StaffCompanies() {
                         <td>{label('tier', c.screenshot_tier)}</td>
                         <td className="num">{usd(c.mrr_estimate)}</td>
                         <td><StatusPill c={c} /></td>
-                        <td><div className="row">
-                          {c.status === 'suspended'
-                            ? <ConfirmButton label="Restore" question={`Restore ${c.name}? Its computers start collecting again.`} onConfirm={() => act(c, 'restore')} />
-                            : c.status !== 'expired' && <ConfirmButton label="Suspend" question={`Suspend ${c.name}? Every computer stops collecting and shows the employee a notice.`} onConfirm={() => act(c, 'suspend')} />}
-                          <button className="btn sm" onClick={() => setSeatsFor(c)}>Enterprise seats</button>
-                          <button className="btn sm" onClick={() => setGraceFor(c)}>Grace period</button>
-                        </div></td>
+                        <td><button className="btn sm" aria-label={`Manage ${c.name}`} onClick={() => setManageFor(c)}>Manage</button></td>
                       </tr>
                     ))}
                 </tbody>
@@ -81,10 +84,13 @@ export default function StaffCompanies() {
             {L.pager}
           </>
         )}</Loaded>
-        <p className="small muted">Suspending a company stops every one of its computers collecting, and each shows the employee a notice. Times are in UTC.</p>
+        <p className="small muted">Manage a company to change its plan, seats, screenshot plan, status, name, retention or grace period. Times are in UTC.</p>
       </div>
-      <SeatsDialog c={seatsFor} onClose={() => setSeatsFor(null)} onSaved={(c) => saved(`${c.name} is on Enterprise with ${seats(c)} seats.`)} />
+      <ManageDialog c={manageFor} onClose={() => setManageFor(null)} onPick={pick} onEndTrial={endTrial} />
+      <PlanDialog c={seatsFor} onClose={() => setSeatsFor(null)} onSaved={(c) => saved(`${c.name} is on ${label('plan', c.plan)} with ${seats(c)} seats and ${label('tier', c.screenshot_tier)} screenshots.`)} />
       <GraceDialog c={graceFor} onClose={() => setGraceFor(null)} onSaved={(c) => saved(`${c.name}: blocking grace period set to ${c.expired_blocking_grace_days} days.`)} />
+      <StatusDialog c={statusFor} onClose={() => setStatusFor(null)} onSaved={(c) => saved(`${c.name} is now ${label('companyStatus', c.status).toLowerCase()}.`)} />
+      <DetailsDialog c={detailsFor} onClose={() => setDetailsFor(null)} onSaved={(c) => saved(`${c.name}: details saved.`)} />
       <AddCompanyDialog open={adding} onClose={() => setAdding(false)}
         onCreated={(c, email) => { setAdding(false); setNote({ ok: true, text: `${c.name} was created. The licence key and a link to create their account were emailed to ${email}.` }); s.reload(); }} />
     </>
