@@ -4,13 +4,13 @@ import { label } from '@/lib/labels';
 export type Device = {
   id: string; hostname: string; os: 'macos' | 'windows'; os_version: string; arch: string; agent_version: string;
   employee: { id: string; name: string };
-  status: 'online' | 'offline' | 'tamper' | 'deactivated' | 'released';
-  badges: ('outdated' | 'permission_pending' | 'browser_access_pending' | 'paused')[];
+  status: 'online' | 'offline' | 'deactivated' | 'released';
+  badges: ('outdated' | 'permission_pending' | 'browser_access_pending' | 'paused' | 'open_alert')[];
   last_heartbeat_at: string | null; released_at: string | null; deactivated_at: string | null;
 };
 
-const STATUS_PILL: Record<string, string> = { online: 'p-ok', offline: '', tamper: 'p-bad', deactivated: '', released: '' };
-const BADGE_PILL: Record<string, string> = { outdated: 'p-warn', permission_pending: 'p-info', browser_access_pending: 'p-info', paused: 'p-acc' };
+const STATUS_PILL: Record<string, string> = { online: 'p-ok', offline: '', deactivated: '', released: '' };
+const BADGE_PILL: Record<string, string> = { outdated: 'p-warn', permission_pending: 'p-info', browser_access_pending: 'p-info', paused: 'p-acc', open_alert: 'p-bad' };
 
 export const StatusPill = ({ s }: { s: string }) => <span className={`pill ${STATUS_PILL[s] ?? ''}`}>{label('deviceStatus', s)}</span>;
 

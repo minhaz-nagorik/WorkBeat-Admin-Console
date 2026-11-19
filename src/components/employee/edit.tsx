@@ -6,7 +6,7 @@ import { call, message } from '@/lib/client';
 import { Combo, Field } from '@/components/form';
 import { ConfirmButton, Modal } from '@/components/confirm';
 
-export type Presence = 'active' | 'idle' | 'offline' | 'paused' | 'tamper' | 'no_device';
+export type Presence = 'active' | 'idle' | 'offline' | 'paused' | 'no_device';
 export type Employee = {
   id: string; name: string; email: string | null; department: string | null; manager_user_id: string | null;
   archived_at: string | null; presence: Presence;

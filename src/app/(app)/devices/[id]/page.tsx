@@ -129,8 +129,8 @@ function ToDo({ d }: { d: Detail }) {
       <h3>What to do</h3>
       <ul className="small" style={{ margin: 0, paddingLeft: 18 }}>
         {items.map((k) => (
-          <li key={k}><b>{label(k in { outdated: 1, permission_pending: 1, browser_access_pending: 1, paused: 1 } ? 'badge' : 'deviceStatus', k)}:</b> {ROLLOUT_ACTION[k]}
-            {k === 'tamper' && <> · <Link href={`/alerts?device_id=${d.id}&state=open`}>See its open alerts</Link></>}</li>
+          <li key={k}><b>{label(k === d.status ? 'deviceStatus' : 'badge', k)}:</b> {ROLLOUT_ACTION[k]}
+            {k === 'open_alert' && <> · <Link href={`/alerts?device_id=${d.id}&state=open`}>See its open alerts</Link></>}</li>
         ))}
       </ul>
     </div>

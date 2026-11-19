@@ -51,8 +51,8 @@ export function SetupChecklist({ refresh }: { refresh?: number } = {}) {
 }
 
 type Rollout = {
-  status: Record<'online' | 'offline' | 'tamper' | 'deactivated' | 'released', number>;
-  badges: Record<'outdated' | 'permission_pending' | 'browser_access_pending' | 'paused', number>;
+  status: Record<'online' | 'offline' | 'deactivated' | 'released', number>;
+  badges: Record<'outdated' | 'permission_pending' | 'browser_access_pending' | 'paused' | 'open_alert', number>;
   healthy: number;
 };
 
@@ -63,7 +63,7 @@ const ROWS: [string, string, string, string, (r: Rollout) => number][] = [
   [label('badge', 'browser_access_pending'), 'p-info', 'badge=browser_access_pending', 'Ask the employee to allow WorkBeat for that browser, or update the browser', (r) => r.badges.browser_access_pending],
   [label('badge', 'outdated'), 'p-warn', 'badge=outdated', 'Check it can download the update, or run WorkBeat Setup again', (r) => r.badges.outdated],
   [label('deviceStatus', 'offline'), '', 'status=offline', 'Check the computer is on and connected', (r) => r.status.offline],
-  [label('deviceStatus', 'tamper'), 'p-bad', 'status=tamper', 'Review the alert', (r) => r.status.tamper],
+  [label('badge', 'open_alert'), 'p-bad', 'badge=open_alert', 'Review the alert', (r) => r.badges.open_alert],
   [label('badge', 'paused'), 'p-acc', 'badge=paused', 'Nothing; it ends on schedule', (r) => r.badges.paused],
   [label('deviceStatus', 'released'), '', 'status=released', 'Uninstall it, or run WorkBeat Setup to monitor it again', (r) => r.status.released],
   [label('deviceStatus', 'deactivated'), '', 'status=deactivated', 'Uninstall it', (r) => r.status.deactivated],

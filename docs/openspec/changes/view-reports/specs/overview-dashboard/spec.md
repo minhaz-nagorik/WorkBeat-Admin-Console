@@ -7,7 +7,7 @@ Admin, all from one dashboard call plus the range's productivity split.
 
 ### Requirement: Overview is one dashboard call shaped by role
 <!-- source: Plan-v3.5 §4.5 "Dashboard" · backend `dashboard-summary` · Prototype "Overview" -->
-Overview SHALL call `GET /v1/dashboard` and show cards for Online now, Offline and Tamper from `devices`; for `company_admin` also Seats used (`seats.used` of `seats.limit`, "unlimited" when null); and the newest five alerts from `alerts` with a View all link. A section absent from the response MUST NOT be shown.
+Overview SHALL call `GET /v1/dashboard` and show cards for Online now and Offline from `devices`, and Open alerts from `devices.open_alert`; for `company_admin` also Seats used (`seats.used` of `seats.limit`, "unlimited" when null); and the newest five alerts from `alerts` with a View all link. A section absent from the response MUST NOT be shown.
 
 #### Scenario: A manager's overview
 - **WHEN** a `manager` opens Overview
@@ -47,8 +47,8 @@ Overview SHALL load its data when opened and again only when the user presses Re
 
 ### Requirement: Cards link to their lists
 <!-- source: Prototype "Overview" -->
-For `company_admin` and `it_admin` the Online, Offline and Tamper cards SHALL open the Devices page filtered to that status; for `manager` they MUST NOT be links.
+For `company_admin` and `it_admin` the Online and Offline cards SHALL open the Devices page filtered to that status and the Open alerts card filtered to the `open_alert` badge; for `manager` they MUST NOT be links.
 
-#### Scenario: Tamper card
-- **WHEN** an admin clicks the Tamper card
-- **THEN** the Devices page opens filtered to `tamper`
+#### Scenario: Open alerts card
+- **WHEN** an admin clicks the Open alerts card
+- **THEN** the Devices page opens filtered to the `open_alert` badge

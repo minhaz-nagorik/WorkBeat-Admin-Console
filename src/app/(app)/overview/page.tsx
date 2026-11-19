@@ -8,7 +8,7 @@ import { SetupChecklist, RolloutCard } from '@/components/deploy';
 import { AlertTable, ap, clock, presetRange, RangePicker, rangeLabel, SplitBar, SplitLegend, type Alert, type Range } from '@/components/reports/kit';
 
 type Dash = {
-  devices: { online: number; offline: number; tamper: number };
+  devices: { online: number; offline: number; open_alert: number };
   today?: { tracked_seconds: number; activity_percent: number | null };
   alerts?: Alert[];
   seats?: { used: number; limit: number | null };
@@ -41,9 +41,9 @@ export default function Overview() {
       <Loaded s={dash} rows={4}>{(d) => (
         <>
           <div className="grid g4">
-            <Stat k="online" title="Online now" v={d.devices.online} sub={`of ${d.devices.online + d.devices.offline + d.devices.tamper} computers`} link={me.role !== 'manager'} />
-            <Stat k="offline" title="Offline" v={d.devices.offline} sub="not heard from in 15 minutes" link={me.role !== 'manager'} />
-            <Stat k="tamper" title="Tamper" v={d.devices.tamper} sub="needs review" link={me.role !== 'manager'} bad />
+            <Stat q="status=online" title="Online now" v={d.devices.online} sub={`of ${d.devices.online + d.devices.offline} computers`} link={me.role !== 'manager'} />
+            <Stat q="status=offline" title="Offline" v={d.devices.offline} sub="not heard from in 15 minutes" link={me.role !== 'manager'} />
+            <Stat q="badge=open_alert" title="Open alerts" v={d.devices.open_alert} sub="computers to review" link={me.role !== 'manager'} bad />
             {d.seats && <div className="card stat"><span className="label">Seats used</span><span className="v">{d.seats.used}</span><span className="s">{d.seats.limit == null ? 'of unlimited' : `of ${d.seats.limit}`}</span></div>}
             {d.today && (
               <div className="card stat"><span className="label">Tracked today</span><span className="v">{hm(d.today.tracked_seconds)}</span><span className="s">{ap(d.today.activity_percent)} activity</span></div>
@@ -65,9 +65,9 @@ export default function Overview() {
   );
 }
 
-function Stat({ k, title, v, sub, link, bad }: { k: string; title: string; v: number; sub: string; link: boolean; bad?: boolean }) {
+function Stat({ q, title, v, sub, link, bad }: { q: string; title: string; v: number; sub: string; link: boolean; bad?: boolean }) {
   const body = <><span className="label">{title}</span><span className="v" style={bad && v ? { color: 'var(--bad)' } : undefined}>{v}</span><span className="s">{sub}</span></>;
-  return link ? <Link href={`/devices?status=${k}`} className="card stat" style={{ color: 'inherit', textDecoration: 'none' }}>{body}</Link> : <div className="card stat">{body}</div>;
+  return link ? <Link href={`/devices?${q}`} className="card stat" style={{ color: 'inherit', textDecoration: 'none' }}>{body}</Link> : <div className="card stat">{body}</div>;
 }
 
 function SplitCard({ tz, admin, refresh }: { tz: string; admin: boolean; refresh: number }) {

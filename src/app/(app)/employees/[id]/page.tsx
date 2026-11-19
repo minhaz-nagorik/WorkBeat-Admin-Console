@@ -36,8 +36,8 @@ const TABS: { k: string; l: string; roles: Role[]; C: (p: TabProps) => React.Rea
   { k: 'pauses', l: 'Pause monitoring', roles: [A, M, I], C: PausesTab },
   { k: 'notice', l: 'Monitoring notice', roles: [A], C: NoticeTab },
 ];
-const PRES: Record<string, string> = { active: 'p-ok', idle: 'p-warn', paused: 'p-info', tamper: 'p-bad' };
-const DEV: Record<string, string> = { online: 'p-ok', offline: 'p-warn', tamper: 'p-bad' };
+const PRES: Record<string, string> = { active: 'p-ok', idle: 'p-warn', paused: 'p-info' };
+const DEV: Record<string, string> = { online: 'p-ok', offline: 'p-warn' };
 
 export default function EmployeePage() {
   const { id } = useParams<{ id: string }>();

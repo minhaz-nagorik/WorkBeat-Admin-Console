@@ -34,10 +34,10 @@ The detail SHALL show `health` under "Agent health": data waiting to upload (`st
 
 ### Requirement: The detail says what to do
 <!-- source: Plan-v3.5 §5.9 · A4 -->
-For each badge the detail SHALL give the rollout action in plain words (`rollout-status`), and for status Tamper link to the device's open alerts.
+For each badge the detail SHALL give the rollout action in plain words (`rollout-status`), and for the Open alert badge link to the device's open alerts.
 
 #### Scenario: A tampered device
-- **WHEN** the device status is `tamper`
+- **WHEN** the device's badges include `open_alert`
 - **THEN** the detail links to its open alerts
 
 ### Requirement: The binding's employee is fixed

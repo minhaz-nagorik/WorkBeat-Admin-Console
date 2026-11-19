@@ -18,8 +18,8 @@ The Employees page SHALL be open to `company_admin` and `it_admin` (every non-ar
 - **THEN** every employee is listed with Add, Import, Edit and Remove, and no manager column
 
 ### Requirement: Each employee shows a live status
-<!-- source: A4 · backend `employee-directory` (`presence`) · Prototype "Employees" -->
-For `company_admin`, `it_admin` and `manager` the list SHALL show each employee's `presence` from `GET /v1/employees` as "Active", "Idle", "Offline", "Monitoring paused", "Tamper" or "No device", and a status filter with those values and their counts. The page MUST NOT derive status from `GET /v1/devices`.
+<!-- source: A4 · B31 · backend `employee-directory` (`presence`) · Prototype "Employees" -->
+For `company_admin`, `it_admin` and `manager` the list SHALL show each employee's `presence` from `GET /v1/employees` as "Active", "Idle", "Offline", "Monitoring paused" or "No device", and a status filter with those values and their counts. The page MUST NOT derive status from `GET /v1/devices`.
 
 #### Scenario: A manager's team
 - **WHEN** a `manager` opens Employees

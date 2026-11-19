@@ -11,7 +11,7 @@ import { useList } from '@/components/list';
 import { EmployeeDialog, RemoveEmployee, RestoreDialog, type Employee, type Manager } from '@/components/employee/edit';
 import { ImportDialog } from '@/components/employee/import';
 
-const PILL: Record<string, string> = { active: 'p-ok', idle: 'p-warn', offline: '', paused: 'p-info', tamper: 'p-bad', no_device: 'plain' };
+const PILL: Record<string, string> = { active: 'p-ok', idle: 'p-warn', offline: '', paused: 'p-info', no_device: 'plain' };
 
 export default function Employees() {
   const { role, tz } = useMe();

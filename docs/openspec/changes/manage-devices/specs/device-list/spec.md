@@ -19,7 +19,7 @@ Devices SHALL be shown to `company_admin` and `it_admin` only, listing `GET /v1/
 
 ### Requirement: Status and badges read as plain words
 <!-- source: A4 · Plan-v3.5 §5.9 · backend `device-status` -->
-Status SHALL show as Online, Offline, Tamper, Deactivated or Released, and badges as Outdated, Permission pending, Browser access pending and Paused, each a pill with text. A device online with no badge MUST read "Installed and working".
+Status SHALL show as Online, Offline, Deactivated or Released, and badges as Outdated, Permission pending, Browser access pending, Paused and Open alert, each a pill with text. A device online with no badge MUST read "Installed and working".
 
 #### Scenario: An outdated Mac waiting for permission
 - **WHEN** a device is `online` with badges `outdated` and `permission_pending`
