@@ -39,19 +39,15 @@ The Report tab SHALL offer presets Today, Yesterday, This week, Last 7 days, Thi
 
 ### Requirement: The report shows time, activity and productivity
 <!-- source: D1 · backend `usage-reports` · Prototype "Employee → Report" -->
-The report SHALL show summary cards (tracked time, activity percent, productive and unproductive share) from `/v1/reports/activity` and `/productivity`, an hour-of-day chart of tracked minutes with the active part, top applications from `/reports/apps` and top websites from `/reports/websites` coloured by category, and a breakdown table by day, week or month. With comparison on, each card MUST show the change versus the previous period.
+The report SHALL show summary cards (tracked time, activity percent, productive and unproductive share) from `/v1/reports/activity` and `/productivity`, an hour-of-day chart of tracked minutes with the active part, top applications from `/reports/apps` and top websites from `/reports/websites` coloured by category, and no breakdown table by day, week or month. With comparison on, each card MUST show the change versus the previous period.
+
+#### Scenario: No breakdown table
+- **WHEN** the reader opens the Report tab for Last 30 days
+- **THEN** no per-day, per-week or per-month table is shown
 
 #### Scenario: Activity shown beside time
 - **WHEN** an employee had 7 h tracked with 62% activity
 - **THEN** the cards show 7 h tracked and 62% activity, and idle time is not subtracted
-
-### Requirement: The breakdown comes from report periods
-<!-- source: backend `usage-reports` (`group_by`) · Prototype "Employee → Report" -->
-The breakdown SHALL call `/v1/reports/activity` and `/v1/reports/productivity` with `group_by` `day`, `week` or `month` and show one row per entry in `periods` (tracked time, activity, productive, neutral, unproductive), zero rows included. A day row MUST open that day in the Calendar tab.
-
-#### Scenario: A week with a quiet day
-- **WHEN** the range is Monday to Sunday and Saturday has no data
-- **THEN** the breakdown has seven rows and Saturday shows zero
 
 ### Requirement: The employee page shows the employee's recent alerts
 <!-- source: backend `alerts-feed` (`employee_id`) · Prototype "Employee" -->
@@ -63,7 +59,7 @@ The employee page SHALL show the newest five alerts from `GET /v1/alerts?employe
 
 ### Requirement: The report can be customised
 <!-- source: Prototype "Employee → Report" -->
-Customize SHALL let the reader show or hide summary, hourly chart, breakdown, applications and websites, choose how many apps and sites to list (5, 8, 15 or all, passed as `limit`), filter them by category (passed as `category`), and reset to the default. The choice MUST be kept per reader in the browser only.
+Customize SHALL let the reader show or hide summary, hourly chart, applications and websites, choose how many apps and sites to list (5, 8, 15 or all, passed as `limit`), filter them by category (passed as `category`), and reset to the default. The choice MUST be kept per reader in the browser only.
 
 #### Scenario: Top 15 productive apps
 - **WHEN** the reader picks Top 15 and Productive only
