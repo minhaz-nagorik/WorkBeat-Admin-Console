@@ -33,6 +33,18 @@ The tab SHALL offer the Report tab's range picker limited to retained days, defa
 - **WHEN** the range has no screenshots
 - **THEN** the tab says none were taken in that range and shows no grid
 
+### Requirement: The range can be narrowed to hours of each day
+<!-- source: product owner 19 Nov 2026 · backend `screenshot-access` "The range can be limited to hours of each day" -->
+Beside the range picker the tab SHALL offer From and To times in company time, blank by default (the whole day). When either is set it MUST send `start` and `end` (a blank From as `00:00`, a blank To as `24:00`), show the hours beside the range heading and offer an All day control that clears them. A To not after From MUST show an error beside the times and make no request.
+
+#### Scenario: Mornings of a week
+- **WHEN** the reader picks Last 7 days and 09:00 to 12:00
+- **THEN** only screenshots taken from 09:00 up to 12:00 on each of those days are shown, and the count and viewer position count only them
+
+#### Scenario: Times in the wrong order
+- **WHEN** the reader sets From 14:00 and To 09:00
+- **THEN** the tab says the end time must be after the start time and makes no new request
+
 ### Requirement: Grid tiles use the small image
 <!-- source: backend `screenshot-access` "A tile can load a thumbnail" · concern #13 -->
 Each grid tile SHALL show the item's `thumb_url` when it is not `null` and its `view_url` otherwise; the viewer MUST always show `view_url`, the full image.

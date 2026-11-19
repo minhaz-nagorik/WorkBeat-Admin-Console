@@ -34,6 +34,7 @@ function initialRange(sp: URLSearchParams, tz: string): Range {
 export function EmployeeScreenshots({ employeeId, tz, role }: TabProps) {
   const sp = useSearchParams();
   const [range, setRange] = useState<Range>(() => initialRange(sp, tz));
+  const [hours, setHours] = useState({ start: '', end: '' }); // blank = the whole day
   const [feed, setFeed] = useState<Feed | null>(null);
   const [status, setStatus] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
@@ -43,7 +44,11 @@ export function EmployeeScreenshots({ employeeId, tz, role }: TabProps) {
   const settings = useData<{ screenshot_interval_seconds: number }>(`/v1/employees/${employeeId}/monitoring-settings`);
   const admin = role === 'company_admin';
 
-  const base = `/v1/employees/${employeeId}/screenshots?from=${range.from}&to=${range.to}`;
+  // Empty start means 00:00 and empty end means 24:00, so one filled-in time still filters. End is exclusive.
+  const hrs = hours.start || hours.end ? { start: hours.start || '00:00', end: hours.end || '24:00' } : null;
+  const badHours = !!hrs && hrs.end <= hrs.start;
+  const okHrs = badHours ? null : hrs;
+  const base = `/v1/employees/${employeeId}/screenshots?from=${range.from}&to=${range.to}${okHrs ? `&start=${okHrs.start}&end=${okHrs.end}` : ''}`;
   const baseRef = useRef(base);
   baseRef.current = base;
   const feedRef = useRef(feed);
@@ -114,14 +119,28 @@ export function EmployeeScreenshots({ employeeId, tz, role }: TabProps) {
     </div>
   );
 
-  const picker = <RangePicker value={range} onChange={pick} tz={tz} min={min} />;
+  const picker = (
+    <div className="stack" style={{ gap: 4 }}>
+      <div className="row rangepick" style={{ flexWrap: 'wrap' }}>
+        <RangePicker value={range} onChange={pick} tz={tz} min={min} />
+        <input type="time" aria-label="From time" value={hours.start} aria-invalid={badHours} aria-describedby={badHours ? 'shot-hours-err' : undefined}
+          onChange={(e) => setHours((h) => ({ ...h, start: e.target.value }))} />
+        <span className="muted">to</span>
+        <input type="time" aria-label="To time" value={hours.end} aria-invalid={badHours} aria-describedby={badHours ? 'shot-hours-err' : undefined}
+          onChange={(e) => setHours((h) => ({ ...h, end: e.target.value }))} />
+        {hrs && <button className="btn sm" onClick={() => setHours({ start: '', end: '' })}>All day</button>}
+      </div>
+      {badHours && <span className="err small" id="shot-hours-err" role="alert">The end time must be after the start time.</span>}
+    </div>
+  );
+  const hoursLabel = okHrs ? `${okHrs.start}–${okHrs.end === '24:00' ? 'end of day' : okHrs.end}` : '';
   const list = feed.items.length ? (
     <>
       <p className="small muted">{feed.total} {feed.total === 1 ? 'screenshot' : 'screenshots'} · newest first{feed.items.length < feed.total ? ` · showing ${feed.items.length}` : ''}</p>
       <Days items={feed.items} tz={tz} multi={feed.from !== feed.to} onOpen={setOpen} onBroken={refresh} />
       {feed.cursor && <button className="btn" style={{ alignSelf: 'center' }} disabled={busy} onClick={() => more()}>{busy ? 'Loading…' : 'Load more'}</button>}
     </>
-  ) : <p className="muted">No screenshots were taken {feed.from === feed.to ? `on ${longDay(feed.from)}` : 'in this range'}.</p>;
+  ) : <p className="muted">No screenshots were taken {feed.from === feed.to ? `on ${longDay(feed.from)}` : 'in this range'}{okHrs ? ` between ${hoursLabel.replace('–', ' and ')}` : ''}.</p>;
   const viewer = <Viewer feed={feed} id={open} setId={setOpen} tz={tz} refresh={refresh} more={more} />;
 
   if (interval === 0) return (
@@ -143,7 +162,7 @@ export function EmployeeScreenshots({ employeeId, tz, role }: TabProps) {
       </div></div>
       {note && <div className="notice warn" role="alert">{note}</div>}
       <div className="card stack">
-        <div className="cardhead"><h2>{rangeLabel(feed.from, feed.to)}</h2>{picker}</div>
+        <div className="cardhead"><h2>{rangeLabel(feed.from, feed.to)}{okHrs ? ` · ${hoursLabel}` : ''}</h2>{picker}</div>
         {list}
       </div>
       {viewer}

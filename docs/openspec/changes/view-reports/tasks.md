@@ -34,4 +34,5 @@
 - [x] 4.3 Signed-link handling: no cache, refetch on expiry
 - [x] 4.5 Tiles load `thumb_url` when present, else `view_url`; the viewer keeps `view_url`
 - [x] 4.6 Viewer Full screen control; arrow keys step in full screen
+- [x] 4.7 From and To times of each day beside the range picker; `start`/`end` sent, All day clears them, To not after From shows an error
 - [ ] 4.4 Tests: role test (admin, own manager; IT and others never); expired link refetches; no `view_url` in logs or address
