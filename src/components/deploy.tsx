@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { call } from '@/lib/client';
 import { label } from '@/lib/labels';
 import { useMe } from '@/lib/me';
-import { useData } from '@/lib/use-data';
+import { useData, useRefresh } from '@/lib/use-data';
 import { pct } from '@/lib/format';
 
 const CAN = ['company_admin', 'it_admin'];
@@ -21,10 +21,12 @@ export async function markStep(step: 'download_downloader' | 'copy_license_key')
   window.dispatchEvent(new Event(SETUP_EVENT));
 }
 
-export function SetupChecklist() {
+/** `refresh` set: no polling; the caller reloads it by changing the number (Overview, A5). */
+export function SetupChecklist({ refresh }: { refresh?: number } = {}) {
   const me = useMe();
-  const s = useData<{ step: string; done: boolean }[]>(me.role === 'company_admin' ? '/v1/company/setup' : null, { poll: true }); // Company Admin only (A14)
+  const s = useData<{ step: string; done: boolean }[]>(me.role === 'company_admin' ? '/v1/company/setup' : null, { poll: refresh === undefined }); // Company Admin only (A14)
   const { reload } = s;
+  useRefresh(refresh, reload);
   useEffect(() => {
     const on = () => { reload(); };
     window.addEventListener(SETUP_EVENT, on);
@@ -69,11 +71,12 @@ const ROWS: [string, string, string, string, (r: Rollout) => number][] = [
 /** What to do, by status or badge value (also used on device detail). */
 export const ROLLOUT_ACTION: Record<string, string> = Object.fromEntries(ROWS.map((r) => [r[2].split('=')[1], r[3]]));
 
-export function RolloutCard({ compact, head }: { compact?: boolean; head?: React.ReactNode }) {
+export function RolloutCard({ compact, head, refresh }: { compact?: boolean; head?: React.ReactNode; refresh?: number }) {
   const me = useMe();
   const router = useRouter();
   const ok = CAN.includes(me.role);
-  const r = useData<Rollout>(ok ? '/v1/rollout' : null, { poll: true });
+  const r = useData<Rollout>(ok ? '/v1/rollout' : null, { poll: refresh === undefined });
+  useRefresh(refresh, r.reload);
   const lic = useData<{ seat_limit: number | null }>(me.role === 'company_admin' ? '/v1/license' : null); // IT Admin has no licence access (A14)
   if (!ok) return null;
   const d = r.data;

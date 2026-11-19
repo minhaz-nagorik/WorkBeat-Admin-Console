@@ -1,11 +1,11 @@
 'use client';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMe } from '@/lib/me';
-import { Loaded, PageHead, useData } from '@/lib/use-data';
+import { Loaded, PageHead, useData, useRefresh } from '@/lib/use-data';
 import { hm } from '@/lib/format';
 import { SetupChecklist, RolloutCard } from '@/components/deploy';
-import { AlertTable, ap, presetRange, RangePicker, rangeLabel, SplitBar, SplitLegend, type Alert, type Range } from '@/components/reports/kit';
+import { AlertTable, ap, clock, presetRange, RangePicker, rangeLabel, SplitBar, SplitLegend, type Alert, type Range } from '@/components/reports/kit';
 
 type Dash = {
   devices: { online: number; offline: number; tamper: number };
@@ -17,7 +17,13 @@ type Prod = { from: string; to: string; productive_seconds: number; neutral_seco
 
 export default function Overview() {
   const me = useMe();
-  const dash = useData<Dash>('/v1/dashboard', { poll: true });
+  // No polling (A5): loads on open and on Refresh; `tick` reloads the other cards too.
+  const dash = useData<Dash>('/v1/dashboard');
+  const [tick, setTick] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [loadedAt, setLoadedAt] = useState<string | null>(null);
+  useEffect(() => { if (dash.data) setLoadedAt(new Date().toISOString()); }, [dash.data]);
+  async function refresh() { setBusy(true); setTick((t) => t + 1); await dash.reload(); setBusy(false); }
   const reader = me.role === 'company_admin' || me.role === 'manager';
   const it = me.role === 'it_admin';
   const sub = it ? 'Device health and rollout status. Activity reports are not available to IT Admins.'
@@ -25,8 +31,13 @@ export default function Overview() {
 
   return (
     <>
-      <PageHead title="Overview" sub={sub} />
-      {(me.role === 'company_admin' || it) && <SetupChecklist />}
+      <PageHead title="Overview" sub={sub} right={
+        <div className="row">
+          {loadedAt && <span className="small muted" role="status">Updated {clock(loadedAt, me.tz)}</span>}
+          <button className="btn sm" onClick={refresh} disabled={busy}>{busy ? 'Refreshing…' : 'Refresh'}</button>
+        </div>
+      } />
+      {(me.role === 'company_admin' || it) && <SetupChecklist refresh={tick} />}
       <Loaded s={dash} rows={4}>{(d) => (
         <>
           <div className="grid g4">
@@ -39,7 +50,7 @@ export default function Overview() {
             )}
           </div>
           <div className="grid g-wide">
-            {reader ? <SplitCard tz={me.tz} admin={me.role === 'company_admin'} /> : <RolloutCard compact />}
+            {reader ? <SplitCard tz={me.tz} admin={me.role === 'company_admin'} refresh={tick} /> : <RolloutCard compact refresh={tick} />}
             {d.alerts && (
               <div className="card">
                 <div className="cardhead"><h2>Recent alerts</h2><Link href="/alerts" className="small">View all</Link></div>
@@ -47,7 +58,7 @@ export default function Overview() {
               </div>
             )}
           </div>
-          {me.role === 'company_admin' && <RolloutCard />}
+          {me.role === 'company_admin' && <RolloutCard refresh={tick} />}
         </>
       )}</Loaded>
     </>
@@ -59,12 +70,13 @@ function Stat({ k, title, v, sub, link, bad }: { k: string; title: string; v: nu
   return link ? <Link href={`/devices?status=${k}`} className="card stat" style={{ color: 'inherit', textDecoration: 'none' }}>{body}</Link> : <div className="card stat">{body}</div>;
 }
 
-function SplitCard({ tz, admin }: { tz: string; admin: boolean }) {
+function SplitCard({ tz, admin, refresh }: { tz: string; admin: boolean; refresh: number }) {
   const [range, setRange] = useState<Range>(() => presetRange('today', tz));
   const [dept, setDept] = useState('');
   const emps = useData<{ department: string | null }[]>(admin ? '/v1/employees' : null);
   const depts = [...new Set((emps.data ?? []).map((e) => e.department).filter((x): x is string => !!x))].sort();
   const prod = useData<Prod>(`/v1/reports/productivity?from=${range.from}&to=${range.to}${dept ? `&department=${encodeURIComponent(dept)}` : ''}`);
+  useRefresh(refresh, prod.reload);
   return (
     <div className="card stack">
       <div className="cardhead">

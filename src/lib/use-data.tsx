@@ -1,5 +1,5 @@
 'use client';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { call, message, usePoll } from './client';
 
 export type DataState<T> = {
@@ -27,6 +27,16 @@ export function useData<T>(path: string | null, opts: { poll?: boolean } = {}): 
   useEffect(() => { setLoading(!!path); setData(null); setStatus(null); reload(); }, [reload, path]);
   usePoll(() => { if (opts.poll && path) reload(); });
   return { data, loading, status, reload, set: setData };
+}
+
+/** Calls `reload` each time `refresh` changes after the first render (a page's Refresh button), never on its own. */
+export function useRefresh(refresh: number | undefined, reload: () => void) {
+  const last = useRef(refresh);
+  useEffect(() => {
+    if (refresh === last.current) return;
+    last.current = refresh;
+    reload();
+  }, [refresh, reload]);
 }
 
 /** Loading placeholder, no-access message or retry for a DataState; renders children with data. */

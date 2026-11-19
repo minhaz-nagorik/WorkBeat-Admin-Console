@@ -35,7 +35,7 @@ The app SHALL show `422 VALIDATION_FAILED` field errors beside the named fields,
 
 ### Requirement: Live pages poll while visible
 <!-- source: A5 · backend `alerts-feed` -->
-The alerts count, the Alerts page, Overview, the Devices list and the setup checklist SHALL refetch every 30 seconds while the browser tab is visible and stop while it is hidden, refetching once when it becomes visible again. A poll MUST NOT reset the user's search, filter, page or open confirmation.
+The alerts count, the Alerts page, the Devices list and the Deployment page's setup checklist SHALL refetch every 30 seconds while the browser tab is visible and stop while it is hidden, refetching once when it becomes visible again. A poll MUST NOT reset the user's search, filter, page or open confirmation.
 
 #### Scenario: A new tamper event
 - **WHEN** a tamper event is stored while an admin has the Alerts page open

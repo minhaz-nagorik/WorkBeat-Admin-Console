@@ -6,6 +6,7 @@
 ## 1. overview-dashboard
 
 - [x] 1.1 Overview from `GET /v1/dashboard`: device cards, seats (admin), recent alerts
+- [x] 1.1a No polling on Overview: Refresh button reloads every card; "Updated HH:MM" in company time
 - [x] 1.2 Today's activity and range productivity split with department filter
 - [x] 1.3 IT view with `GET /v1/rollout` table linking to filtered Devices
 - [ ] 1.4 Tests: role test (admin seats + split, manager team counts no seats, IT no activity); cards link only for admin and IT

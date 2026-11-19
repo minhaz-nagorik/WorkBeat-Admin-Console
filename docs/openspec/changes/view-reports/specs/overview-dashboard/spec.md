@@ -33,6 +33,18 @@ For `it_admin`, Overview SHALL say activity reports are not available to IT Admi
 - **WHEN** an IT admin of a company with no device opens Overview
 - **THEN** no setup checklist is shown and no `GET /v1/company/setup` call is made
 
+### Requirement: Overview refreshes only when asked
+<!-- source: A5 · product owner 19 Nov 2026 -->
+Overview SHALL load its data when opened and again only when the user presses Refresh, which MUST reload the dashboard, the setup checklist, the rollout table and the productivity split. It MUST show when its data was loaded, in company time, and MUST NOT refetch on a timer or when the tab becomes visible again.
+
+#### Scenario: Overview left open
+- **WHEN** an admin leaves Overview open for an hour
+- **THEN** no request is sent after it loaded and the page still shows the time it was loaded
+
+#### Scenario: Pressing Refresh
+- **WHEN** the admin presses Refresh
+- **THEN** every card reloads, the chosen range and department stay, and the loaded time updates
+
 ### Requirement: Cards link to their lists
 <!-- source: Prototype "Overview" -->
 For `company_admin` and `it_admin` the Online, Offline and Tamper cards SHALL open the Devices page filtered to that status; for `manager` they MUST NOT be links.
