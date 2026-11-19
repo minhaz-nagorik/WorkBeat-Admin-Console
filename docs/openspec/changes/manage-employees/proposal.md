@@ -10,7 +10,7 @@ Managers on their own team; IT Admins have no Employees page (A3).
 
 - **Employee directory**: Employees page with search, department and status filters; add and edit
   dialog; CSV import that checks before it imports; remove archives the employee and is refused
-  while a device is still bound; archived employees viewable and read-only.
+  while a device is still bound; archived employees viewable and read-only, and restored rather than added again (D46).
 - **Monitoring settings**: an employee tab with the four switches and the screenshot interval
   (off, 10, 30 or 60 minutes, never faster than the tier).
 - **Monitoring pauses**: schedule, extend, end and cancel a pause, with an end always required and

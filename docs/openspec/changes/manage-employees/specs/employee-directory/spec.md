@@ -61,6 +61,10 @@ A `company_admin` SHALL import employees by choosing a CSV file or pasting text 
 - **WHEN** the file has two emails that already exist
 - **THEN** the result shows them as skipped and the rest as created
 
+#### Scenario: A removed employee's email
+- **WHEN** line 3 holds the email of Sadia Khan, who was removed
+- **THEN** the dialog names line 3 and Sadia Khan, says to restore her from the removed employees, and nothing is imported
+
 ### Requirement: Removing an employee archives them
 <!-- source: D46 · D48 · backend `employee-directory` · A7 -->
 Remove SHALL confirm that the employee leaves the list and reports while their history is kept under the retention setting, then call `DELETE /v1/employees/:id`. On `409 EMPLOYEE_HAS_DEVICES` the dialog MUST name the employee's unreleased devices and say to release them on the Devices page first, with a link; it MUST NOT offer to reassign.
@@ -71,8 +75,28 @@ Remove SHALL confirm that the employee leaves the list and reports while their h
 
 ### Requirement: Archived employees are viewable and read-only
 <!-- source: D46 · backend `employee-directory` -->
-A "Show removed employees" filter SHALL list archived employees through `GET /v1/employees?archived=true` with the date removed. An archived employee's pages MUST show their reports and history and MUST hide Edit, Remove, monitoring-setting and pause controls.
+A "Show removed employees" filter SHALL list archived employees through `GET /v1/employees?archived=true` with the date removed. An archived employee's pages MUST show their reports and history and MUST hide Edit, Remove, monitoring-setting and pause controls; Restore is the only action.
 
 #### Scenario: Opening a removed employee
 - **WHEN** an admin opens an archived employee
 - **THEN** the report tabs work and no edit, settings or pause control is shown
+
+### Requirement: A removed employee is restored, not added again
+<!-- source: D46 · backend `employee-directory` -->
+A `company_admin` SHALL restore an archived employee from the removed list and from their page through `POST /v1/employees/:id/restore`, after saying their history and past hours return to reports. On `409 CONFLICT` or `422` naming `email` the dialog MUST ask for a new work email and send it. Add employee MUST offer to restore an archived employee with the typed email, and an import refused with `archived` MUST name them.
+
+#### Scenario: Restoring from the removed list
+- **WHEN** the admin restores Sadia Khan and her email is free
+- **THEN** she is back in the employee list with her history, and can be edited
+
+#### Scenario: Her email was given to someone else
+- **WHEN** the restore answers `409 CONFLICT`
+- **THEN** the dialog says another employee uses that email and asks for a new one
+
+#### Scenario: Adding a removed person again
+- **WHEN** the admin types the email of a removed employee in Add employee
+- **THEN** the dialog names that employee and offers Restore instead
+
+#### Scenario: Other roles
+- **WHEN** an `it_admin` or a `manager` views a removed employee
+- **THEN** no Restore control is shown

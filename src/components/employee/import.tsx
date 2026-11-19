@@ -70,6 +70,13 @@ export function ImportDialog({ open, onClose, onDone }: { open: boolean; onClose
     if (res.status === 401) return location.assign(`/sign-in?expired=1&next=${encodeURIComponent(location.pathname)}`);
     setChecked(null);
     if (res.status === 413) return setErr('This file is too large. Import at most 2 MB and 5,000 people at a time.');
+    if (res.status === 422 && Array.isArray(json?.archived) && json.archived.length) return setErr(
+      <>
+        <p>{lines(json.lines, true)}</p>
+        <p>These people were removed earlier. Restore them from <b>Show removed employees</b> instead of importing them again, then take their {json.archived.length === 1 ? 'line' : 'lines'} out of the file:</p>
+        <ul>{(json.archived as { line: number; employee_id: string; name: string }[]).slice(0, 20).map((x) => <li key={x.line}>Line {x.line}: {x.name}</li>)}</ul>
+      </>,
+    );
     if (res.status === 422 && Array.isArray(json?.lines)) return setErr(lines(json.lines, true));
     setErr(message(res.status, json?.code ?? ''));
   }
@@ -131,5 +138,5 @@ export function ImportDialog({ open, onClose, onDone }: { open: boolean; onClose
 
 function lines(n: number[], server = false) {
   const shown = n.slice(0, 20).join(', ') + (n.length > 20 ? ` and ${n.length - 20} more` : '');
-  return `${server ? 'Nothing was imported. ' : ''}Fix ${n.length === 1 ? 'line' : 'lines'} ${shown} (counting people, not the header): each needs a name and a valid email${server ? ' used once in the file, and any manager email must belong to a Manager' : ''}.`;
+  return `${server ? 'Nothing was imported. ' : ''}Fix ${n.length === 1 ? 'line' : 'lines'} ${shown} (counting people, not the header): each needs a name and a valid email${server ? ' used once in the file and not by a removed employee, and any manager email must belong to a Manager' : ''}.`;
 }

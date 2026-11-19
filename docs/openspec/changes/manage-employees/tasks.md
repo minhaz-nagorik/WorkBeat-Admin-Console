@@ -12,6 +12,7 @@
 - [x] 1.5 Remove with confirmation; `409 EMPLOYEE_HAS_DEVICES` names devices and links to Devices
 - [x] 1.6 Removed-employees filter and read-only archived pages
 - [ ] 1.7 Tests: role test (admin all, manager own team read only, IT redirected); each `presence` value labelled, manager sees status; import line errors create nothing; archived employee has no write controls
+- [x] 1.8 Restore (D46): Restore on the removed list and the archived page (company_admin), new-email prompt on `409`/`422 email`, Add employee offers Restore for a removed employee's email, import names `archived` matches
 
 ## 2. monitoring-settings
 

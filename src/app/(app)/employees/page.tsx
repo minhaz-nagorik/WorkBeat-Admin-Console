@@ -8,7 +8,7 @@ import { label, options } from '@/lib/labels';
 import { dateOnly } from '@/lib/time';
 import { initials } from '@/lib/format';
 import { useList } from '@/components/list';
-import { EmployeeDialog, RemoveEmployee, type Employee, type Manager } from '@/components/employee/edit';
+import { EmployeeDialog, RemoveEmployee, RestoreDialog, type Employee, type Manager } from '@/components/employee/edit';
 import { ImportDialog } from '@/components/employee/import';
 
 const PILL: Record<string, string> = { active: 'p-ok', idle: 'p-warn', offline: '', paused: 'p-info', tamper: 'p-bad', no_device: 'plain' };
@@ -26,6 +26,9 @@ export default function Employees() {
   const [note, setNote] = useState<string | null>(null);
   const [editing, setEditing] = useState<Employee | null | undefined>(undefined); // undefined = closed, null = add
   const [importing, setImporting] = useState(false);
+  const [restoring, setRestoring] = useState<Employee | null>(null);
+  // Add offers Restore for a removed employee's email (D46); only loaded while adding.
+  const gone = useData<Employee[]>(admin && editing === null ? '/v1/employees?archived=true' : null);
 
   const all = (s.data ?? []).filter((e) => removed ? e.archived_at : !e.archived_at);
   const depts = [...new Set(all.map((e) => e.department).filter((d): d is string => !!d))].sort();
@@ -84,7 +87,9 @@ export default function Employees() {
                       {admin && <td>{mgrName(e.manager_user_id) ?? <span className="muted">None</span>}</td>}
                       <td className="mono">{e.devices.map((d) => d.hostname).join(', ') || <span className="muted">None</span>}</td>
                       <td>{removed && e.archived_at ? dateOnly(e.archived_at, tz) : <span className={`pill ${PILL[e.presence] ?? ''}`}>{label('presence', e.presence)}</span>}</td>
-                      {edit && <td>{!removed && (
+                      {edit && <td>{removed ? admin && e.archived_at && (
+                        <button className="btn sm" onClick={() => setRestoring(e)} aria-label={`Restore ${e.name}`}>Restore</button>
+                      ) : (
                         <div className="row">
                           <button className="btn sm" onClick={() => setEditing(e)} aria-label={`Edit ${e.name}`}>Edit</button>
                           <RemoveEmployee emp={e} onRemoved={() => { setNote(`${e.name} was removed. Their history is kept under the retention setting.`); s.reload(); }} onSent={() => setNote(SENT)} />
@@ -102,10 +107,13 @@ export default function Employees() {
       {edit && (
         <>
           <EmployeeDialog open={editing !== undefined} emp={editing} managers={managers} departments={depts}
+            removed={gone.data ?? []} onRestoreInstead={admin ? (e) => { setEditing(undefined); setRestoring(e); } : undefined}
             onClose={() => setEditing(undefined)}
             onSaved={(e, added) => { setEditing(undefined); setNote(added ? `${e.name} was added.` : `${e.name} was saved.`); s.reload(); }}
             onSent={() => { setEditing(undefined); setNote(SENT); }} />
           <ImportDialog open={importing} onClose={() => setImporting(false)} onDone={() => s.reload()} />
+          <RestoreDialog emp={restoring} onClose={() => setRestoring(null)}
+            onRestored={(e) => { setRestoring(null); setNote(`${e.name} was restored with their history.`); s.reload(); }} />
         </>
       )}
     </>

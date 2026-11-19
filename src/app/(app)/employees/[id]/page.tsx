@@ -4,6 +4,8 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useMe } from '@/lib/me';
 import { useData, Skeleton } from '@/lib/use-data';
 import { message } from '@/lib/client';
+import { useState } from 'react';
+import { RestoreDialog } from '@/components/employee/edit';
 import { label } from '@/lib/labels';
 import { initials } from '@/lib/format';
 import { when, full, dateOnly } from '@/lib/time';
@@ -43,6 +45,7 @@ export default function EmployeePage() {
   const sp = useSearchParams();
   const router = useRouter();
   const emp = useData<Employee>(`/v1/employees/${id}`);
+  const [restoring, setRestoring] = useState(false);
   const tabs = TABS.filter((t) => t.roles.includes(me.role));
   const tab = tabs.find((t) => t.k === sp.get('tab')) ?? tabs[0];
 
@@ -66,7 +69,13 @@ export default function EmployeePage() {
           <p>{[e.department, e.email].filter(Boolean).join(' · ') || 'No department or email'}</p>
         </div>
       </div>
-      {archived && <div className="notice warn" role="status">{e.name} was removed on {dateOnly(e.archived_at!, me.tz)}. Their reports and history stay viewable; nothing can be changed.</div>}
+      {archived && (
+        <div className="notice warn row between" role="status">
+          <span>{e.name} was removed on {dateOnly(e.archived_at!, me.tz)}. Their reports and history stay viewable; nothing can be changed{me.role === 'company_admin' ? ' unless you restore them' : ''}.</span>
+          {me.role === 'company_admin' && <button className="btn sm pri" onClick={() => setRestoring(true)}>Restore {e.name}</button>}
+        </div>
+      )}
+      <RestoreDialog emp={restoring ? e : null} onClose={() => setRestoring(false)} onRestored={() => { setRestoring(false); emp.reload(); }} />
 
       <div className="grid g-wide">
         <div className="card">
