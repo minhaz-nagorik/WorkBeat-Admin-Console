@@ -27,7 +27,7 @@ For `it_admin` the employee page SHALL show the header (name, department, email,
 
 ### Requirement: The report takes a range with presets and comparison
 <!-- source: backend `usage-reports` · A9 · Prototype "Employee → Report" -->
-The Report tab SHALL offer presets Today, Yesterday, This week, Last 7 days, This month, Last 30 days and a custom from–to in the company's days, and an option to compare with the previous period of the same length. When the response's effective `from` differs from the chosen one, the tab MUST say data before that day was deleted by the retention setting.
+The Report tab SHALL offer presets Today, Yesterday, This week, Last 7 days, This month, Last 30 days and a custom from–to in the company's days, defaulting to Today or to `from`/`to` in the address, and an option to compare with the previous period of the same length. When the response's effective `from` differs from the chosen one, the tab MUST say data before that day was deleted by the retention setting.
 
 #### Scenario: A range past retention
 - **WHEN** the admin picks a range starting 60 days ago with 30-day retention

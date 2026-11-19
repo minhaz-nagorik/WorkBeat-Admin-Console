@@ -36,7 +36,7 @@ export function EmployeeActivity({ employeeId, tz }: TabProps) {
   const sp = useSearchParams();
   const router = useRouter();
   const [range, setRange] = useState<Range>(() => sp.get('from') && sp.get('to')
-    ? { preset: 'custom', from: sp.get('from')!, to: sp.get('to')! } : presetRange('last7', tz));
+    ? { preset: 'custom', from: sp.get('from')!, to: sp.get('to')! } : presetRange('today', tz));
   const [compare, setCompare] = useState(false);
   const [group, setGroup] = useState<Group>('day');
   const [cust, setCust] = useState(false);
