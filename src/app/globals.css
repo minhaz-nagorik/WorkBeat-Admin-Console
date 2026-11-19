@@ -126,6 +126,15 @@ tr.click:hover td { background: var(--surface-2); }
 .field label { font-size: 12.5px; font-weight: 500; }
 .field .hint { font-size: 12px; color: var(--muted); }
 input[type=text], input[type=email], input[type=number], select, textarea { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; width: 100%; min-width: 0; }
+.combo { position: relative; }
+.combo input { padding-right: 32px; }
+.combo-arrow { position: absolute; right: 1px; top: 1px; bottom: 1px; width: 30px; border: 0; background: transparent; color: var(--muted); cursor: pointer; display: grid; place-items: center; border-radius: 0 6px 6px 0; }
+.combo-arrow:hover { color: var(--fg); }
+.combo-list { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 4px); max-height: 260px; overflow-y: auto; margin: 0; padding: 4px; list-style: none; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--shadow); }
+.combo-list li { padding: 6px 10px; border-radius: 5px; cursor: pointer; }
+.combo-list li.on { background: var(--surface-2); }
+.combo-list li.cur { color: var(--accent); font-weight: 500; }
+.combo-list li.none { color: var(--muted); cursor: default; }
 .form { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); align-items: end; }
 .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; flex-wrap: wrap; }
 .seg button { border: 0; background: transparent; padding: 5px 12px; cursor: pointer; font-weight: 500; color: var(--muted); }

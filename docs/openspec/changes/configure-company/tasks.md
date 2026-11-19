@@ -7,6 +7,7 @@
 
 - [x] 1.1 Company form: name, read-only address, time zone picker, idle threshold in minutes
 - [x] 1.2 Retention as 30, 60 or 90 days, with a shorten confirmation naming the date
+- [x] 1.4 Time zone dropdown in the site's style: opens the full list on click, filters as you type, keyboard picks
 - [ ] 1.3 Tests: `422` beside fields; out-of-range idle refused; shorten confirmation date; role test — only company admin reaches the page
 
 ## 2. custom-domain

@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { call, message } from '@/lib/client';
 import { Loaded, PageHead, useData } from '@/lib/use-data';
 import { useMe } from '@/lib/me';
-import { Field } from '@/components/form';
+import { Combo, Field } from '@/components/form';
 
 type Settings = { idle_threshold_seconds: number; timezone: string };
 
@@ -59,9 +59,8 @@ function CompanyForm({ s, onSaved }: { s: Settings; onSaved: (d: Settings) => vo
   return (
     <form method="post" className="card stack" onSubmit={submit} noValidate>
       <h2>Company</h2>
-      <Field id="co-tz" label="Time zone" list="co-tz-list" autoComplete="off" value={zone} error={err.timezone}
-        hint="Days, weeks and times across the dashboard follow this zone. Type to search." onChange={(e) => setZone(e.target.value)} />
-      <datalist id="co-tz-list">{zones.map((z) => <option key={z} value={z} />)}</datalist>
+      <Combo id="co-tz" label="Time zone" options={zones} value={zone} error={err.timezone} onChange={setZone}
+        hint="Days, weeks and times across the dashboard follow this zone. Pick from the list or type to search." />
       <Field id="co-idle" label="Idle after (minutes)" type="number" inputMode="numeric" min={1} max={60} step={1} style={{ maxWidth: 120 }}
         value={idle} error={err.idle_threshold_seconds} onChange={(e) => setIdle(e.target.value)}
         hint="A computer with no keyboard or mouse use for this long counts as idle. Computers pick up a change within 30 minutes. 1 to 60." />

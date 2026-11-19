@@ -3,7 +3,7 @@ import { isPending } from '@/components/pending';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { call, message } from '@/lib/client';
-import { Field } from '@/components/form';
+import { Combo, Field } from '@/components/form';
 import { ConfirmButton, Modal } from '@/components/confirm';
 
 export type Presence = 'active' | 'idle' | 'offline' | 'paused' | 'tamper' | 'no_device';
@@ -66,8 +66,7 @@ export function EmployeeDialog({ open, emp, managers, departments, removed = [],
           </div>
         )}
         <div className="grid g2">
-          <Field id="emp-dept" label="Department (optional)" maxLength={200} list="emp-dept-list" value={f.department} onChange={(e) => setF({ ...f, department: e.target.value })} />
-          <datalist id="emp-dept-list">{departments.map((d) => <option key={d} value={d} />)}</datalist>
+          <Combo id="emp-dept" label="Department (optional)" maxLength={200} free options={departments} value={f.department} onChange={(v) => setF({ ...f, department: v })} />
           <div className="field">
             <label htmlFor="emp-mgr">Manager</label>
             <select id="emp-mgr" value={f.manager_user_id} aria-invalid={!!err.manager} aria-describedby={err.manager ? 'emp-mgr-err' : undefined}

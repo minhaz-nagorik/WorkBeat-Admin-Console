@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { call, message } from '@/lib/client';
 import { label, options } from '@/lib/labels';
 import { Modal } from '@/components/confirm';
-import { Field } from '@/components/form';
+import { Combo, Field } from '@/components/form';
 import type { Company } from './common';
 
 // POST /v1/staff/companies (backend round 5): the company, its licence and a Company Admin invitation.
@@ -100,10 +100,8 @@ export function AddCompanyDialog({ open, onClose, onCreated }: {
 
           <Field id="nc-trial" label="Trial days" inputMode="numeric" disabled={f.status !== 'trial'} value={f.trial_days} error={err.trial_days}
             hint={f.status === 'trial' ? '1 to 90' : 'Only for a trial'} onChange={(e) => set('trial_days', e.target.value)} />
-          <div className="field"><label htmlFor="nc-tz">Time zone</label>
-            <input id="nc-tz" type="text" list="nc-tz-list" value={f.timezone} onChange={(e) => set('timezone', e.target.value)} />
-            <datalist id="nc-tz-list">{zones.map((z) => <option key={z} value={z} />)}</datalist>
-            {err.timezone ? <span className="err" role="alert">{err.timezone}</span> : <span className="hint">Type to search</span>}</div>
+          <Combo id="nc-tz" label="Time zone" options={zones} value={f.timezone} error={err.timezone} hint="Pick from the list or type to search"
+            onChange={(v) => set('timezone', v)} />
 
           <div className="field"><label htmlFor="nc-ret">Keep activity for</label>
             <select id="nc-ret" value={f.data_retention_days} onChange={(e) => set('data_retention_days', e.target.value)}

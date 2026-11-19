@@ -29,6 +29,18 @@ The form SHALL edit `timezone` (a searchable list of IANA zones) and `idle_thres
 - **WHEN** a company admin opens Company settings
 - **THEN** only the time zone and idle threshold are shown, with no billing, domain, notice, name or retention
 
+### Requirement: The time zone list opens as a dropdown
+<!-- source: A11 · Prototype "Company settings" -->
+Clicking the time zone field or its arrow SHALL open the full list of zones in the site's own style, with the saved zone highlighted, and typing MUST narrow the list. The arrow keys MUST move through the list, Enter MUST pick the highlighted zone, and Escape MUST close the list without changing the value.
+
+#### Scenario: Opening the list
+- **WHEN** an admin clicks the arrow on a time zone field that holds `Asia/Dhaka`
+- **THEN** every zone is listed with `Asia/Dhaka` highlighted
+
+#### Scenario: Searching
+- **WHEN** an admin types `london`
+- **THEN** the list shows `Europe/London` and no zone without that text
+
 ### Requirement: The idle threshold says what it changes
 <!-- source: D15 · backend `company-settings` -->
 The idle threshold field SHALL explain that a computer with no keyboard or mouse use for that long counts as idle, and that computers pick up a change within 30 minutes.
