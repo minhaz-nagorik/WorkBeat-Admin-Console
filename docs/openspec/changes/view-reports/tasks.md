@@ -15,10 +15,10 @@
 
 - [x] 2.1 Employee page header with `presence` and `devices`, recent alerts from `GET /v1/alerts?employee_id=`, tabs, `404` message
 - [x] 2.2 Range presets, custom range, comparison, retention notice
-- [x] 2.3 Summary cards, hourly chart, top apps and sites, breakdown from `group_by` `periods`
+- [x] 2.3 Summary cards, hourly chart, top apps and sites (breakdown table removed 19 Nov 2026)
 - [x] 2.4 Customize panel kept per reader in the browser
 - [x] 2.5 CSV exports and `EXPORT_TOO_LARGE`
-- [ ] 2.6 Tests: role test (admin any, manager own team, IT none); manager sees devices and alerts; breakdown has a row for every period; clamped range notice; export too large downloads nothing
+- [ ] 2.6 Tests: role test (admin any, manager own team, IT none); manager sees devices and alerts; clamped range notice; export too large downloads nothing
 
 ## 3. calendar-and-timesheet
 

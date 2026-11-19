@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useData, Loaded } from '@/lib/use-data';
 import { call, message } from '@/lib/client';
 import { useMe } from '@/lib/me';
@@ -8,18 +8,16 @@ import { hm } from '@/lib/format';
 import { label, options } from '@/lib/labels';
 import type { TabProps } from './tabs';
 import {
-  addDays, ap, daysIn, download, fmtDay, HourChart, longDay, presetRange, RangePicker, rangeLabel, useRetainedFrom, type Range,
+  addDays, ap, daysIn, download, HourChart, longDay, presetRange, RangePicker, rangeLabel, useRetainedFrom, type Range,
 } from '@/components/reports/kit';
 
-type Period = { period_start: string; tracked_seconds: number; activity_percent: number | null; productive_seconds: number; neutral_seconds: number; unproductive_seconds: number };
-type Activity = { from: string; to: string; tracked_seconds: number; activity_percent: number | null; idle_seconds: number; hours: { hour: number; tracked_seconds: number; activity_percent: number | null }[]; periods?: Period[] };
-type Prod = { from: string; to: string; productive_seconds: number; neutral_seconds: number; unproductive_seconds: number; tracked_seconds: number; periods?: Period[] };
+type Activity = { from: string; to: string; tracked_seconds: number; activity_percent: number | null; idle_seconds: number; hours: { hour: number; tracked_seconds: number; activity_percent: number | null }[] };
+type Prod = { from: string; to: string; productive_seconds: number; neutral_seconds: number; unproductive_seconds: number; tracked_seconds: number };
 type Item = { seconds: number; category: string };
-type Group = 'day' | 'week' | 'month';
 
-type Prefs = { show: Record<'summary' | 'hourly' | 'breakdown' | 'apps' | 'sites', boolean>; top: string; cat: string };
-const DEFAULT: Prefs = { show: { summary: true, hourly: true, breakdown: true, apps: true, sites: true }, top: '8', cat: 'all' };
-const SECTIONS: [keyof Prefs['show'], string][] = [['summary', 'Summary cards'], ['hourly', 'Activity by hour'], ['breakdown', 'Breakdown table'], ['apps', 'Applications'], ['sites', 'Websites']];
+type Prefs = { show: Record<'summary' | 'hourly' | 'apps' | 'sites', boolean>; top: string; cat: string };
+const DEFAULT: Prefs = { show: { summary: true, hourly: true, apps: true, sites: true }, top: '8', cat: 'all' };
+const SECTIONS: [keyof Prefs['show'], string][] = [['summary', 'Summary cards'], ['hourly', 'Activity by hour'], ['apps', 'Applications'], ['sites', 'Websites']];
 const CATCOL: Record<string, string> = { productive: 'var(--prod)', neutral: 'var(--neu)', unproductive: 'var(--unprod)' };
 
 /** Customize choices, kept per reader in this browser only (employee-report). */
@@ -34,11 +32,9 @@ function usePrefs(userId: string) {
 export function EmployeeActivity({ employeeId, tz }: TabProps) {
   const me = useMe();
   const sp = useSearchParams();
-  const router = useRouter();
   const [range, setRange] = useState<Range>(() => sp.get('from') && sp.get('to')
     ? { preset: 'custom', from: sp.get('from')!, to: sp.get('to')! } : presetRange('today', tz));
   const [compare, setCompare] = useState(false);
-  const [group, setGroup] = useState<Group>('day');
   const [cust, setCust] = useState(false);
   const [prefs, setPrefs] = usePrefs(me.id);
   const [note, setNote] = useState<string | null>(null);
@@ -49,8 +45,8 @@ export function EmployeeActivity({ employeeId, tz }: TabProps) {
   const pq = `from=${addDays(range.from, -n)}&to=${addDays(range.from, -1)}&employee_id=${employeeId}`;
   // The API ranks, filters by category and pages (usage-reports); All reads pages of 100.
   const ranked = `${q}&limit=${prefs.top === 'all' ? 100 : +prefs.top}${prefs.cat !== 'all' ? `&category=${prefs.cat}` : ''}`;
-  const act = useData<Activity>(`/v1/reports/activity?${q}&group_by=${group}`);
-  const prod = useData<Prod>(`/v1/reports/productivity?${q}&group_by=${group}`);
+  const act = useData<Activity>(`/v1/reports/activity?${q}`);
+  const prod = useData<Prod>(`/v1/reports/productivity?${q}`);
   const pAct = useData<Activity>(compare ? `/v1/reports/activity?${pq}` : null);
   const pProd = useData<Prod>(compare ? `/v1/reports/productivity?${pq}` : null);
 
@@ -139,29 +135,6 @@ export function EmployeeActivity({ employeeId, tz }: TabProps) {
             </div>
           )}
 
-          {show.breakdown && (
-            <div className="card">
-              <div className="cardhead"><h2>Breakdown by {label('period', group).toLowerCase()}</h2>
-                <select aria-label="Breakdown by" style={{ width: 'auto' }} value={group} onChange={(e) => setGroup(e.target.value as Group)}>
-                  {options('period').map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                </select></div>
-              <div className="tablewrap"><table>
-                <thead><tr><th>{label('period', group)}</th><th>Tracked</th><th>Activity</th><th>Productive</th><th>Neutral</th><th>Unproductive</th></tr></thead>
-                <tbody>{(a.periods ?? []).map((p) => {
-                  const pr = prod.data?.periods?.find((x) => x.period_start === p.period_start) ?? p;
-                  const lbl = group === 'day' ? fmtDay(p.period_start) : group === 'week' ? `Week of ${fmtDay(p.period_start, { day: 'numeric', month: 'short' })}` : fmtDay(p.period_start, { month: 'long', year: 'numeric' });
-                  const open = () => router.replace(`?tab=calendar&view=day&date=${p.period_start}`, { scroll: false });
-                  return (
-                    <tr key={p.period_start}>
-                      <td>{group === 'day' ? <button className="linkbtn" onClick={open} title="Open this day in the calendar">{lbl}</button> : lbl}</td>
-                      <td className="num">{hm(p.tracked_seconds)}</td><td className="num">{ap(p.activity_percent)}</td>
-                      <td className="num">{hm(pr.productive_seconds)}</td><td className="num">{hm(pr.neutral_seconds)}</td><td className="num">{hm(pr.unproductive_seconds)}</td>
-                    </tr>
-                  );
-                })}</tbody>
-              </table></div>
-            </div>
-          )}
         </>
       )}</Loaded>
     </>
