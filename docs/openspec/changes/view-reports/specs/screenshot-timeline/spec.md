@@ -33,6 +33,18 @@ The tab SHALL offer the Report tab's range picker limited to retained days, defa
 - **WHEN** the range has no screenshots
 - **THEN** the tab says none were taken in that range and shows no grid
 
+### Requirement: Grid tiles use the small image
+<!-- source: backend `screenshot-access` "A tile can load a thumbnail" · concern #13 -->
+Each grid tile SHALL show the item's `thumb_url` when it is not `null` and its `view_url` otherwise; the viewer MUST always show `view_url`, the full image.
+
+#### Scenario: A screenshot with a thumbnail
+- **WHEN** an item has a `thumb_url`
+- **THEN** its tile loads `thumb_url` and the viewer loads `view_url`
+
+#### Scenario: A screenshot without one
+- **WHEN** an item's `thumb_url` is `null`
+- **THEN** its tile loads `view_url`
+
 ### Requirement: Screenshots load a page at a time
 <!-- source: backend `screenshot-access` · Plan-v3.5 §4.5 -->
 The tab SHALL request one page and show a Load more control while `next_cursor` is not null, appending the next page below. The viewer SHALL open one image large with previous and next, its time, hostname and position against `total` ("3 of 240"); Next on the last loaded image MUST load the next page first and MUST be disabled on the range's last image.
@@ -47,7 +59,7 @@ The tab SHALL request one page and show a Load more control while `next_cursor` 
 
 ### Requirement: Signed links are short-lived and never kept
 <!-- source: A6 · backend `screenshot-access` -->
-The app SHALL use each `view_url` only to display or download that image before its `expires_at`, MUST NOT cache, log or put it in the page address, and MUST refetch the loaded pages when a link has expired or an image fails to load.
+The app SHALL use each `view_url` and `thumb_url` only to display or download that image before its `expires_at`, MUST NOT cache, log or put it in the page address, and MUST refetch the loaded pages when a link has expired or an image fails to load.
 
 #### Scenario: Viewer left open
 - **WHEN** the viewer stays open for 6 minutes and the reader presses Next

@@ -9,9 +9,9 @@ import { dayKey, full } from '@/lib/time';
 import type { TabProps } from './tabs';
 import { clock, longDay, presetRange, RangePicker, rangeLabel, useRetainedFrom, type Range } from '@/components/reports/kit';
 
-// view_url is a 5-minute signed link (A6, rule 4): it lives only in this component's memory and in <img src>,
+// view_url and thumb_url are 5-minute signed links (A6, rule 4): they live only in this component's memory and in <img src>,
 // never in storage, logs or our address. An expired link or a failed image refetches the loaded pages.
-type Shot = { id: string; captured_at: string; device_id: string; hostname: string; view_url: string; download_url: string; expires_at: string };
+type Shot = { id: string; captured_at: string; device_id: string; hostname: string; view_url: string; thumb_url?: string | null; download_url: string; expires_at: string };
 type Page = { screenshots_enabled: boolean; from: string; to: string; total: number; next_cursor: string | null; items: Shot[] };
 type Feed = { enabled: boolean; from: string; to: string; total: number; items: Shot[]; cursor: string | null };
 
@@ -175,7 +175,7 @@ function Grid({ items, tz, onOpen, onBroken }: { items: Shot[]; tz: string; onOp
           aria-label={`Screenshot at ${clock(s.captured_at, tz)} on ${s.hostname}`}>
           <div className="scr" style={{ padding: 0 }}>
             {/* eslint-disable-next-line @next/next/no-img-element -- signed link must not pass through the image optimizer */}
-            <img src={s.view_url} alt="" referrerPolicy="no-referrer" loading="lazy" onError={onBroken} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={s.thumb_url ?? s.view_url} alt="" referrerPolicy="no-referrer" loading="lazy" onError={onBroken} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <div className="meta"><span>{clock(s.captured_at, tz)}</span><span className="mono">{s.hostname}</span></div>
         </button>
