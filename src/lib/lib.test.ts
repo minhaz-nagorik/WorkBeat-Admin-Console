@@ -3,7 +3,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { when, dayKey, startOfToday } from './time.ts';
 import { label } from './labels.ts';
-import { allowed, landing } from './nav.ts';
+import { allowed, can, landing } from './nav.ts';
+import type { Perm } from './types.ts';
 
 const now = new Date('2026-11-16T05:00:00Z'); // 11:00 in Dhaka
 
@@ -20,16 +21,18 @@ test('unknown enum shows Other', () => {
   assert.equal(label('alert', 'brand_new_type'), 'Other');
 });
 
-test('navigation follows the role', () => {
-  assert.ok(allowed('manager', '/employees'));
-  assert.ok(!allowed('manager', '/devices'));
-  assert.ok(allowed('it_admin', '/employees') && allowed('it_admin', '/approvals') && allowed('it_admin', '/downloads'));
-  assert.ok(!allowed('it_admin', '/deployment') && !allowed('company_admin', '/downloads') && !allowed('manager', '/approvals'));
-  assert.ok(!allowed('manager', '/team') && !allowed('it_admin', '/team') && allowed('company_admin', '/team'));
-  assert.ok(!allowed('super_admin', '/overview'));
-  assert.ok(allowed('super_admin', '/staff/companies'));
-  assert.ok(allowed('super_admin', '/staff/admins') && !allowed('company_admin', '/staff/admins'));
-  assert.ok(allowed('company_admin', '/employees/123'));
-  assert.equal(landing('super_admin'), '/staff/companies');
-  assert.equal(landing('it_admin'), '/overview');
+test('navigation follows the role and its permissions', () => {
+  const admin = { role: 'company_admin' as const }, staff = { role: 'super_admin' as const };
+  const mgr = { role: 'member' as const, permissions: ['reports', 'employees.view', 'alerts.view', 'policy.view'] as Perm[] };
+  const it = { role: 'member' as const, permissions: ['employees.view', 'employees.edit', 'devices.view', 'deployment'] as Perm[] };
+  assert.ok(allowed(mgr, '/employees') && !allowed(mgr, '/devices') && allowed(mgr, '/approvals'));
+  assert.ok(allowed(it, '/employees') && allowed(it, '/approvals') && allowed(it, '/downloads'));
+  assert.ok(!allowed(it, '/deployment') && !allowed(admin, '/downloads'));
+  assert.ok(!allowed(mgr, '/team') && !allowed(it, '/team') && allowed(admin, '/team'));
+  assert.ok(!allowed(staff, '/overview') && allowed(staff, '/staff/companies'));
+  assert.ok(allowed(staff, '/staff/admins') && !allowed(admin, '/staff/admins'));
+  assert.ok(allowed(admin, '/employees/123'));
+  assert.ok(can(it, 'employees.edit') && !can(mgr, 'employees.edit') && can(admin, 'employees.edit') && !can(it, 'admin'));
+  assert.equal(landing(staff), '/staff/companies');
+  assert.equal(landing(it), '/overview');
 });

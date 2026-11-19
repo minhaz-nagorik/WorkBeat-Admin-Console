@@ -6,14 +6,14 @@ import { Modal } from '@/components/confirm';
 import { Combo, Field } from '@/components/form';
 import type { Company } from './common';
 
-// POST /v1/staff/companies (backend round 5): the company, its licence and a Company Admin invitation.
+// POST /v1/staff/companies (backend round 5): the company, its licence and one or two Company Admin invitations.
 type Form = {
   name: string; slug: string; plan: string; seats: string; unlimited: boolean; screenshot_tier: string;
-  status: 'trial' | 'active'; trial_days: string; timezone: string; data_retention_days: string; admin_email: string;
+  status: 'trial' | 'active'; trial_days: string; timezone: string; data_retention_days: string; admin_email: string; admin_email_2: string;
 };
 const EMPTY: Form = {
   name: '', slug: '', plan: 'growth', seats: '10', unlimited: false, screenshot_tier: 'standard',
-  status: 'trial', trial_days: '14', timezone: 'UTC', data_retention_days: '90', admin_email: '',
+  status: 'trial', trial_days: '14', timezone: 'UTC', data_retention_days: '90', admin_email: '', admin_email_2: '',
 };
 const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/; // companies.slug rule: 3–32, no double dash
 const slugOf = (name: string) => name.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').slice(0, 32).replace(/^-+|-+$/g, '');
@@ -28,6 +28,9 @@ export function check(f: Form): Partial<Record<keyof Form, string>> {
   if (f.status === 'trial' && !whole(f.trial_days, 1, 90)) e.trial_days = 'Use 1 to 90 days.';
   if (!['30', '60', '90'].includes(f.data_retention_days)) e.data_retention_days = 'Pick 30, 60 or 90 days.';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.admin_email.trim())) e.admin_email = 'Enter the Company Admin’s email.';
+  const second = f.admin_email_2.trim();
+  if (second && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(second)) e.admin_email_2 = 'Enter a valid email, or leave it empty.';
+  else if (second && second.toLowerCase() === f.admin_email.trim().toLowerCase()) e.admin_email_2 = 'Use a different email from the first Company Admin.';
   return e;
 }
 
@@ -47,16 +50,16 @@ export function AddCompanyDialog({ open, onClose, onCreated }: {
     const bad = check(f); setErr(bad); if (Object.keys(bad).length) return;
     setBusy(true);
     const unlimited = f.unlimited && f.plan === 'enterprise';
-    const r = await call<{ company: Company; invitation: { email: string } }>('POST', '/v1/staff/companies', {
+    const r = await call<{ company: Company; invitation: { email: string }; invitations?: { email: string }[] }>('POST', '/v1/staff/companies', {
       name: f.name.trim(), slug: f.slug, plan: f.plan, seat_limit: unlimited ? null : +f.seats, screenshot_tier: f.screenshot_tier,
       status: f.status, ...(f.status === 'trial' && { trial_days: +f.trial_days }), timezone: f.timezone,
-      data_retention_days: +f.data_retention_days, admin_email: f.admin_email.trim(),
+      data_retention_days: +f.data_retention_days, admin_email: f.admin_email.trim(), admin_email_2: f.admin_email_2.trim() || null,
     });
     setBusy(false);
-    if (r.ok) return onCreated(r.data.company, r.data.invitation.email);
+    if (r.ok) return onCreated(r.data.company, (r.data.invitations ?? [r.data.invitation]).map((i) => i.email).join(' and '));
     const fields = r.err.fields ?? [];
-    if (r.status === 409) return setErr(fields.includes('admin_email')
-      ? { admin_email: 'This email already has an account or an open invitation.' }
+    if (r.status === 409) return setErr(fields.includes('admin_email') || fields.includes('admin_email_2')
+      ? { [fields.includes('admin_email_2') ? 'admin_email_2' : 'admin_email']: 'This email already has an account or an open invitation.' }
       : { slug: 'This address is already taken.' });
     if (r.status === 422 && fields.length) {
       const e2: Partial<Record<keyof Form, string>> = {};
@@ -114,6 +117,10 @@ export function AddCompanyDialog({ open, onClose, onCreated }: {
           <div className="span2">
             <Field id="nc-admin" label="Company Admin email" type="email" required maxLength={254} value={f.admin_email} error={err.admin_email}
               hint="We email the licence key and a link to create their account to this address." onChange={(e) => set('admin_email', e.target.value)} />
+          </div>
+          <div className="span2">
+            <Field id="nc-admin-2" label="Second Company Admin email (optional)" type="email" maxLength={254} value={f.admin_email_2} error={err.admin_email_2}
+              hint="With two Company Admins, each one’s changes wait for the other’s approval." onChange={(e) => set('admin_email_2', e.target.value)} />
           </div>
         </div>
         {err.form && <div className="err" role="alert">{err.form}</div>}

@@ -1,7 +1,12 @@
 // The one label map for every API enum shown to a person (A4, rule 6). Unknown values read "Other".
 // Add a map inside MAPS; keep each area's maps under its own comment.
 const MAPS = {
-  role: { company_admin: 'Company Admin', manager: 'Manager', it_admin: 'IT Admin', super_admin: 'WorkBeat staff' },
+  role: { company_admin: 'Company Admin', member: 'Team member', super_admin: 'WorkBeat staff' },
+  perm: {
+    reports: 'Reports, activity and screenshots', 'employees.view': 'See employees', 'employees.edit': 'Change employees',
+    'devices.view': 'See computers', 'devices.edit': 'Release or deactivate computers', 'alerts.view': 'See alerts', 'alerts.edit': 'Resolve alerts',
+    'policy.view': 'See block list and productivity rules', 'policy.edit': 'Change block list and productivity rules', deployment: 'Install WorkBeat (downloads)',
+  },
   companyStatus: { trial: 'Trial', active: 'Active', suspended: 'Suspended', expired: 'Expired' },
   alert: {
     hosts_modified: 'Website blocking changed', offline: 'Computer offline', process_restart: 'WorkBeat was closed',
@@ -29,7 +34,6 @@ const MAPS = {
   category: { productive: 'Productive', neutral: 'Neutral', unproductive: 'Unproductive' },
   // policies
   delivery: { instant: 'As they happen', hourly: 'Hourly digest', daily: 'Daily digest at 09:00' },
-  alertRole: { company_admin: 'Company Admins', it_admin: 'IT Admins', manager: 'Managers (own team only)' },
   ruleType: { domain: 'Website', url: 'Web address', regex: 'Pattern' },
   matchType: { app: 'App', domain: 'Website' },
   // company

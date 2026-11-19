@@ -1,4 +1,5 @@
 'use client';
+import { can } from '@/lib/nav';
 import { useEffect, useState } from 'react';
 import { call, message } from '@/lib/client';
 import { label, options } from '@/lib/labels';
@@ -19,7 +20,7 @@ const CONFLICT = 'A rule for this app or website already exists.';
 
 export default function ProductivityRules() {
   const me = useMe();
-  const canEdit = me.role === 'company_admin' || me.role === 'it_admin'; // IT Admin changes wait for approval (A14)
+  const canEdit = can(me, 'policy.edit'); // a member's changes wait for approval
   const rules = useData<Rule[]>('/v1/productivity-rules');
   const [cat, setCat] = useState<Cat | 'all'>('all');
   const [adding, setAdding] = useState(false);

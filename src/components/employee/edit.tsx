@@ -1,5 +1,5 @@
 'use client';
-import { isPending } from '@/components/pending';
+import { isPending, SENT } from '@/components/pending';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { call, message } from '@/lib/client';
@@ -108,6 +108,7 @@ export function RestoreDialog({ emp, onClose, onRestored }: {
     setBusy(true); setErr(null);
     const r = await call<Employee>('POST', `/v1/employees/${emp.id}/restore`, ask !== null ? { email: email.trim() } : undefined);
     setBusy(false);
+    if (isPending(r)) { setAsk(null); return setErr(SENT); }
     if (r.ok) return onRestored(r.data);
     if (r.status === 409) {
       if (ask === null) return setAsk(`Another employee now uses ${emp.email}. Enter a new work email for ${emp.name}.`);

@@ -1,4 +1,5 @@
 'use client';
+import { can } from '@/lib/nav';
 import { useEffect, useState } from 'react';
 import { call, message } from '@/lib/client';
 import { useMe } from '@/lib/me';
@@ -21,7 +22,7 @@ const looksRegex = (s: string) => /^\^|[\\()|[\]$]/.test(s);
 
 export default function BlockList() {
   const me = useMe();
-  const canEdit = me.role === 'company_admin' || me.role === 'it_admin';
+  const canEdit = can(me, 'policy.edit');
   const rules = useData<Rule[]>('/v1/block-rules');
   const [note, setNote] = useState<Note>(null);
   const [editing, setEditing] = useState<Rule | 'new' | null>(null);
@@ -81,7 +82,7 @@ export default function BlockList() {
         </div>
       )}</Loaded>
 
-      <PrivateSites canEdit={me.role !== 'manager'} />
+      <PrivateSites canEdit={canEdit} />
 
       <RuleDialog rule={editing} onClose={() => setEditing(null)} onSaved={saved} onSent={() => { setEditing(null); setNote({ ok: true, text: SENT }); }} />
       <Modal title="Rules created" open={!!created} onClose={() => setCreated(null)}>

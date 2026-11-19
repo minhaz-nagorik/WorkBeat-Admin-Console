@@ -22,7 +22,7 @@ export default function Account() {
     setBusy(true);
     const r = await call('POST', '/v1/auth/password', { current_password: cur, new_password: pw });
     setBusy(false);
-    if (r.ok && forced) return location.replace(landing(me.role));
+    if (r.ok && forced) return location.replace(landing(me));
     if (r.ok) { setCur(''); setPw(''); return setMsg({ ok: true, text: 'Password changed. Your other sessions were signed out.' }); }
     if (r.status === 429) return setWait(r.retryAfter ?? 60);
     if (r.status === 422 && r.err.fields?.includes('current_password')) return setErrs({ cur: forced ? 'This is not the temporary password, or it has expired.' : 'This is not your current password.' });

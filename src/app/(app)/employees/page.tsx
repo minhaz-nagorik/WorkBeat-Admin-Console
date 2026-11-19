@@ -1,4 +1,5 @@
 'use client';
+import { can } from '@/lib/nav';
 import { PendingList, SENT } from '@/components/pending';
 import { useState } from 'react';
 import Link from 'next/link';
@@ -14,13 +15,14 @@ import { ImportDialog } from '@/components/employee/import';
 const PILL: Record<string, string> = { active: 'p-ok', idle: 'p-warn', offline: '', paused: 'p-info', no_device: 'plain' };
 
 export default function Employees() {
-  const { role, tz } = useMe();
+  const me = useMe();
+  const { role, tz } = me;
   const admin = role === 'company_admin';
-  const edit = admin || role === 'it_admin'; // IT Admin changes wait for approval (A14)
+  const edit = can(me, 'employees.edit'); // a member's changes wait for approval
   const [removed, setRemoved] = useState(false);
   const s = useData<Employee[]>(removed ? '/v1/employees?archived=true' : '/v1/employees', { poll: true });
-  const team = useData<{ users: (Manager & { role: string })[] }>(admin ? '/v1/team' : null);
-  const managers = (team.data?.users ?? []).filter((u) => u.role === 'manager');
+  const team = useData<{ users: (Manager & { team_only: boolean | null })[] }>(admin ? '/v1/team' : null);
+  const managers = (team.data?.users ?? []).filter((u) => u.team_only); // users of a team-only role
   const [dept, setDept] = useState('');
   const [status, setStatus] = useState('');
   const [note, setNote] = useState<string | null>(null);
