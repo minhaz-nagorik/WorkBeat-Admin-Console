@@ -194,6 +194,16 @@ function Viewer({ feed, id, setId, tz, refresh, more }: {
   const itemsRef = useRef(items);
   itemsRef.current = items;
   const atEnd = i === items.length - 1 && !feed.cursor;
+  const frame = useRef<HTMLDivElement>(null);
+  const [fs, setFs] = useState(false);
+  const [canFs, setCanFs] = useState(false);
+  useEffect(() => {
+    setCanFs(!!document.fullscreenEnabled);
+    const sync = () => setFs(!!frame.current && document.fullscreenElement === frame.current);
+    document.addEventListener('fullscreenchange', sync);
+    return () => document.removeEventListener('fullscreenchange', sync);
+  }, []);
+  const toggleFs = () => (fs ? document.exitFullscreen() : frame.current?.requestFullscreen())?.catch(() => {});
   // Next past the loaded items loads the next page; stepping onto an expired link refetches first (fresh links, same ids).
   const step = async (n: number) => {
     setStepping(true);
@@ -203,18 +213,42 @@ function Viewer({ feed, id, setId, tz, refresh, more }: {
     if (next) { if (expired(next)) await refresh(); setId(next.id); }
     setStepping(false);
   };
+  const stepRef = useRef(step);
+  stepRef.current = step;
+  const canPrev = i > 0 && !stepping, canNext = !atEnd && !stepping;
+  // In full screen the footer is hidden: the arrow keys step like Previous and Next.
+  useEffect(() => {
+    if (!fs) return;
+    const key = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft' && canPrev) { e.preventDefault(); stepRef.current(-1); }
+      if (e.key === 'ArrowRight' && canNext) { e.preventDefault(); stepRef.current(1); }
+    };
+    document.addEventListener('keydown', key);
+    return () => document.removeEventListener('keydown', key);
+  }, [fs, canPrev, canNext]);
   return (
     <Modal title={s ? `${clock(s.captured_at, tz)} · ${s.hostname}` : 'Screenshot'} open={!!id} onClose={() => setId(null)} wide>
       {!s ? <p className="muted">This screenshot is no longer available.</p> : (
         <>
-          {/* eslint-disable-next-line @next/next/no-img-element -- signed link must not pass through the image optimizer */}
-          <img src={s.view_url} alt={`Screenshot at ${clock(s.captured_at, tz)} on ${s.hostname}`} referrerPolicy="no-referrer"
-            onError={() => refresh()} style={{ width: '100%', borderRadius: 8, background: 'var(--surface-2)' }} />
+          <div ref={frame} className="shotframe">
+            {/* eslint-disable-next-line @next/next/no-img-element -- signed link must not pass through the image optimizer */}
+            <img src={s.view_url} alt={`Screenshot at ${clock(s.captured_at, tz)} on ${s.hostname}`} referrerPolicy="no-referrer"
+              onError={() => refresh()} onDoubleClick={canFs ? toggleFs : undefined} />
+            {fs && (
+              <div className="fsbar">
+                <button className="btn" disabled={!canPrev} onClick={() => step(-1)}>‹ Previous</button>
+                <span>{clock(s.captured_at, tz)} · <span className="mono">{s.hostname}</span> · {i + 1} of {feed.total}</span>
+                <button className="btn" disabled={!canNext} onClick={() => step(1)}>{stepping ? 'Loading…' : 'Next ›'}</button>
+                <button className="btn" onClick={toggleFs}>Exit full screen</button>
+              </div>
+            )}
+          </div>
           <div className="row between small"><span title={full(s.captured_at, tz)}><span className="mono">{s.hostname}</span> · {full(s.captured_at, tz)}</span></div>
           <div className="mf">
-            <button className="btn" disabled={i === 0 || stepping} onClick={() => step(-1)}>‹ Previous</button>
+            {canFs && <button className="btn" onClick={toggleFs}>⛶ Full screen</button>}
+            <button className="btn" disabled={!canPrev} onClick={() => step(-1)}>‹ Previous</button>
             <span className="small muted" style={{ alignSelf: 'center' }}>{i + 1} of {feed.total}</span>
-            <button className="btn" disabled={atEnd || stepping} onClick={() => step(1)}>{stepping ? 'Loading…' : 'Next ›'}</button>
+            <button className="btn" disabled={!canNext} onClick={() => step(1)}>{stepping ? 'Loading…' : 'Next ›'}</button>
             <button className="btn pri" disabled={saving} onClick={async () => {
               setSaving(true);
               if (expired(s)) await refresh(); // the list comes back with fresh links for the same screenshot

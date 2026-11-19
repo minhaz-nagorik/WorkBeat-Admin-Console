@@ -57,6 +57,19 @@ The tab SHALL request one page and show a Load more control while `next_cursor` 
 - **WHEN** the viewer shows the last image of the range
 - **THEN** the Next control is disabled
 
+### Requirement: The viewer opens an image full screen
+<!-- source: A11 · Prototype "Employee → Screenshots" -->
+The viewer SHALL offer a labelled Full screen control that shows the current `view_url` image filling the screen, scaled to fit without cropping. In full screen the left and right arrow keys MUST step to the previous and next image as the viewer's controls do, and Escape or the control MUST return to the viewer.
+
+#### Scenario: Viewing full screen
+- **WHEN** the reader presses Full screen in the viewer
+- **THEN** the image fills the screen, uncropped
+- **AND** the right arrow key shows the next image
+
+#### Scenario: Leaving full screen
+- **WHEN** the reader presses Escape in full screen
+- **THEN** the viewer shows the same image at its normal size
+
 ### Requirement: Signed links are short-lived and never kept
 <!-- source: A6 · backend `screenshot-access` -->
 The app SHALL use each `view_url` and `thumb_url` only to display or download that image before its `expires_at`, MUST NOT cache, log or put it in the page address, and MUST refetch the loaded pages when a link has expired or an image fails to load.
