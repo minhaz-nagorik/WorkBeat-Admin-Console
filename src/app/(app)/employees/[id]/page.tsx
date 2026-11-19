@@ -77,23 +77,19 @@ export default function EmployeePage() {
       )}
       <RestoreDialog emp={restoring ? e : null} onClose={() => setRestoring(false)} onRestored={() => { setRestoring(false); emp.reload(); }} />
 
-      <div className="grid g-wide">
+      <div className="grid g-side">
+        <EmployeeAlerts id={e.id} tz={me.tz} />
         <div className="card">
           <h2>Computers</h2>
           {!e.devices?.length ? <p className="muted small">No computer is set up for this person yet. Run WorkBeat Setup on their computer and pick {e.name}.</p> : (
-            <div className="tablewrap"><table>
-              <thead><tr><th>Computer</th><th>Status</th><th>Last seen</th></tr></thead>
-              <tbody>{e.devices.map((d) => (
-                <tr key={d.id}>
-                  <td><span className="mono">{d.hostname}</span><div className="small muted">{label('os', d.os)}</div></td>
-                  <td><span className={`pill ${DEV[d.status] ?? ''}`}>{label('deviceStatus', d.status)}</span></td>
-                  <td className="small" title={d.last_heartbeat_at ? full(d.last_heartbeat_at, me.tz) : undefined}>{d.last_heartbeat_at ? when(d.last_heartbeat_at, me.tz) : 'Never'}</td>
-                </tr>
-              ))}</tbody>
-            </table></div>
+            <ul className="devlist">{e.devices.map((d) => (
+              <li key={d.id}>
+                <div className="row between"><span className="mono">{d.hostname}</span><span className={`pill ${DEV[d.status] ?? ''}`}>{label('deviceStatus', d.status)}</span></div>
+                <div className="small muted">{label('os', d.os)} · <span title={d.last_heartbeat_at ? full(d.last_heartbeat_at, me.tz) : undefined}>Last seen {d.last_heartbeat_at ? when(d.last_heartbeat_at, me.tz) : 'never'}</span></div>
+              </li>
+            ))}</ul>
           )}
         </div>
-        <EmployeeAlerts id={e.id} tz={me.tz} />
       </div>
 
       <div className="tabs" role="tablist" aria-label="Employee sections">
