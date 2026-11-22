@@ -6,9 +6,9 @@ leave out two prototype controls.
 
 ## Decisions
 
-- **No "Check DNS now".** Prototype "Custom domains" offers it; the backend will not add one
-  (backend reply 16 Nov 2026): `/cron/domain-verify` runs every 5 minutes. The page shows
-  `custom_domain_checked_at` instead.
+- **No "Check DNS now".** Prototype "Custom domains" offers it. There is no DNS job (backend B33):
+  staff check the TXT record by hand, then Approve or Reject. The page shows
+  `custom_domain_checked_at` as the review time (A17).
 - **Global minimum is read-only.** Prototype "Agent releases" has a dropdown to set it; the backend
   confirmed the derived rule is final (backend reply 16 Nov 2026).
 - **Seat limit is changed only for Enterprise.** Prototype "Change plan" edits plan, seat limit and

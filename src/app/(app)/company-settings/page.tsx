@@ -1,13 +1,16 @@
 'use client';
-// A Company Admin edits only the time zone and the idle threshold here (B29). Company name, data retention,
-// custom domain, the monitoring notice and billing are managed by WorkBeat staff; the API refuses them (403).
+// A Company Admin edits the time zone, the idle threshold and the custom domain here (B29, B33). Company name,
+// data retention, the monitoring notice and billing are managed by WorkBeat staff; the API refuses them (403).
+// A custom domain works only after WorkBeat approves it (A17).
 // The screenshot interval is set on each employee, never faster than the plan (D37, B11).
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { call, message } from '@/lib/client';
 import { Loaded, PageHead, useData } from '@/lib/use-data';
 import { useMe } from '@/lib/me';
+import { label } from '@/lib/labels';
 import { Combo, Field } from '@/components/form';
+import { ConfirmButton } from '@/components/confirm';
 
 type Settings = { idle_threshold_seconds: number; timezone: string };
 
@@ -19,6 +22,7 @@ export default function CompanySettings() {
       <PageHead title="Company settings" sub={me.company?.name} />
       <div className="grid g2">
         <Loaded s={settings} rows={3}>{(s) => <CompanyForm s={s} onSaved={(d) => settings.set(() => d)} />}</Loaded>
+        <DomainCard />
       </div>
     </>
   );
@@ -71,5 +75,76 @@ function CompanyForm({ s, onSaved }: { s: Settings; onSaved: (d: Settings) => vo
         {saved && <span className="small muted" role="status">Saved.</span>}
       </div>
     </form>
+  );
+}
+
+// GET /v1/company/custom-domain (custom-domains). null when none is set.
+type Domain = { domain: string; status: 'pending' | 'active' | 'failed'; cname_target: string; txt_name: string; txt_value: string; verified_at: string | null } | null;
+const DOMAIN_PILL = { pending: 'p-warn', active: 'p-ok', failed: 'p-bad' } as const;
+
+function DomainCard() {
+  const d = useData<Domain>('/v1/company/custom-domain');
+  const [value, setValue] = useState('');
+  const [err, setErr] = useState<{ domain?: string; form?: string }>({});
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!value.trim()) return setErr({ domain: 'Enter a domain such as monitor.yourcompany.com.' });
+    setBusy(true); setErr({});
+    const r = await call<Domain>('PUT', '/v1/company/custom-domain', { domain: value.trim() });
+    setBusy(false);
+    if (r.ok) { setValue(''); return d.set(() => r.data); }
+    if (r.status === 422) return setErr({ domain: 'Enter a domain you own, such as monitor.yourcompany.com. A workbeat.io address cannot be used.' });
+    if (r.status === 409) return setErr({ domain: 'Another company already uses this domain.' });
+    setErr({ form: message(r.status, r.err.code) });
+  }
+  async function remove() {
+    const r = await call('DELETE', '/v1/company/custom-domain');
+    if (r.ok) return d.set(() => null);
+    setErr({ form: message(r.status, r.err.code) });
+  }
+
+  // Loaded shows a skeleton for null data, and null here means "no domain": use it only while loading or failed.
+  if (d.loading || d.status) return <Loaded s={d} rows={2}>{() => null}</Loaded>;
+  const dom = d.data;
+  return (
+    <div className="card stack">
+      <h2>Custom domain</h2>
+      {dom && (
+        <div className="stack">
+          <div className="row">
+            <span className="mono">{dom.domain}</span>
+            <span className={`pill ${DOMAIN_PILL[dom.status]}`}>{label('domainStatus', dom.status)}</span>
+          </div>
+          {dom.status !== 'active' && (
+            <>
+              <p className="small">Add these two records where your domain is managed. WorkBeat checks them and then turns the domain on.</p>
+              <div className="tablewrap">
+                <table>
+                  <thead><tr><th>Type</th><th>Name</th><th>Value</th></tr></thead>
+                  <tbody>
+                    <tr><td>CNAME</td><td className="mono">{dom.domain}</td><td className="mono">{dom.cname_target}</td></tr>
+                    <tr><td>TXT</td><td className="mono">{dom.txt_name}</td><td className="mono">{dom.txt_value}</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+          {dom.status === 'failed' && <p className="small">WorkBeat could not approve this domain. Check the records above, then contact WorkBeat.</p>}
+          <div className="row">
+            <ConfirmButton label="Remove domain" action="Remove"
+              question={`Remove ${dom.domain}? The dashboard stops opening at this address. You can add a domain again later.`} onConfirm={remove} />
+          </div>
+        </div>
+      )}
+      <form method="post" className="stack" onSubmit={submit} noValidate>
+        <Field id="co-domain" label={dom ? 'Use a different domain' : 'Domain'} value={value} error={err.domain} maxLength={253}
+          placeholder="monitor.yourcompany.com" onChange={(e) => setValue(e.target.value)}
+          hint={dom ? 'A new domain replaces the current one and needs WorkBeat approval again.' : 'Your team can open the dashboard at this address once WorkBeat approves it.'} />
+        {err.form && <div className="err" role="alert">{err.form}</div>}
+        <div className="row"><button className="btn pri" disabled={busy}>{busy ? 'Saving…' : dom ? 'Change domain' : 'Add domain'}</button></div>
+      </form>
+    </div>
   );
 }

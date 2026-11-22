@@ -10,8 +10,8 @@ and leaves the interval to each employee's monitoring settings.
 
 - **Company settings**: name, read-only address (slug), data retention of 30, 60 or 90 days, time zone,
   idle threshold 60–3600 s.
-- **Custom domain**: add, change and remove a domain; show the CNAME and TXT records with copy
-  buttons; pending, active and failed states.
+- **Custom domain**: add, change and remove a domain; show the CNAME and TXT records; waiting for
+  WorkBeat approval, active and not approved states (A17, backend B33).
 - **Billing**: plan, seats used of the limit, screenshot tier with a change scheduled for the end
   of the period, next-invoice estimate, and the Stripe billing portal for card and invoices.
 

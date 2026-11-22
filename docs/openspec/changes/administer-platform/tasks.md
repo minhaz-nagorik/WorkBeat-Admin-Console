@@ -19,8 +19,9 @@
 
 ## 3. staff-domains
 
-- [x] 3.1 Read-only domain list from companies with a `custom_domain`, with `custom_domain_checked_at`
-- [ ] 3.2 Tests: state labels; no write control; role test — super admin only
+- [x] 3.1 Domain list from companies with a `custom_domain`, with `custom_domain_checked_at` as the review time
+- [x] 3.2 A17: "Check and approve" dialog with the TXT name, value and a `dig` command; Approve and Reject; Deactivate for an active domain
+- [ ] 3.3 Tests: state labels; `409` message when the company changed its domain; role test — super admin only
 
 ## 4. agent-releases
 

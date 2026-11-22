@@ -14,8 +14,8 @@ The Company settings page SHALL be in the navigation and reachable for `company_
 - **THEN** the app shows Overview
 
 ### Requirement: The company form saves time zone and idle threshold only
-<!-- source: A15 · B19 · D15 · backend `company-settings` (B29) -->
-The form SHALL edit `timezone` (a searchable list of IANA zones) and `idle_threshold_seconds` (minutes, 1 to 60), and save only those two with `PATCH /v1/company/settings`, then reload `GET /v1/me` so the time zone applies across the app at once. A `422` MUST appear beside its field. The page MUST NOT show or send the company name, data retention, a custom domain, the monitoring notice, billing or a screenshot interval, and MUST say that intervals are set on each employee.
+<!-- source: A15 · A17 · B19 · D15 · backend `company-settings` (B29) -->
+The form SHALL edit `timezone` (a searchable list of IANA zones) and `idle_threshold_seconds` (minutes, 1 to 60), and save only those two with `PATCH /v1/company/settings`, then reload `GET /v1/me` so the time zone applies across the app at once. A `422` MUST appear beside its field. The form MUST NOT show or send the company name, data retention, the monitoring notice, billing or a screenshot interval, and MUST say that intervals are set on each employee.
 
 #### Scenario: Changing the time zone
 - **WHEN** an admin picks `Asia/Dhaka` and saves
@@ -27,7 +27,7 @@ The form SHALL edit `timezone` (a searchable list of IANA zones) and `idle_thres
 
 #### Scenario: What the page holds
 - **WHEN** a company admin opens Company settings
-- **THEN** only the time zone and idle threshold are shown, with no billing, domain, notice, name or retention
+- **THEN** the form shows only the time zone and idle threshold, with no billing, notice, name or retention, and the custom domain has its own card
 
 ### Requirement: The time zone list opens as a dropdown
 <!-- source: A11 · Prototype "Company settings" -->

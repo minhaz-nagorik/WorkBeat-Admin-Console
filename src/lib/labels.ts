@@ -35,7 +35,7 @@ const MAPS = {
   // company
   tier: { off: 'Off', light: 'Light', standard: 'Standard', intensive: 'Intensive' },
   plan: { starter: 'Starter', growth: 'Growth', enterprise: 'Enterprise' },
-  domainStatus: { pending: 'Waiting for DNS records', active: 'Active', failed: 'Not verified' },
+  domainStatus: { pending: 'Waiting for WorkBeat approval', active: 'Active', failed: 'Not approved' },
   // staff
   suspendedReason: { staff: 'By WorkBeat', payment_failed: 'Payment failed' },
   arch: { universal: 'Universal', x64: 'x64', arm64: 'ARM64' },

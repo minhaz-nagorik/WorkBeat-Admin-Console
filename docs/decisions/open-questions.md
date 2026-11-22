@@ -24,7 +24,7 @@ answered.
 | Q15 | Counts per type on `GET /v1/alerts` | Alerts | Dropdown without counts | ✅ answered, in API 16 Nov |
 | Q16 | `employee_id` filter on `GET /v1/alerts` | Employee page | No alerts section | ✅ answered, in API 16 Nov |
 | Q17 | Who gets alert emails, readable by Managers and IT Admins | Alerts subtitle | Line left out for them | dropped, not asked |
-| Q18 | Staff "Check DNS now" route and `custom_domain_checked_at` on staff companies | Staff custom domains | Dropped | agreed, staff API not built |
+| Q18 | Staff "Check DNS now" route and `custom_domain_checked_at` on staff companies | Staff custom domains | Dropped | closed by A17 / backend B33: no DNS job; staff check by hand and approve |
 | Q19 | Installer upload route for staff releases | Agent releases | Publish by `storage_path` of a file already in the bucket | agreed, staff API not built |
 | Q20 | Staff set the global minimum version directly | Agent releases | Derived from `min_supported` only | ✅ answered: derived, read-only |
 | Q21 | Resend a staff invitation | Staff team | Revoke and invite again | agreed, staff API not built |

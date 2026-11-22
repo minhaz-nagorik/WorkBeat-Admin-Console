@@ -12,9 +12,10 @@
 
 ## 2. custom-domain
 
-- [x] 2.1 Card states: none, pending, active, failed, with `checked_at`
-- [x] 2.2 Add/change dialog; CNAME and TXT records with copy
-- [x] 2.3 Inline remove
+- [x] 2.1 A17: card back on Company settings; states none, pending ("Waiting for WorkBeat approval"), active, failed ("Not approved")
+- [x] 2.2 Add/change form; CNAME and TXT records shown until the domain is active
+- [x] 2.3 Remove with a confirmation naming the effect
+- [x] 2.5 Host gate in the middleware: an address that is not WorkBeat's own opens only when `GET /v1/hosts/resolve` answers 200 (60 s cache); else redirect to `APP_URL/sign-in`, or 404 for `/api/`. `isOwnHost` unit test
 - [ ] 2.4 Tests: `409` and `422` messages; records shown after save; remove returns to empty state; role test — no other role calls the route
 
 ## 3. billing
@@ -23,4 +24,4 @@
 - [x] 3.2 Tier change via `PUT /v1/billing/screenshot-tier`, scheduled tier and date shown
 - [x] 3.3 Stripe portal button via `POST /v1/billing/portal-session`
 - [ ] 3.4 Tests: estimate per tier; scheduled tier shown; no card field anywhere; works while suspended; role test — only company admin sees billing
-- [x] 3.5 A15: Company settings holds only time zone and idle threshold; Billing card, custom domain card, notice editor, name and retention removed; billing links in the shell banner and screenshot tab replaced by "contact WorkBeat"
+- [x] 3.5 A15: Company settings holds only time zone and idle threshold; Billing card, notice editor, name and retention removed (the custom domain card came back with A17); billing links in the shell banner and screenshot tab replaced by "contact WorkBeat"

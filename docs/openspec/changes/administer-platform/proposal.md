@@ -12,7 +12,7 @@ staff area on them.
 - **Companies**: totals, list with status filter and search, suspend and restore, Enterprise plan
   and seat limit, expired grace days.
 - **Licences**: masked keys, seats, reissue with a one-time display of the new key.
-- **Custom domains**: every company's custom domain and its state, read-only.
+- **Custom domains**: every company's custom domain and its state; staff check its TXT record, then approve, reject or deactivate it (A17).
 - **Agent releases**: list, publish, withdraw.
 - **Staff team**: list, invite a super admin, resend or revoke an invitation, remove a staff user.
 
