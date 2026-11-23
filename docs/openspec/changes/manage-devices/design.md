@@ -17,9 +17,9 @@ Amends the prototype's release text. The device stops collecting and blocking at
 what it already holds for up to 24 hours, then wipes and goes dormant (D38, D45). Saying "deleted"
 would mislead admins about data that will still arrive.
 
-### Deactivate is offered beside release
-Plan-v3.5 §5.8 and backend `device-lifecycle` give both. Deactivate is for a device about to be
-uninstalled; release is for a device leaving monitoring or changing hands. Both free the seat.
+### Release is the only device action
+Backend B35 removed deactivate (product owner, 23 Nov 2026). Release is for a device leaving
+monitoring, changing hands, or already uninstalled: uninstalling frees no seat, so the page says so.
 
 ### Filters become dropdowns
 The prototype's status chips become status, issue (badge), OS and employee dropdowns (A8): the

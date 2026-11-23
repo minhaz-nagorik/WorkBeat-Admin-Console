@@ -36,12 +36,12 @@ export default function DevicePage() {
   const s = useData<Detail>(`/v1/devices/${id}`, { poll: true });
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
 
-  async function act(kind: 'release' | 'deactivate', d: Detail) {
-    const r = await call<Detail>('POST', `/v1/devices/${d.id}/${kind}`);
+  async function release(d: Detail) {
+    const r = await call<Detail>('POST', `/v1/devices/${d.id}/release`);
     if (isPending(r)) return setNote({ ok: true, text: SENT });
     if (r.ok) {
       s.set(() => r.data);
-      return setNote({ ok: true, text: kind === 'release' ? `${d.hostname} was released. Its seat is free.` : `${d.hostname} was deactivated. Its seat is free.` });
+      return setNote({ ok: true, text: `${d.hostname} was released. Its seat is free.` });
     }
     if (r.status === 409) { await s.reload(); return setNote({ ok: false, text: 'This device was already released.' }); }
     if (r.status === 404) { await s.reload(); return setNote({ ok: false, text: 'This device no longer exists.' }); }
@@ -67,16 +67,15 @@ export default function DevicePage() {
           <div className="grid g2">
             <div className="card stack">
               <h2>Status</h2>
-              <div className="row"><StatusPill s={d.status} />{d.status !== 'released' && d.status !== 'deactivated' && <Badges d={d} />}</div>
+              <div className="row"><StatusPill s={d.status} />{d.status !== 'released' && <Badges d={d} />}</div>
               <p className="small">{d.status === 'released' && d.released_at ? `Released ${shortDate(d.released_at, me.tz)}.`
-                : d.status === 'deactivated' && d.deactivated_at ? `Deactivated ${shortDate(d.deactivated_at, me.tz)}.`
                 : d.last_heartbeat_at ? <>Last seen <span title={full(d.last_heartbeat_at, me.tz)}>{when(d.last_heartbeat_at, me.tz)}</span>.</>
                 : 'WorkBeat has not reported from this computer yet.'}</p>
               <ToDo d={d} />
             </div>
             <div className="card stack">
               <h2>Employee</h2>
-              {['released', 'deactivated'].includes(d.status) ? (
+              {d.status === 'released' ? (
                 <>
                   <p>Was set up for <b><Link href={`/employees/${d.employee.id}`}>{d.employee.name}</Link></b>. {d.employee.name} is no longer monitored on this computer.</p>
                   <p className="small muted">The link is kept for history. To monitor someone on this computer again, run WorkBeat Setup on it and pick the employee. That uses a seat.</p>
@@ -90,7 +89,7 @@ export default function DevicePage() {
             </div>
           </div>
 
-          {!['released', 'deactivated'].includes(d.status) && <Access d={d} />}
+          {d.status !== 'released' && <Access d={d} />}
           <Health d={d} tz={me.tz} />
 
           {d.status !== 'released' && (
@@ -98,17 +97,10 @@ export default function DevicePage() {
               <h2>Actions</h2>
               <div className="stack">
                 <div className="row between">
-                  <p className="small" style={{ maxWidth: 560 }}><b>Release</b> when the computer leaves monitoring or changes hands.</p>
-                  <ConfirmButton label="Release" onConfirm={() => act('release', d)}
+                  <p className="small" style={{ maxWidth: 560 }}><b>Release</b> when the computer leaves monitoring or changes hands, or after WorkBeat was uninstalled from it. Uninstalling alone does not free the seat.</p>
+                  <ConfirmButton label="Release" onConfirm={() => release(d)}
                     question={`Release ${d.hostname} (${d.employee.name})? Its seat and ${d.employee.name} are freed, and collection and blocking stop. It uploads what it holds for up to 24 hours, then wipes itself. It comes back only through a new WorkBeat Setup.`} />
                 </div>
-                {d.status !== 'deactivated' && (
-                  <div className="row between">
-                    <p className="small" style={{ maxWidth: 560 }}><b>Deactivate</b> a computer you are about to uninstall.</p>
-                    <ConfirmButton label="Deactivate" onConfirm={() => act('deactivate', d)}
-                      question={`Deactivate ${d.hostname}? Its seat is freed and it stops collecting, but it keeps its block list until WorkBeat is uninstalled. Use this for a computer about to be uninstalled.`} />
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -121,7 +113,7 @@ export default function DevicePage() {
 function ToDo({ d }: { d: Detail }) {
   const items = [
     ...(d.status !== 'online' ? [d.status] : []),
-    ...(d.status === 'released' || d.status === 'deactivated' ? [] : d.badges),
+    ...(d.status === 'released' ? [] : d.badges),
   ];
   if (!items.length) return null;
   return (

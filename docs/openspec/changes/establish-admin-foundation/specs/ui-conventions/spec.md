@@ -27,7 +27,7 @@ A list with no rows SHALL say why in one line ("No alerts match", "No device yet
 
 ### Requirement: Destructive actions confirm and name the consequence
 <!-- source: A7 · Prototype "confirmBox" -->
-Release, deactivate, remove, cancel, delete, suspend and reissue SHALL ask for confirmation in place, naming what will happen ("Release NG-LT-0141? Its seat is freed and it stops being monitored"), with the destructive button styled as such and Cancel as the default focus. Nothing destructive MUST happen on a single click.
+Release, remove, cancel, delete, suspend and reissue SHALL ask for confirmation in place, naming what will happen ("Release NG-LT-0141? Its seat is freed and it stops being monitored"), with the destructive button styled as such and Cancel as the default focus. Nothing destructive MUST happen on a single click.
 
 #### Scenario: Deleting a block rule
 - **WHEN** a user clicks Delete on a block rule

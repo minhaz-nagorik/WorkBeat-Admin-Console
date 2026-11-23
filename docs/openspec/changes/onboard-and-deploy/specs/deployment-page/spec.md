@@ -23,7 +23,7 @@ Deployment SHALL be shown to `company_admin` only. Step 1 MUST show `key_masked`
 
 ### Requirement: Seats are shown beside the key
 <!-- source: D43 · backend `license-key` · Prototype "Deployment" -->
-The page SHALL show `seats_used` of `seat_limit` ("unlimited" when null) and explain that each installed computer uses one seat, a full licence installs nothing more, and releasing or deactivating a device on Devices frees its seat at once.
+The page SHALL show `seats_used` of `seat_limit` ("unlimited" when null) and explain that each installed computer uses one seat, a full licence installs nothing more, and releasing a device on Devices frees its seat at once while uninstalling WorkBeat does not.
 
 #### Scenario: All seats used
 - **WHEN** `seats_used` equals `seat_limit`

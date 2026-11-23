@@ -51,7 +51,7 @@ export function SetupChecklist({ refresh }: { refresh?: number } = {}) {
 }
 
 type Rollout = {
-  status: Record<'online' | 'offline' | 'deactivated' | 'released', number>;
+  status: Record<'online' | 'offline' | 'released', number>;
   badges: Record<'outdated' | 'permission_pending' | 'browser_access_pending' | 'paused' | 'open_alert', number>;
   healthy: number;
 };
@@ -62,11 +62,10 @@ const ROWS: [string, string, string, string, (r: Rollout) => number][] = [
   [label('badge', 'permission_pending'), 'p-info', 'badge=permission_pending', 'Ask the employee to allow it in System Settings', (r) => r.badges.permission_pending],
   [label('badge', 'browser_access_pending'), 'p-info', 'badge=browser_access_pending', 'Ask the employee to allow WorkBeat for that browser, or update the browser', (r) => r.badges.browser_access_pending],
   [label('badge', 'outdated'), 'p-warn', 'badge=outdated', 'Check it can download the update, or run WorkBeat Setup again', (r) => r.badges.outdated],
-  [label('deviceStatus', 'offline'), '', 'status=offline', 'Check the computer is on and connected', (r) => r.status.offline],
+  [label('deviceStatus', 'offline'), '', 'status=offline', 'Check the computer is on and connected, or release it if WorkBeat was uninstalled', (r) => r.status.offline],
   [label('badge', 'open_alert'), 'p-bad', 'badge=open_alert', 'Review the alert', (r) => r.badges.open_alert],
   [label('badge', 'paused'), 'p-acc', 'badge=paused', 'Nothing; it ends on schedule', (r) => r.badges.paused],
   [label('deviceStatus', 'released'), '', 'status=released', 'Uninstall it, or run WorkBeat Setup to monitor it again', (r) => r.status.released],
-  [label('deviceStatus', 'deactivated'), '', 'status=deactivated', 'Uninstall it', (r) => r.status.deactivated],
 ];
 /** What to do, by status or badge value (also used on device detail). */
 export const ROLLOUT_ACTION: Record<string, string> = Object.fromEntries(ROWS.map((r) => [r[2].split('=')[1], r[3]]));
@@ -81,7 +80,7 @@ export function RolloutCard({ compact, head, refresh }: { compact?: boolean; hea
   if (!ok) return null;
   const d = r.data;
   const enrolled = d ? Object.values(d.status).reduce((a, b) => a + b, 0) : 0;
-  const active = d ? enrolled - d.status.released - d.status.deactivated : 0;
+  const active = d ? enrolled - d.status.released : 0;
   return (
     <div className="card">
       <div className="cardhead">{head ?? <h2>Rollout status</h2>}<Link href="/devices" className="small">Open devices</Link></div>

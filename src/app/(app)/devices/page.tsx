@@ -16,7 +16,7 @@ export default function DevicesPage() {
 }
 
 const BROWSER_ONLY = ['attention', 'healthy']; // applied in the browser over the full list
-const ended = (d: Device) => d.status === 'released' || d.status === 'deactivated';
+const ended = (d: Device) => d.status === 'released';
 const attention = (d: Device) => d.status !== 'online' || d.badges.length > 0;
 
 function Devices() {
@@ -47,7 +47,7 @@ function Devices() {
     router.replace(`${pathname}${q.size ? `?${q}` : ''}`);
   }
   const lastSeen = (d: Device) => {
-    const at = d.status === 'released' ? d.released_at : d.status === 'deactivated' ? d.deactivated_at : null;
+    const at = d.status === 'released' ? d.released_at : null;
     if (at) return <span title={full(at, me.tz)}>{label('deviceStatus', d.status)} {shortDate(at, me.tz)}</span>;
     return d.last_heartbeat_at ? <span title={full(d.last_heartbeat_at, me.tz)}>{when(d.last_heartbeat_at, me.tz)}</span> : 'Not yet';
   };
@@ -56,7 +56,7 @@ function Devices() {
     <>
       <PageHead title="Devices" sub={<>
         {lic.data ? `${lic.data.seats_used} of ${lic.data.seat_limit ?? 'unlimited'} seats used. ` : ''}
-        Releasing or deactivating a device frees its seat at once. To give a computer to someone else, release it, then run WorkBeat Setup for the new person.
+        Releasing a device frees its seat at once; uninstalling WorkBeat does not, so release a computer after uninstalling it. To give a computer to someone else, release it, then run WorkBeat Setup for the new person.
       </>} />
       <PendingList resource="device" />
       <Loaded s={s}>{() => (
@@ -91,7 +91,7 @@ function Devices() {
                     <tr key={d.id} className="click" onClick={() => router.push(`/devices/${d.id}`)}>
                       <td><Link href={`/devices/${d.id}`} className="mono" onClick={(e) => e.stopPropagation()}>{d.hostname}</Link>
                         <div className="small muted">{label('os', d.os)} {d.os_version}</div></td>
-                      <td>{['released', 'deactivated'].includes(d.status) && <span className="small muted">Was: </span>}
+                      <td>{d.status === 'released' && <span className="small muted">Was: </span>}
                         {can(me, 'employees.view')
                           ? <Link href={`/employees/${d.employee.id}`} onClick={(e) => e.stopPropagation()}>{d.employee.name}</Link>
                           : d.employee.name}</td>

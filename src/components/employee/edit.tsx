@@ -10,7 +10,7 @@ export type Presence = 'active' | 'idle' | 'offline' | 'paused' | 'no_device';
 export type Employee = {
   id: string; name: string; email: string | null; department: string | null; manager_user_id: string | null;
   archived_at: string | null; presence: Presence;
-  /** Unreleased devices only (deactivated included). */
+  /** Unreleased devices only. */
   devices: { id: string; hostname: string; status: string }[];
 };
 export type Manager = { id: string; name: string };

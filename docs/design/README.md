@@ -16,7 +16,7 @@ or the backend specs, build the plan (A1). Known deviations:
 | Pause "Until I resume" (no end) | Every pause has an end; "End now" cancels or shortens it | backend `monitoring-pauses` |
 | Screenshots are one company-wide switch and any interval 10–480 min | Interval per employee: off, 10, 30 or 60 minutes, never faster than the tier. The tier is changed through billing | D37, B11, backend `monitoring-settings`, `subscription-sync` |
 | No per-employee monitoring settings | Each employee: activity, app usage, window titles, website visits on/off and the screenshot interval | D37, Plan-v3.5 §4.5 |
-| Devices table has no browser access, deactivate, released or paused | Show browser access, paused and released; offer deactivate beside release | Plan-v3.5 §4.5, §5.9 |
+| Devices table has no browser access, released or paused | Show browser access, paused and released; release is the only action (B35) | Plan-v3.5 §4.5, §5.9 |
 | IT Admin edits private (sensitive) sites | Company Admin edits; Manager reads; IT Admin has no access | backend `sensitive-domains` |
 | Managers don't see the block list | Managers read the block list, private sites and productivity rules | backend `role-access` |
 | Employee "No device" status says "Assign one on the Devices page" | Install WorkBeat Setup on a computer for this person | D47 |

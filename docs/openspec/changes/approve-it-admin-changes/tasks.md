@@ -22,7 +22,7 @@
 
 - [x] 3.1 Navigation per role (Downloads, Approvals; no Deployment for IT)
 - [x] 3.2 Employees, employee page (What is collected and Pause monitoring only), settings and pauses for `it_admin` as requests
-- [x] 3.3 Devices: no seats header for IT; release and deactivate as requests
+- [x] 3.3 Devices: no seats header for IT; release as a request
 - [x] 3.4 Alerts: Resolve as a request for IT; Person links to the employee page
 - [x] 3.5 Block list, private sites, productivity rules: IT reads and requests
 - [x] 3.6 Deployment and setup checklist `company_admin` only; IT Overview without checklist

@@ -4,7 +4,7 @@ const MAPS = {
   role: { company_admin: 'Company Admin', member: 'Team member', super_admin: 'WorkBeat staff' },
   perm: {
     reports: 'Reports, activity and screenshots', 'employees.view': 'See employees', 'employees.edit': 'Change employees',
-    'devices.view': 'See computers', 'devices.edit': 'Release or deactivate computers', 'alerts.view': 'See alerts', 'alerts.edit': 'Resolve alerts',
+    'devices.view': 'See computers', 'devices.edit': 'Release computers', 'alerts.view': 'See alerts', 'alerts.edit': 'Resolve alerts',
     'policy.view': 'See block list and productivity rules', 'policy.edit': 'Change block list and productivity rules', deployment: 'Install WorkBeat (downloads)',
   },
   companyStatus: { trial: 'Trial', active: 'Active', suspended: 'Suspended', expired: 'Expired' },
@@ -21,7 +21,7 @@ const MAPS = {
   blocking: { applied: 'Working', degraded: 'Partly working', off: 'Off' },
   dropReason: { store_full: 'Storage full', too_old: 'Too old to send', app_sessions: 'App use', url_visits: 'Website visits', activity: 'Activity', idle: 'Idle time', screenshots: 'Screenshots' },
   macPermission: { screen_recording: 'Screen Recording', accessibility: 'Accessibility', automation: 'Automation' },
-  deviceStatus: { online: 'Online', offline: 'Offline', deactivated: 'Deactivated', released: 'Released' },
+  deviceStatus: { online: 'Online', offline: 'Offline', released: 'Released' },
   badge: { outdated: 'Outdated', permission_pending: 'Permission pending', browser_access_pending: 'Browser access pending', paused: 'Paused', open_alert: 'Open alert' },
   os: { macos: 'macOS', windows: 'Windows' },
   // employees

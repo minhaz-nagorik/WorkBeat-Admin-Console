@@ -1,7 +1,6 @@
 ## Purpose
 
-What an admin can do to a device from the portal: release it from monitoring or deactivate it,
-knowing what each does, and how a device changes hands.
+What an admin can do to a device from the portal: release it from monitoring, knowing what it does, and how a device changes hands.
 
 ## ADDED Requirements
 
@@ -13,17 +12,17 @@ Release SHALL be offered to `company_admin` and `it_admin` on a device that is n
 - **WHEN** a Company Admin confirms Release on NG-LT-0141
 - **THEN** the device shows Released and seats used drops by one
 
-### Requirement: Admin and IT deactivate a device
-<!-- source: D6 · Plan-v3.5 §5.8 · A7 · backend `device-lifecycle` -->
-Deactivate SHALL be offered on a device that is neither released nor deactivated and, after confirmation, call `POST /v1/devices/:id/deactivate`. The confirmation MUST say the seat is freed and the device stops collecting but keeps its block list until it is uninstalled, and that it is for a computer about to be uninstalled.
+### Requirement: There is no deactivate
+<!-- source: backend B35 · A18 · product owner 23 Nov 2026 -->
+The portal SHALL offer Release as the only device action and MUST NOT show a Deactivate control or a Deactivated status anywhere. Device detail MUST say that uninstalling WorkBeat does not free the seat, so a computer is released after it is uninstalled.
 
-#### Scenario: Deactivating before uninstall
-- **WHEN** a Company Admin confirms Deactivate
-- **THEN** the device shows Deactivated and its seat is free
+#### Scenario: The actions of a monitored device
+- **WHEN** a Company Admin opens a device that is not released
+- **THEN** the only action is Release, and it says uninstalling alone does not free the seat
 
-### Requirement: An IT Admin's release or deactivate waits for approval
+### Requirement: An IT Admin's release waits for approval
 <!-- source: A14 · product owner 17 Nov 2026 · backend round 6 `POST /v1/devices/:id/release` -->
-For `it_admin` release and deactivate SHALL keep the same confirmation and, on `202 { change }`, show "Waiting for approval" per `change-approvals`; the device MUST keep its status and seat until a Company Admin approves.
+For `it_admin` release SHALL keep the same confirmation and, on `202 { change }`, show "Waiting for approval" per `change-approvals`; the device MUST keep its status and seat until a Company Admin approves.
 
 #### Scenario: IT requests a release
 - **WHEN** an `it_admin` confirms Release on NG-LT-0141
@@ -31,7 +30,7 @@ For `it_admin` release and deactivate SHALL keep the same confirmation and, on `
 
 ### Requirement: Conflicts refresh the device
 <!-- source: A12 · backend `device-lifecycle` -->
-A `409 CONFLICT` from release or deactivate SHALL refresh the device and say "This device was already released"; a repeated deactivate MUST simply show the device as Deactivated. A `404` MUST remove it from the list with "This device no longer exists".
+A `409 CONFLICT` from release SHALL refresh the device and say "This device was already released". A `404` MUST remove it from the list with "This device no longer exists".
 
 #### Scenario: Two admins release at once
 - **WHEN** a release returns `409` because another admin released it first
@@ -47,7 +46,7 @@ The portal SHALL offer no control that moves a device to another employee. Where
 
 ### Requirement: Managers never act on devices
 <!-- source: backend `role-access` · backend `device-lifecycle` -->
-No release or deactivate control SHALL be shown to a `manager`; a `403 FORBIDDEN` from either route MUST show the no-access message and change nothing on screen.
+No release control SHALL be shown to a `manager`; a `403 FORBIDDEN` from the route MUST show the no-access message and change nothing on screen.
 
 #### Scenario: An unexpected 403
 - **WHEN** a release returns `403`

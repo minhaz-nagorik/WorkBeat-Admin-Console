@@ -19,15 +19,15 @@ Devices SHALL be shown to `company_admin` and `it_admin` only, listing `GET /v1/
 
 ### Requirement: Status and badges read as plain words
 <!-- source: A4 · Plan-v3.5 §5.9 · backend `device-status` -->
-Status SHALL show as Online, Offline, Deactivated or Released, and badges as Outdated, Permission pending, Browser access pending, Paused and Open alert, each a pill with text. A device online with no badge MUST read "Installed and working".
+Status SHALL show as Online, Offline or Released, and badges as Outdated, Permission pending, Browser access pending, Paused and Open alert, each a pill with text. A device online with no badge MUST read "Installed and working".
 
 #### Scenario: An outdated Mac waiting for permission
 - **WHEN** a device is `online` with badges `outdated` and `permission_pending`
 - **THEN** it shows Online with Outdated and Permission pending pills
 
-### Requirement: Released and deactivated devices show when
-<!-- source: D38 · backend `device-status` (`released_at`, `deactivated_at`) -->
-A device with status Released or Deactivated SHALL show the date from `released_at` or `deactivated_at` in its last-seen column ("Released 12 Nov 2026"), in the company's time zone.
+### Requirement: Released devices show when
+<!-- source: D38 · backend `device-status` (`released_at`) · backend B35 -->
+A device with status Released SHALL show the date from `released_at` in its last-seen column ("Released 12 Nov 2026"), in the company's time zone.
 
 #### Scenario: A released laptop
 - **WHEN** a device has `released_at` 12 November 2026 10:00
@@ -41,9 +41,9 @@ The list SHALL offer search over hostname, employee and version, and dropdown fi
 - **WHEN** IT picks Needs attention
 - **THEN** only devices that are not online or carry a badge are listed
 
-### Requirement: Released and deactivated devices stay visible
+### Requirement: Released devices stay visible
 <!-- source: D38 · backend `device-lifecycle` -->
-Released and deactivated devices SHALL stay in the list with their status and the time it happened, sorted after active devices, and MUST NOT count toward seats or show an offline issue.
+Released devices SHALL stay in the list with their status and the time it happened, sorted after active devices, and MUST NOT count toward seats or show an offline issue.
 
 #### Scenario: A released laptop
 - **WHEN** a device was released yesterday
