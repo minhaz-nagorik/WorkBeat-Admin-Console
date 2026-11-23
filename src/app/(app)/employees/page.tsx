@@ -10,7 +10,6 @@ import { dateOnly } from '@/lib/time';
 import { initials } from '@/lib/format';
 import { useList } from '@/components/list';
 import { EmployeeDialog, RemoveEmployee, RestoreDialog, type Employee, type Manager } from '@/components/employee/edit';
-import { ImportDialog } from '@/components/employee/import';
 
 const PILL: Record<string, string> = { active: 'p-ok', idle: 'p-warn', offline: '', paused: 'p-info', no_device: 'plain' };
 
@@ -27,7 +26,6 @@ export default function Employees() {
   const [status, setStatus] = useState('');
   const [note, setNote] = useState<string | null>(null);
   const [editing, setEditing] = useState<Employee | null | undefined>(undefined); // undefined = closed, null = add
-  const [importing, setImporting] = useState(false);
   const [restoring, setRestoring] = useState<Employee | null>(null);
   // Add offers Restore for a removed employee's email (D46); only loaded while adding.
   const gone = useData<Employee[]>(admin && editing === null ? '/v1/employees?archived=true' : null);
@@ -46,7 +44,7 @@ export default function Employees() {
         sub={edit ? 'Everyone monitored on a company computer.' : 'People assigned to you. This list is read only: you can view their reports but not edit them.'}
         right={edit && !removed && (
           <div className="row">
-            <button className="btn" onClick={() => setImporting(true)}>Import CSV</button>
+            <Link className="btn" href="/employees/import">Import CSV</Link>
             <button className="btn pri" onClick={() => setEditing(null)}>Add employee</button>
           </div>
         )} />
@@ -113,7 +111,6 @@ export default function Employees() {
             onClose={() => setEditing(undefined)}
             onSaved={(e, added) => { setEditing(undefined); setNote(added ? `${e.name} was added.` : `${e.name} was saved.`); s.reload(); }}
             onSent={() => { setEditing(undefined); setNote(SENT); }} />
-          <ImportDialog open={importing} onClose={() => setImporting(false)} onDone={() => s.reload()} />
           <RestoreDialog emp={restoring} onClose={() => setRestoring(null)}
             onRestored={(e) => { setRestoring(null); setNote(`${e.name} was restored with their history.`); s.reload(); }} />
         </>

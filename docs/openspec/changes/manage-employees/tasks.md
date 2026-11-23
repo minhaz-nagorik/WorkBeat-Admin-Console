@@ -8,7 +8,7 @@
 - [x] 1.1 Employees page: list, search, department dropdown, manager column from `GET /v1/team`
 - [x] 1.2 Status column and filter from `presence` (admin and manager)
 - [x] 1.3 Add and edit dialog with field errors and duplicate-email message
-- [x] 1.4 CSV import dialog: file or paste, template, Check, line errors, `413`, result counts
+- [x] 1.4 CSV import page `/employees/import`: template, file, `import/check`, green/red lines with reasons, edit/remove, Check again, Cancel import, 500 cap, `413`, created count
 - [x] 1.5 Remove with confirmation; `409 EMPLOYEE_HAS_DEVICES` names devices and links to Devices
 - [x] 1.6 Removed-employees filter and read-only archived pages
 - [ ] 1.7 Tests: role test (admin all, manager own team read only, IT redirected); each `presence` value labelled, manager sees status; import line errors create nothing; archived employee has no write controls

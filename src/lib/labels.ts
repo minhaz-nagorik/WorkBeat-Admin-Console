@@ -27,6 +27,11 @@ const MAPS = {
   // employees
   presence: { active: 'Active', idle: 'Idle', offline: 'Offline', paused: 'Monitoring paused', no_device: 'No device' },
   pauseReason: { annual_leave: 'Annual leave', sick_leave: 'Sick leave', personal: 'Personal time', offsite_training: 'Off-site or training', other: 'Other' },
+  importReason: {
+    name_required: 'Name is missing', email_invalid: 'Email is missing or not valid', email_repeated: 'Email is used on more than one line',
+    email_exists: 'An employee with this email already exists', manager_unknown: 'Manager email is not a manager in your company',
+    email_archived: 'This person was removed earlier: restore them from Show removed employees',
+  },
   pauseState: { scheduled: 'Scheduled', active: 'Active now', ended: 'Ended', cancelled: 'Cancelled' },
   interval: { 0: 'Off', 600: 'Every 10 minutes', 1800: 'Every 30 minutes', 3600: 'Every 60 minutes' },
   // reports

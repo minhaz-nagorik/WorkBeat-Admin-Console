@@ -9,7 +9,7 @@ Managers on their own team; IT Admins have no Employees page (A3).
 ## What Changes
 
 - **Employee directory**: Employees page with search, department and status filters; add and edit
-  dialog; CSV import that checks before it imports; remove archives the employee and is refused
+  dialog; CSV import page that checks every line (green or red) before it imports; remove archives the employee and is refused
   while a device is still bound; archived employees viewable and read-only, and restored rather than added again (D46).
 - **Monitoring settings**: an employee tab with the four switches and the screenshot interval
   (off, 10, 30 or 60 minutes, never faster than the tier).
@@ -33,7 +33,7 @@ None.
 ## Impact
 
 - Consumes backend `employee-directory` (`GET/POST /v1/employees`, `GET/PATCH/DELETE /v1/employees/:id`,
-  `POST /v1/employees/import`, with `presence` and `devices`), `manager-teams`, `monitoring-settings`, `monitoring-pauses`,
+  `POST /v1/employees/import/check`, `POST /v1/employees/import`, with `presence` and `devices`), `manager-teams`, `monitoring-settings`, `monitoring-pauses`,
   `notice-acknowledgement`, `subscription-sync` (`GET /v1/billing`
   for the tier), `team-invitations` (`GET /v1/team` for managers).
 - Builds on `establish-admin-foundation` (`app-shell`, `api-access`, `ui-conventions`).

@@ -43,27 +43,39 @@ A `company_admin` SHALL add and edit an employee in a dialog with name and work 
 
 ### Requirement: IT Admins request employee changes
 <!-- source: A14 · product owner 17 Nov 2026 · backend round 6 `POST /v1/employees` -->
-For `it_admin` add, edit, CSV import and remove SHALL use the same dialogs and checks, without the manager field, and on `202 { change }` show "Waiting for approval" per `change-approvals` and leave the list unchanged. A CSV import MUST still list invalid lines on `422` before anything is stored.
+For `it_admin` add, edit, CSV import and remove SHALL use the same dialogs, pages and checks, without the manager field, and on `202 { change }` show "Waiting for approval" per `change-approvals` and leave the list unchanged. A CSV import MUST still show its red lines before anything is stored.
 
 #### Scenario: IT adds an employee
 - **WHEN** an `it_admin` saves a new employee and the API answers `202`
 - **THEN** the list does not show them yet and the page says the addition waits for approval
 
 ### Requirement: Employees are imported from CSV after a check
-<!-- source: backend `employee-directory` · A12 · Prototype "Import employees from CSV" -->
-A `company_admin` SHALL import employees by choosing a CSV file or pasting text in the format `name, email, department, manager email`, with a template download, sent as the raw file with `Content-Type: text/csv` (up to 2 MiB and 5,000 rows). Check MUST preview the rows before Import is enabled; on `422 VALIDATION_FAILED` the dialog MUST list each invalid line number and import nothing; `413 PAYLOAD_TOO_LARGE` MUST say the file is too large. A result MUST show created and skipped counts and the skipped emails.
+<!-- source: backend `employee-directory` · A12 · product owner 23 Nov 2026 -->
+A user with `employees.edit` SHALL import on the Import employees page: download the template (`name, email, department, manager email`), choose a CSV of up to 2 MiB and 500 rows, and see every row after `POST /v1/employees/import/check`, green when valid and red with its reasons in words. `413 PAYLOAD_TOO_LARGE` MUST say the file is too large.
 
 #### Scenario: One bad line
-- **WHEN** line 7 has no name or no email
-- **THEN** the dialog names line 7 and no employee is created
+- **WHEN** line 7 has no name
+- **THEN** line 7 is red and says the name is missing, and the other lines are green
 
-#### Scenario: Existing emails
-- **WHEN** the file has two emails that already exist
-- **THEN** the result shows them as skipped and the rest as created
+#### Scenario: An existing employee
+- **WHEN** line 2 holds the email of a current employee
+- **THEN** line 2 is red and says an employee with this email already exists
 
 #### Scenario: A removed employee's email
 - **WHEN** line 3 holds the email of Sadia Khan, who was removed
-- **THEN** the dialog names line 3 and Sadia Khan, says to restore her from the removed employees, and nothing is imported
+- **THEN** line 3 is red and says to restore her from the removed employees
+
+### Requirement: Red lines are fixed or the import is cancelled
+<!-- source: backend `employee-directory` · A11 · product owner 23 Nov 2026 -->
+Each line SHALL be editable and removable; any change MUST require Check again before Import. Import MUST be enabled only when every line is green, MUST send all lines as one `text/csv` file to `POST /v1/employees/import`, and on `201` MUST show the number created. Cancel import MUST return to Employees with nothing stored. Status MUST be in words as well as colour.
+
+#### Scenario: A fixed line
+- **WHEN** the admin corrects line 7's name and checks again
+- **THEN** every line is green and Import adds all of them
+
+#### Scenario: Cancelled
+- **WHEN** the admin chooses Cancel import
+- **THEN** the Employees page opens and no employee is created
 
 ### Requirement: Removing an employee archives them
 <!-- source: D46 · D48 · backend `employee-directory` · A7 -->
