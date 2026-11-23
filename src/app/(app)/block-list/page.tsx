@@ -9,9 +9,9 @@ import { isPending, PendingList, SENT } from '@/components/pending';
 import { useList } from '@/components/list';
 import { Confirm, ConfirmButton, Modal } from '@/components/confirm';
 import { Field } from '@/components/form';
+import { SiteDialog, type Site } from '@/components/policies/site-dialog';
 
 type Rule = { id: string; type: 'domain' | 'url'; pattern: string; reason: string | null; created_at: string; created_by_name?: string | null };
-type Site = { id: string; pattern: string; is_default: boolean; created_at: string };
 type Note = { ok: boolean; text: string } | null;
 
 const BLOCKS = { domain: 'Whole site and its subdomains, in every browser and app', url: 'Only this part of the site, in most browsers' };
@@ -165,7 +165,7 @@ function PrivateSites({ canEdit }: { canEdit: boolean }) {
   const [adding, setAdding] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
   const [note, setNote] = useState<Note>(null);
-  const L = useList(sites.data ?? [], (s) => `${s.pattern} ${s.is_default ? 'default' : ''}`, [25, 50, 100]);
+  const L = useList(sites.data ?? [], (s) => `${s.pattern} ${s.is_default ? 'default' : ''} ${s.source === 'workbeat' ? 'set by workbeat' : ''}`, [25, 50, 100]);
 
   async function remove(s: Site) {
     const r = await call('DELETE', `/v1/sensitive-domains/${s.id}`);
@@ -183,7 +183,7 @@ function PrivateSites({ canEdit }: { canEdit: boolean }) {
       <div className="cardhead">
         <div>
           <h2>Private sites (never recorded)</h2>
-          <p className="small muted">WorkBeat never records visits to these sites, and screenshots pause while they are open. Defaults cover banking, health and personal email.{!canEdit && ' Read-only. Your Company Admin sets these sites.'}</p>
+          <p className="small muted">WorkBeat never records visits to these sites, and screenshots pause while they are open. Defaults cover banking, health and personal email. Sites marked Set by WorkBeat apply to every company and can&apos;t be changed here.{!canEdit && ' Read-only. Your Company Admin sets these sites.'}</p>
         </div>
         <div className="row">{L.search('Search private sites')}{canEdit && <button className="btn" onClick={() => setAdding(true)}>Add site</button>}</div>
       </div>
@@ -198,8 +198,9 @@ function PrivateSites({ canEdit }: { canEdit: boolean }) {
                   : `Remove ${s.pattern}? WorkBeat will start recording visits to it.`} />
             ) : (
               <span key={s.id} className="chip">
-                {s.pattern}{s.is_default && <span className="tag" style={{ fontFamily: 'inherit' }}>Default</span>}
-                {canEdit && <button aria-label={`Remove ${s.pattern}`} onClick={() => setRemoving(s.id)}>×</button>}
+                {s.pattern}{s.source === 'workbeat' ? <span className="tag" style={{ fontFamily: 'inherit' }}>Set by WorkBeat</span>
+                  : s.is_default && <span className="tag" style={{ fontFamily: 'inherit' }}>Default</span>}
+                {canEdit && s.source !== 'workbeat' && <button aria-label={`Remove ${s.pattern}`} onClick={() => setRemoving(s.id)}>×</button>}
               </span>
             ))}
             {!L.rows.length && <span className="muted small">{data.length ? 'No sites match.' : 'No private sites.'}</span>}
@@ -211,39 +212,5 @@ function PrivateSites({ canEdit }: { canEdit: boolean }) {
         onSaved={(s) => { setAdding(false); sites.set((d) => d && [s, ...d]); setNote({ ok: true, text: `${s.pattern} added. ${SYNC}` }); }}
         onSent={() => { setAdding(false); setNote({ ok: true, text: SENT }); }} />
     </div>
-  );
-}
-
-function SiteDialog({ open, onClose, onSaved, onSent }: { open: boolean; onClose: () => void; onSaved: (s: Site) => void; onSent: () => void }) {
-  const [pattern, setPattern] = useState('');
-  const [err, setErr] = useState<{ pattern?: string; form?: string }>({});
-  const [busy, setBusy] = useState(false);
-  useEffect(() => { if (open) { setPattern(''); setErr({}); } }, [open]);
-
-  async function submit(e: React.FormEvent) {
-    e.preventDefault(); setBusy(true); setErr({});
-    const r = await call<Site>('POST', '/v1/sensitive-domains', { pattern: pattern.trim() });
-    setBusy(false);
-    if (isPending(r)) return onSent();
-    if (r.ok) return onSaved(r.data);
-    if (r.status === 409) return setErr({ pattern: 'That site is already on the list.' });
-    if (r.status === 422 || r.status === 400) return setErr({ pattern: 'Type just the website, like citybank.com.' });
-    setErr({ form: message(r.status, r.err.code) });
-  }
-
-  return (
-    <Modal title="Add a private site" open={open} onClose={onClose}>
-      <form method="post" className="stack" onSubmit={submit}>
-        <p className="small">WorkBeat will never record visits to this site, and screenshots pause while it is open. Use it for banking, health or personal sites.</p>
-        <Field id="sens-new" type="text" label="Website address" required maxLength={253} autoFocus spellCheck={false} placeholder="citybank.com"
-          hint="Just the website name. It also covers its subdomains, like online.citybank.com."
-          value={pattern} error={err.pattern} onChange={(e) => setPattern(e.target.value)} />
-        {err.form && <div className="err" role="alert">{err.form}</div>}
-        <div className="mf">
-          <button type="button" className="btn" onClick={onClose}>Cancel</button>
-          <button className="btn pri" disabled={busy}>{busy ? 'Adding…' : 'Add site'}</button>
-        </div>
-      </form>
-    </Modal>
   );
 }
