@@ -7,8 +7,7 @@ import { call, message, usePoll } from '@/lib/client';
 import { label, options } from '@/lib/labels';
 import { useMe } from '@/lib/me';
 import { when, full } from '@/lib/time';
-import { useData, PageHead } from '@/lib/use-data';
-import { EmailSettings, emailSentence, useAlertRoles, type AlertEmail } from '@/components/alerts/email-settings';
+import { PageHead } from '@/lib/use-data';
 
 type Alert = {
   id: string; event_type: string; device_id: string; hostname: string; employee: { id: string; name: string } | null;
@@ -68,14 +67,10 @@ export default function Alerts({ searchParams }: { searchParams: Promise<{ emplo
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
-  const [mailing, setMailing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [person, setPerson] = useState<string | null>(null);
 
-  const isAdmin = me.role === 'company_admin';
   const canResolve = can(me, 'alerts.edit');
-  const alertRoles = useAlertRoles(isAdmin);
-  const settings = useData<{ alert_email: AlertEmail }>(isAdmin ? '/v1/company/settings' : null);
 
   useEffect(() => { const t = setTimeout(() => setQ(qInput), 300); return () => clearTimeout(t); }, [qInput]);
   const query = feedQuery({ type, state, q, employee, device });
@@ -121,13 +116,11 @@ export default function Alerts({ searchParams }: { searchParams: Promise<{ emplo
   const seen = new Set<string>();
   const rows = (pages ?? []).flat().filter((a) => !seen.has(a.id) && seen.add(a.id));
   const total = Object.values(counts).reduce((s, n) => s + n, 0);
-  const mail = settings.data?.alert_email;
 
   return (
     <>
       <PageHead title="Alerts"
-        sub={<>Signs that WorkBeat was interfered with, or a computer stopped connecting.{mail && ` ${emailSentence(mail, alertRoles)}`}</>}
-        right={isAdmin && <button className="btn" disabled={!mail} onClick={() => setMailing(true)}>Email settings</button>} />
+        sub="Signs that WorkBeat was interfered with, or a computer stopped connecting." />
       {note && <div className={`notice ${note === SENT ? 'info' : 'warn'}`} role="status">{note}</div>}
       <PendingList resource="alert" />
 
@@ -192,11 +185,6 @@ export default function Alerts({ searchParams }: { searchParams: Promise<{ emplo
           </ul>
         </details>
       </div>
-
-      {mail && (
-        <EmailSettings open={mailing} value={mail} roles={alertRoles} onClose={() => setMailing(false)}
-          onSaved={(v) => { setMailing(false); settings.set((d) => d && { ...d, alert_email: v }); setNote(null); }} />
-      )}
     </>
   );
 }

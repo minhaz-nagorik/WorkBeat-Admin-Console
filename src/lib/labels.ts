@@ -38,7 +38,6 @@ const MAPS = {
   period: { day: 'Day', week: 'Week', month: 'Month' },
   category: { productive: 'Productive', neutral: 'Neutral', unproductive: 'Unproductive' },
   // policies
-  delivery: { instant: 'As they happen', hourly: 'Hourly digest', daily: 'Daily digest at 09:00' },
   ruleType: { domain: 'Website', url: 'Web address', regex: 'Pattern' },
   matchType: { app: 'App', domain: 'Website' },
   // company
