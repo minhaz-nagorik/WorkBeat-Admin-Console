@@ -11,3 +11,17 @@ test('import CSV: BOM, header, CRLF and quotes read back unchanged', () => {
   assert.deepEqual(rows, [['Silva, Ana', 'a@x.co'], ['Say "hi"', '-b@x.co']]);
   assert.deepEqual(readCsv(writeCsv(rows)), rows);
 });
+
+test('import CSV: semicolon file (Excel) splits into columns and drops its header', () => {
+  const rows = readCsv('name;email;departemnt;manager\r\nSara Ali;sara@example.com;Sales;\r\n"Silva, Ana";ana@example.com;;\r\n');
+  assert.deepEqual(rows, [['Sara Ali', 'sara@example.com', 'Sales', ''], ['Silva, Ana', 'ana@example.com', '', '']]);
+  assert.deepEqual(readCsv(writeCsv(rows)), rows);
+});
+
+test('import CSV: tab-separated file', () => {
+  assert.deepEqual(readCsv('Name\tEmail\nSara Ali\tsara@example.com\n'), [['Sara Ali', 'sara@example.com']]);
+});
+
+test('import CSV: a comma file with semicolons in a value stays comma-separated', () => {
+  assert.deepEqual(readCsv('name,email,department\nSara Ali,sara@example.com,"R;D; QA"\n'), [['Sara Ali', 'sara@example.com', 'R;D; QA']]);
+});

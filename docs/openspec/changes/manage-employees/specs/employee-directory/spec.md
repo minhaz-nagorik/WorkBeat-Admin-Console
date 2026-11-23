@@ -65,6 +65,22 @@ A user with `employees.edit` SHALL import on the Import employees page: download
 - **WHEN** line 3 holds the email of Sadia Khan, who was removed
 - **THEN** line 3 is red and says to restore her from the removed employees
 
+### Requirement: The chosen file is read whatever its separator
+<!-- source: A12 · product owner 23 Nov 2026 -->
+The page SHALL split the chosen file on the separator its first line uses most outside quotes: comma, semicolon or tab. It MUST read the four columns by position, skip a first line whose first cell is `name` in any case, and send the lines to the API as comma-separated `text/csv`.
+
+#### Scenario: A file saved by Excel with semicolons
+- **WHEN** the file is `name;email;department;manager email` then `Sara Ali;sara@example.com;Sales;`
+- **THEN** one line is shown, with Sara Ali as the name, sara@example.com as the email and Sales as the department
+
+#### Scenario: A tab-separated file
+- **WHEN** the file's columns are separated by tabs
+- **THEN** each value is shown in its own column and the header line is not shown
+
+#### Scenario: A comma inside a quoted name
+- **WHEN** a semicolon file holds `"Silva, Ana";ana@example.com`
+- **THEN** the name is `Silva, Ana`
+
 ### Requirement: Red lines are fixed or the import is cancelled
 <!-- source: backend `employee-directory` · A11 · product owner 23 Nov 2026 -->
 Each line SHALL be editable and removable; any change MUST require Check again before Import. Import MUST be enabled only when every line is green, MUST send all lines as one `text/csv` file to `POST /v1/employees/import`, and on `201` MUST show the number created. Cancel import MUST return to Employees with nothing stored. Status MUST be in words as well as colour.
