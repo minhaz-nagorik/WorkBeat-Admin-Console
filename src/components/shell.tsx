@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { call, usePoll } from '@/lib/client';
 import { dateOnly, startOfToday } from '@/lib/time';
-import type { Me, StatusInfo } from '@/lib/types';
+import type { Change, Me, StatusInfo } from '@/lib/types';
 import type { navFor } from '@/lib/nav';
 import { Logo, Icon } from './icons';
 import { MeProvider } from '@/lib/me';
@@ -15,7 +15,7 @@ export function Shell({ me, nav, status, children }: {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const [alerts, setAlerts] = useState(0);
-  const [approvals, setApprovals] = useState(0); // pending IT Admin changes, for Company Admins
+  const [approvals, setApprovals] = useState(0); // pending changes a Company Admin may decide (not their own)
   const [dark, setDark] = useState<boolean | null>(null); // known only in the browser
   useEffect(() => setDark(isDark()), []);
   const tz = me.company?.timezone ?? 'UTC';
@@ -25,7 +25,7 @@ export function Shell({ me, nav, status, children }: {
     if (!seesAlerts) return;
     call<{ counts: Record<string, number> }>('GET', `/v1/alerts?state=open&from=${encodeURIComponent(startOfToday(tz))}`)
       .then((r) => { if (r.ok) setAlerts(Object.values(r.data.counts).reduce((a, b) => a + b, 0)); });
-    if (me.role === 'company_admin') call<unknown[]>('GET', '/v1/changes?status=pending').then((r) => { if (r.ok) setApprovals(r.data.length); });
+    if (me.role === 'company_admin') call<Change[]>('GET', '/v1/changes?status=pending').then((r) => { if (r.ok) setApprovals(r.data.filter((c) => c.requested_by.id !== me.id).length); });
   });
 
   async function signOut() {

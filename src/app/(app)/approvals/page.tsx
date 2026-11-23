@@ -8,7 +8,7 @@ import { useList } from '@/components/list';
 import { ConfirmButton, Modal } from '@/components/confirm';
 import type { Change } from '@/lib/types';
 
-// Company Admins decide IT Admins' changes; IT Admins follow and cancel their own (A14, backend round 6).
+// Maker-checker: Company Admins decide others' changes, never their own; everyone follows and cancels their own.
 const STATUS: Record<Change['status'], [string, string]> = {
   pending: ['Waiting for approval', 'p-warn'], approved: ['Approved', 'p-ok'], rejected: ['Rejected', 'p-bad'],
   cancelled: ['Cancelled', ''], failed: ['Couldn’t be applied', 'p-bad'],
@@ -24,12 +24,14 @@ export default function Approvals() {
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);
   const [rejecting, setRejecting] = useState<Change | null>(null);
   const pendingCount = (s.data ?? []).filter((c) => c.status === 'pending').length;
+  // Own changes wait for another Company Admin; the API lets a lone admin decide them (no one else can).
 
   async function approve(c: Change) {
     const r = await call<{ change: Change }>('POST', `/v1/changes/${c.id}/approve`);
     if (r.ok && r.data.change.status === 'failed') setNote({ ok: false, text: `Couldn’t apply “${c.summary}”: ${r.data.change.error?.message ?? 'it no longer applies'}.` });
     else if (r.ok) setNote({ ok: true, text: `Approved: ${c.summary}.` });
-    else setNote({ ok: false, text: r.status === 409 ? 'This request was already decided or cancelled.' : message(r.status, r.err.code) });
+    else setNote({ ok: false, text: r.status === 409 ? 'This request was already decided or cancelled.'
+      : r.status === 403 ? 'Another Company Admin must approve your own change.' : message(r.status, r.err.code) });
     s.reload();
   }
   async function cancel(c: Change) {
@@ -41,7 +43,7 @@ export default function Approvals() {
   return (
     <>
       <PageHead title={admin ? 'Approvals' : 'My requests'}
-        sub={admin ? 'Changes your IT Admins asked for. Nothing changes until you approve it.' : 'Your changes wait here until a Company Admin approves them.'} />
+        sub={admin ? 'Changes your team asked for. Nothing changes until a Company Admin approves it; your own changes wait for another Company Admin.' : 'Your changes wait here until a Company Admin approves them.'} />
       {note && <div className={`notice ${note.ok ? 'ok' : 'warn'}`} role="status">{note.text}</div>}
       <div className="card stack">
         <div className="toolbar">
@@ -66,14 +68,17 @@ export default function Approvals() {
                         <td>{c.requested_by.name}<div className="small muted" title={full(c.requested_at, me.tz)}>{when(c.requested_at, me.tz)}</div></td>
                         <td><span className={`pill ${STATUS[c.status][1]}`}>{STATUS[c.status][0]}</span>
                           {c.decided_by && <div className="small muted">by {c.decided_by.name}{c.decided_at ? `, ${when(c.decided_at, me.tz)}` : ''}</div>}</td>
-                        <td>{c.status !== 'pending' ? null : admin ? (
+                        <td>{c.status !== 'pending' ? null : c.requested_by.id === me.id ? (
+                          <div className="row">
+                            {admin && <span className="small muted">Waiting for another Company Admin</span>}
+                            <ConfirmButton label="Cancel request" question="Cancel this request? Nothing changes." onConfirm={() => cancel(c)} />
+                          </div>
+                        ) : admin ? (
                           <div className="row">
                             <button className="btn sm" onClick={() => setRejecting(c)}>Reject</button>
                             <ConfirmButton positive label="Approve" action="Approve" question={`Approve “${c.summary}”? It takes effect now.`} onConfirm={() => approve(c)} />
                           </div>
-                        ) : c.requested_by.id === me.id
-                          ? <ConfirmButton label="Cancel request" question="Cancel this request? Nothing changes." onConfirm={() => cancel(c)} />
-                          : null}</td>
+                        ) : null}</td>
                       </tr>
                     ))}
                 </tbody>

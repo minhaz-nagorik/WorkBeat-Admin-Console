@@ -3,6 +3,7 @@
 // data retention, the monitoring notice and billing are managed by WorkBeat staff; the API refuses them (403).
 // A custom domain works only after WorkBeat approves it (A17).
 // The screenshot interval is set on each employee, never faster than the plan (D37, B11).
+import { isPending, SENT } from '@/components/pending';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { call, message } from '@/lib/client';
@@ -53,6 +54,7 @@ function CompanyForm({ s, onSaved }: { s: Settings; onSaved: (d: Settings) => vo
     setBusy(true);
     const r = await call<Settings>('PATCH', '/v1/company/settings', { timezone: zone, idle_threshold_seconds: +idle * 60 });
     setBusy(false);
+    if (isPending(r)) return setErr({ form: SENT });
     if (r.ok) { onSaved(r.data); setSaved(true); router.refresh(); return; } // refresh reloads GET /v1/me in the shell
     if (r.status === 422 && r.err.fields?.some((f) => FIELD_ERR[f])) {
       return setErr(Object.fromEntries(r.err.fields.filter((f) => FIELD_ERR[f]).map((f) => [f, FIELD_ERR[f]])));

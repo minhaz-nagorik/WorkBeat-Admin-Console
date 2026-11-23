@@ -1,4 +1,5 @@
 'use client';
+import { isPending, SENT } from '@/components/pending';
 import { useState } from 'react';
 import Link from 'next/link';
 import { call, message } from '@/lib/client';
@@ -105,6 +106,7 @@ function MinVersion() {
     setBusy(true); setNote(null);
     const r = await call<{ min_agent_version: string | null }>('PUT', '/v1/deployment/min-agent-version', { min_agent_version: pick || null });
     setBusy(false);
+    if (isPending(r)) { setPick(null); return setNote({ ok: true, text: SENT }); }
     if (r.ok) { setSaved(r.data.min_agent_version); setPick(null); return setNote({ ok: true, text: 'Minimum version saved.' }); }
     setNote({ ok: false, text: r.status === 422 ? 'That version is above the newest release. Pick one from the list.' : message(r.status, r.err.code) });
   }

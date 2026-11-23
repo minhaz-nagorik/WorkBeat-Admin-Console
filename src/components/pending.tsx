@@ -8,8 +8,8 @@ import { when } from '@/lib/time';
 import { ConfirmButton } from './confirm';
 import type { Change } from '@/lib/types';
 
-// IT Admin writes answer 202 { change } and wait for a Company Admin (backend round 6).
-export const SENT = 'Sent to your Company Admin for approval. It shows as waiting for approval until they decide.';
+// Maker-checker: a write answers 202 { change } when it must wait for a Company Admin (another one, for an admin).
+export const SENT = 'Sent for approval. It shows as waiting for approval until a Company Admin decides.';
 
 /** True when the write was stored as a change waiting for approval instead of applied. */
 export function isPending<T>(r: CallResult<T>) {
@@ -20,16 +20,16 @@ export function isPending<T>(r: CallResult<T>) {
 const CHANGED = 'wb:changes';
 
 /**
- * "Waiting for approval" card for one kind of record, shown to IT Admins (their own requests,
- * which they can cancel) and Company Admins (everyone's, with a link to Approvals).
+ * "Waiting for approval" card for one kind of record: members see their own requests, which they
+ * can cancel; Company Admins see everyone's, with a link to Approvals.
  */
 export function PendingList({ resource, onChange }: { resource: string | string[]; onChange?: () => void }) {
   const me = useMe();
-  const seen = me.role === 'company_admin' || me.role === 'it_admin';
+  const seen = me.role !== 'super_admin';
   const kinds = Array.isArray(resource) ? resource : [resource];
-  const s = useData<Change[]>(seen ? '/v1/changes?status=pending' : null, { poll: true });
+  const s = useData<Change[]>(seen ? '/v1/changes?status=pending' : null, { poll: true }); // members get their own only
   const mine = (s.data ?? []).filter((c) => kinds.includes(c.resource)); // the API filters one resource at a time
-  const hint = me.role === 'it_admin' && <p className="small muted">Changes you make here wait for your Company Admin’s approval.</p>;
+  const hint = me.role === 'member' && <p className="small muted">Changes you make here wait for a Company Admin’s approval.</p>;
   const { reload } = s;
   useEffect(() => {
     const on = () => { reload(); };

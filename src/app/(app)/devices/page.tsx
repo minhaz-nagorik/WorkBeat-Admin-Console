@@ -1,4 +1,5 @@
 'use client';
+import { can } from '@/lib/nav';
 import { PendingList } from '@/components/pending';
 import { Suspense, useRef } from 'react';
 import Link from 'next/link';
@@ -29,7 +30,7 @@ function Devices() {
   if (f.status && !BROWSER_ONLY.includes(f.status)) api.set('status', f.status);
   for (const k of ['badge', 'os', 'employee_id'] as const) if (f[k]) api.set(k, f[k]);
   const s = useData<Device[]>(`/v1/devices${api.size ? `?${api}` : ''}`, { poll: true });
-  const lic = useData<{ seat_limit: number | null; seats_used: number }>(me.role === 'company_admin' ? '/v1/license' : null, { poll: true }); // IT Admin: no licence access (A14)
+  const lic = useData<{ seat_limit: number | null; seats_used: number }>(me.role === 'company_admin' ? '/v1/license' : null, { poll: true }); // members: no licence access (A14)
 
   // Employee choices from every list seen, so picking one keeps the others in the dropdown.
   const people = useRef(new Map<string, string>());
@@ -91,7 +92,7 @@ function Devices() {
                       <td><Link href={`/devices/${d.id}`} className="mono" onClick={(e) => e.stopPropagation()}>{d.hostname}</Link>
                         <div className="small muted">{label('os', d.os)} {d.os_version}</div></td>
                       <td>{['released', 'deactivated'].includes(d.status) && <span className="small muted">Was: </span>}
-                        {me.role !== 'manager'
+                        {can(me, 'employees.view')
                           ? <Link href={`/employees/${d.employee.id}`} onClick={(e) => e.stopPropagation()}>{d.employee.name}</Link>
                           : d.employee.name}</td>
                       <td><StatusPill s={d.status} /></td>

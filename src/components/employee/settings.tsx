@@ -1,4 +1,6 @@
 'use client';
+import { can } from '@/lib/nav';
+import { useMe } from '@/lib/me';
 import { isPending, PendingList, SENT } from '@/components/pending';
 import { useEffect, useState } from 'react';
 import { call, message } from '@/lib/client';
@@ -18,9 +20,8 @@ const SWITCHES: [Switch, string, string][] = [
 // Choices no faster than the company's screenshot tier (B11).
 const BY_TIER: Record<string, number[]> = { off: [0], light: [0, 3600], standard: [0, 1800, 3600], intensive: [0, 600, 1800, 3600] };
 
-export function MonitoringSettingsTab({ employeeId, role, archived }: TabProps) {
-  const admin = role === 'company_admin';
-  const edit = (admin || role === 'it_admin') && !archived; // IT Admin changes wait for approval (A14)
+export function MonitoringSettingsTab({ employeeId, archived }: TabProps) {
+  const edit = can(useMe(), 'employees.edit') && !archived; // a member's changes wait for approval
   const s = useData<Settings>(`/v1/employees/${employeeId}/monitoring-settings`);
   const [f, setF] = useState<Settings | null>(null);
   const [busy, setBusy] = useState(false);

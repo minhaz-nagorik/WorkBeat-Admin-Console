@@ -20,11 +20,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   );
   const user = me.data;
   if (user.must_change_password && path !== '/account') redirect('/account'); // temporary password: change it first
-  if (!allowed(user.role, path)) redirect(landing(user.role));
+  if (!allowed(user, path)) redirect(landing(user));
 
   const status = user.company ? (await api<StatusInfo>('/v1/company/status')).data : null;
   return (
-    <Shell me={user} nav={navFor(user.role)} status={status}>
+    <Shell me={user} nav={navFor(user)} status={status}>
       {children}
     </Shell>
   );

@@ -1,4 +1,5 @@
 'use client';
+import { can } from '@/lib/nav';
 import { isPending, PendingList, SENT } from '@/components/pending';
 import { use, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -7,7 +8,7 @@ import { label, options } from '@/lib/labels';
 import { useMe } from '@/lib/me';
 import { when, full } from '@/lib/time';
 import { useData, PageHead } from '@/lib/use-data';
-import { EmailSettings, emailSentence, type AlertEmail } from '@/components/alerts/email-settings';
+import { EmailSettings, emailSentence, useAlertRoles, type AlertEmail } from '@/components/alerts/email-settings';
 
 type Alert = {
   id: string; event_type: string; device_id: string; hostname: string; employee: { id: string; name: string } | null;
@@ -72,7 +73,8 @@ export default function Alerts({ searchParams }: { searchParams: Promise<{ emplo
   const [person, setPerson] = useState<string | null>(null);
 
   const isAdmin = me.role === 'company_admin';
-  const canResolve = isAdmin || me.role === 'it_admin';
+  const canResolve = can(me, 'alerts.edit');
+  const alertRoles = useAlertRoles(isAdmin);
   const settings = useData<{ alert_email: AlertEmail }>(isAdmin ? '/v1/company/settings' : null);
 
   useEffect(() => { const t = setTimeout(() => setQ(qInput), 300); return () => clearTimeout(t); }, [qInput]);
@@ -124,7 +126,7 @@ export default function Alerts({ searchParams }: { searchParams: Promise<{ emplo
   return (
     <>
       <PageHead title="Alerts"
-        sub={<>Signs that WorkBeat was interfered with, or a computer stopped connecting.{mail && ` ${emailSentence(mail)}`}</>}
+        sub={<>Signs that WorkBeat was interfered with, or a computer stopped connecting.{mail && ` ${emailSentence(mail, alertRoles)}`}</>}
         right={isAdmin && <button className="btn" disabled={!mail} onClick={() => setMailing(true)}>Email settings</button>} />
       {note && <div className={`notice ${note === SENT ? 'info' : 'warn'}`} role="status">{note}</div>}
       <PendingList resource="alert" />
@@ -192,7 +194,7 @@ export default function Alerts({ searchParams }: { searchParams: Promise<{ emplo
       </div>
 
       {mail && (
-        <EmailSettings open={mailing} value={mail} onClose={() => setMailing(false)}
+        <EmailSettings open={mailing} value={mail} roles={alertRoles} onClose={() => setMailing(false)}
           onSaved={(v) => { setMailing(false); settings.set((d) => d && { ...d, alert_email: v }); setNote(null); }} />
       )}
     </>

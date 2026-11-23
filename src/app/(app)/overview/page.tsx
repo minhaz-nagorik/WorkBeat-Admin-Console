@@ -1,4 +1,5 @@
 'use client';
+import { can } from '@/lib/nav';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useMe } from '@/lib/me';
@@ -24,10 +25,10 @@ export default function Overview() {
   const [loadedAt, setLoadedAt] = useState<string | null>(null);
   useEffect(() => { if (dash.data) setLoadedAt(new Date().toISOString()); }, [dash.data]);
   async function refresh() { setBusy(true); setTick((t) => t + 1); await dash.reload(); setBusy(false); }
-  const reader = me.role === 'company_admin' || me.role === 'manager';
-  const it = me.role === 'it_admin';
-  const sub = it ? 'Device health and rollout status. Activity reports are not available to IT Admins.'
-    : me.role === 'manager' ? 'Your team' : me.company?.name;
+  const reader = can(me, 'reports');
+  const it = can(me, 'deployment');
+  const sub = !reader ? 'Device health and rollout status. Activity reports are not part of your role.'
+    : me.team_only ? 'Your team' : me.company?.name;
 
   return (
     <>
@@ -37,13 +38,13 @@ export default function Overview() {
           <button className="btn sm" onClick={refresh} disabled={busy}>{busy ? 'Refreshing…' : 'Refresh'}</button>
         </div>
       } />
-      {(me.role === 'company_admin' || it) && <SetupChecklist refresh={tick} />}
+      {it && <SetupChecklist refresh={tick} />}
       <Loaded s={dash} rows={4}>{(d) => (
         <>
           <div className="grid g4">
-            <Stat q="status=online" title="Online now" v={d.devices.online} sub={`of ${d.devices.online + d.devices.offline} computers`} link={me.role !== 'manager'} />
-            <Stat q="status=offline" title="Offline" v={d.devices.offline} sub="not heard from in 15 minutes" link={me.role !== 'manager'} />
-            <Stat q="badge=open_alert" title="Open alerts" v={d.devices.open_alert} sub="computers to review" link={me.role !== 'manager'} bad />
+            <Stat q="status=online" title="Online now" v={d.devices.online} sub={`of ${d.devices.online + d.devices.offline} computers`} link={can(me, 'devices.view')} />
+            <Stat q="status=offline" title="Offline" v={d.devices.offline} sub="not heard from in 15 minutes" link={can(me, 'devices.view')} />
+            <Stat q="badge=open_alert" title="Open alerts" v={d.devices.open_alert} sub="computers to review" link={can(me, 'devices.view')} bad />
             {d.seats && <div className="card stat"><span className="label">Seats used</span><span className="v">{d.seats.used}</span><span className="s">{d.seats.limit == null ? 'of unlimited' : `of ${d.seats.limit}`}</span></div>}
             {d.today && (
               <div className="card stat"><span className="label">Tracked today</span><span className="v">{hm(d.today.tracked_seconds)}</span><span className="s">{ap(d.today.activity_percent)} activity</span></div>
@@ -56,7 +57,7 @@ export default function Overview() {
                 <AlertTable items={d.alerts.slice(0, 5)} tz={me.tz} empty="No alerts." linkPeople={reader} />
               </div>
             )}
-            {reader ? <SplitCard tz={me.tz} admin={me.role === 'company_admin'} refresh={tick} /> : <RolloutCard compact refresh={tick} />}
+            {reader ? <SplitCard tz={me.tz} admin={me.role === 'company_admin'} refresh={tick} /> : it && <RolloutCard compact refresh={tick} />}
           </div>
           {me.role === 'company_admin' && <RolloutCard refresh={tick} />}
         </>

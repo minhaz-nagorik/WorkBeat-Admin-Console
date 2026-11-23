@@ -7,8 +7,8 @@ import { Logo } from '@/components/icons';
 import type { Me, Role } from '@/lib/types';
 import { SignIn, useTokenFromUrl } from '../sign-in/sign-in';
 
-type Lookup = { email: string; role: Role; company_name: string | null };
-const article = (r: Role) => (r === 'it_admin' ? 'an' : 'a');
+type Lookup = { email: string; role: Role; role_name?: string | null; company_name: string | null };
+const roleWords = (l: Lookup) => (l.role === 'member' ? `${/^[aeiou]/i.test(l.role_name ?? '') ? 'an' : 'a'} ${l.role_name}` : `a ${label('role', l.role)}`);
 
 export default function Invite() {
   const token = useTokenFromUrl();
@@ -67,7 +67,7 @@ export default function Invite() {
           : inv === 'error' ? <p role="alert">Something went wrong. <button className="linkbtn" onClick={() => location.reload()}>Try again</button></p>
           : (
             <form method="post" className="stack" onSubmit={submit}>
-              <h1>{inv.role === 'super_admin' ? "You're invited to WorkBeat staff" : `You're invited as ${article(inv.role)} ${label('role', inv.role)} of ${inv.company_name}`}</h1>
+              <h1>{inv.role === 'super_admin' ? "You're invited to WorkBeat staff" : `You're invited as ${roleWords(inv)} of ${inv.company_name}`}</h1>
               <p className="muted">Create your account for <b>{inv.email}</b>.</p>
               {(msg || wait > 0) && <div className="notice warn" role="alert">{wait > 0 ? tooMany(wait) : msg}</div>}
               <Field id="name" label="Your name" autoComplete="name" error={errs.name} value={name} onChange={(e) => setName(e.target.value)} />

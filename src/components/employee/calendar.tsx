@@ -6,7 +6,8 @@ import { hm } from '@/lib/format';
 import { label, options } from '@/lib/labels';
 import type { TabProps } from './tabs';
 import {
-  addDays, addMonths, ap, clock, download, fmtDay, HourChart, longDay, mondayOf, monthStart, saveBlob, SplitBar, today, toCsv, useRetainedFrom,
+  addDays, addMonths, ap, clock, daysIn, download, fmtDay, HourChart, longDay, mondayOf, monthStart, presetRange, RangePicker, rangeLabel, saveBlob, SplitBar,
+  today, toCsv, useRetainedFrom, type Range,
 } from '@/components/reports/kit';
 
 type Day = { date: string; tracked_seconds: number; activity_percent: number | null; productive_seconds: number; neutral_seconds: number; unproductive_seconds: number; paused: boolean };
@@ -131,45 +132,50 @@ function DayDetail({ employeeId, date }: { employeeId: string; date: string }) {
 }
 
 type TsDay = Day & { first_activity_at: string | null; last_activity_at: string | null };
-type Timesheet = { employee: { name: string; email: string | null }; company: { name: string }; week: string; days: TsDay[]; totals: Omit<Day, 'date' | 'paused'> };
+type Timesheet = { employee: { name: string; email: string | null }; company: { name: string }; from: string; to: string; days: TsDay[]; totals: Omit<Day, 'date' | 'paused'> };
+/** The API's one-page timesheet PDF holds at most 31 days (backend PDF_MAX_DAYS). */
+const PDF_MAX_DAYS = 31;
 
 export function EmployeeTimesheet({ employeeId, tz }: TabProps) {
-  const t = today(tz), thisWeek = mondayOf(t);
-  const [week, setWeek] = useState(thisWeek);
+  const t = today(tz);
+  const [range, setRange] = useState<Range>(() => presetRange('thisweek', tz));
   const [note, setNote] = useState<string | null>(null);
   const min = useRetainedFrom(tz, employeeId);
-  const ts = useData<Timesheet>(`/v1/employees/${employeeId}/timesheet?week=${week}`);
-  const prevOk = !min || addDays(week, -1) >= min; // previous week's Sunday still retained
-  const nextOk = addDays(week, 7) <= t;
+  const q = `from=${range.from}&to=${range.to}`;
+  const ts = useData<Timesheet>(`/v1/employees/${employeeId}/timesheet?${q}`);
+  const pdfOk = daysIn(range.from, range.to) <= PDF_MAX_DAYS;
 
   function csv(d: Timesheet) {
     const rows: (string | number)[][] = [
-      ['Employee', d.employee.name], ['Email', d.employee.email ?? ''], ['Company', d.company.name], ['Week starting', d.week], [],
+      ['Employee', d.employee.name], ['Email', d.employee.email ?? ''], ['Company', d.company.name], ['From', d.from], ['To', d.to], [],
       ['Date', 'First activity', 'Last activity', 'Tracked (h)', 'Activity %', 'Productive (h)', 'Neutral (h)', 'Unproductive (h)', 'Note'],
       ...d.days.map((r) => [r.date, clock(r.first_activity_at, tz), clock(r.last_activity_at, tz), h(r.tracked_seconds), r.activity_percent == null ? '' : Math.round(r.activity_percent),
         h(r.productive_seconds), h(r.neutral_seconds), h(r.unproductive_seconds), r.paused ? 'Paused' : '']),
       ['Total', '', '', h(d.totals.tracked_seconds), d.totals.activity_percent == null ? '' : Math.round(d.totals.activity_percent), h(d.totals.productive_seconds), h(d.totals.neutral_seconds), h(d.totals.unproductive_seconds), ''],
     ];
-    saveBlob(new Blob([toCsv(rows)], { type: 'text/csv' }), `timesheet-${d.employee.name.replace(/[^\w]+/g, '-').toLowerCase()}-${d.week}.csv`);
+    saveBlob(new Blob([toCsv(rows)], { type: 'text/csv' }), `timesheet-${d.employee.name.replace(/[^\w]+/g, '-').toLowerCase()}-${d.from}-${d.to}.csv`);
   }
   async function pdf() {
     setNote(null);
-    setNote(await download(`/v1/employees/${employeeId}/timesheet.pdf?week=${week}`, `timesheet-${week}.pdf`));
+    setNote(await download(`/v1/employees/${employeeId}/timesheet.pdf?${q}`, `timesheet-${range.from}-${range.to}.pdf`));
   }
 
   return (
+    <>
+    <div className="card toolbar between" style={{ padding: '12px 16px' }}>
+      <RangePicker value={range} onChange={setRange} tz={tz} min={min} />
+    </div>
     <Loaded s={ts} rows={7}>{(d) => (
       <div className="card stack">
         <div className="cardhead">
-          <div><h2>Weekly timesheet · {d.employee.name}</h2><p className="small muted">Week starting Monday {fmtDay(d.week, { day: 'numeric', month: 'long', year: 'numeric' })} · {d.company.name}</p></div>
+          <div><h2>Timesheet · {d.employee.name}</h2><p className="small muted">{rangeLabel(d.from, d.to)} · {d.company.name}</p></div>
           <div className="row">
-            <button className="btn" disabled={!prevOk} onClick={() => setWeek(addDays(week, -7))} aria-label="Previous week">←</button>
-            <button className="btn" disabled={!nextOk} onClick={() => setWeek(addDays(week, 7))} aria-label="Next week">→</button>
-            <button className="btn" disabled={week === thisWeek} onClick={() => setWeek(thisWeek)}>This week</button>
             <button className="btn" onClick={() => csv(d)}>Download CSV</button>
-            <button className="btn pri" onClick={pdf}>Download PDF</button>
+            <button className="btn pri" onClick={pdf} disabled={!pdfOk}
+              title={pdfOk ? undefined : `The PDF holds up to ${PDF_MAX_DAYS} days. Pick a shorter range or download the CSV.`}>Download PDF</button>
           </div>
         </div>
+        {!pdfOk && <p className="small muted">The PDF holds up to {PDF_MAX_DAYS} days. Pick a shorter range for a PDF, or download the CSV.</p>}
         {note && <div className="notice warn" role="alert">{note}</div>}
         <div className="tablewrap"><table>
           <thead><tr><th>Day</th><th>First activity</th><th>Last activity</th><th>Tracked</th><th>Activity</th><th>Productive</th><th>Neutral</th><th>Unproductive</th><th>Note</th></tr></thead>
@@ -194,6 +200,7 @@ export function EmployeeTimesheet({ employeeId, tz }: TabProps) {
         <p className="small muted">Times are in the company&apos;s time zone ({tz}).</p>
       </div>
     )}</Loaded>
+    </>
   );
 }
 

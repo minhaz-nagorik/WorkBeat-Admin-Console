@@ -1,4 +1,6 @@
 'use client';
+import { can } from '@/lib/nav';
+import { useMe } from '@/lib/me';
 import { isPending, PendingList, SENT } from '@/components/pending';
 import { useEffect, useState } from 'react';
 import { call, message } from '@/lib/client';
@@ -31,8 +33,8 @@ const length = (a: string, b: string) => {
   return d ? `${d} ${d === 1 ? 'day' : 'days'}${s % 86400 >= 60 ? ` ${hm(s % 86400)}` : ''}` : hm(s);
 };
 
-export function PausesTab({ employeeId, tz, role, archived }: TabProps) {
-  const act = (role === 'company_admin' || role === 'it_admin') && !archived; // IT Admin changes wait for approval (A14)
+export function PausesTab({ employeeId, tz, archived }: TabProps) {
+  const act = can(useMe(), 'employees.edit') && !archived; // a member's changes wait for approval
   const s = useData<Pause[]>(`/v1/employees/${employeeId}/pauses`, { poll: true });
   const [open, setOpen] = useState(false);
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null);

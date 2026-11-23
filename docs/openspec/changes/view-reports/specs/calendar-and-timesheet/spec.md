@@ -1,7 +1,7 @@
 ## Purpose
 
 The Calendar and Timesheet tabs: one employee's days by day, week or month, and the Monday-start
-weekly timesheet with its PDF.
+timesheet over a chosen date range with its PDF.
 
 ## ADDED Requirements
 
@@ -21,18 +21,18 @@ The day view SHALL show that day's tracked time, activity and top apps (from `us
 - **WHEN** the reader clicks Screenshots for this day
 - **THEN** the Screenshots tab opens on that date
 
-### Requirement: The timesheet covers one Monday-start week
+### Requirement: The timesheet covers a chosen date range
 <!-- source: backend `calendar-and-timesheets` · Prototype "Employee → Timesheet" -->
-The Timesheet tab SHALL show `GET /v1/employees/:id/timesheet?week=` with seven rows (first and last activity, tracked, activity, productive, neutral, unproductive, a Paused note) and week totals, with previous week, next week and This week controls. Weeks entirely before retention or after today MUST NOT be reachable.
+The Timesheet tab SHALL show `GET /v1/employees/:id/timesheet?from=&to=` with one row per day (first and last activity, tracked, activity, productive, neutral, unproductive, a Paused note) and totals, with the same date-range picker as the Report tab (presets and custom dates, default This week, owner 19 Nov 2026). Days before retention or after today MUST NOT be pickable.
 
-#### Scenario: Next week disabled
-- **WHEN** the current week is shown
-- **THEN** the next-week control is disabled
+#### Scenario: Last 30 days
+- **WHEN** the reader picks Last 30 days
+- **THEN** thirty day rows and their totals are shown
 
 ### Requirement: The timesheet downloads as PDF and CSV
 <!-- source: backend `calendar-and-timesheets` · backend `data-export` -->
-Download PDF SHALL fetch `GET /v1/employees/:id/timesheet.pdf?week=` and save it with the file name the response gives; Download CSV MUST save the shown rows as CSV with formula-leading cells prefixed with `'`.
+Download PDF SHALL fetch `GET /v1/employees/:id/timesheet.pdf?from=&to=` and save it; over 31 days it MUST be disabled with a note to pick a shorter range or use the CSV. It saves with the file name the response gives; Download CSV MUST save the shown rows as CSV with formula-leading cells prefixed with `'`.
 
 #### Scenario: PDF download
 - **WHEN** the reader clicks Download PDF
-- **THEN** a PDF named for the employee and week is saved and nothing is stored by the app
+- **THEN** a PDF named for the employee and range is saved and nothing is stored by the app

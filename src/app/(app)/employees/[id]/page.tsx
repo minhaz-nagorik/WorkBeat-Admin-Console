@@ -1,4 +1,5 @@
 'use client';
+import { can } from '@/lib/nav';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useMe } from '@/lib/me';
@@ -9,7 +10,7 @@ import { RestoreDialog } from '@/components/employee/edit';
 import { label } from '@/lib/labels';
 import { initials } from '@/lib/format';
 import { when, full, dateOnly } from '@/lib/time';
-import type { Role } from '@/lib/types';
+import type { Need } from '@/lib/nav';
 import type { TabProps } from '@/components/employee/tabs';
 import { EmployeeActivity } from '@/components/employee/activity';
 import { EmployeeCalendar, EmployeeTimesheet } from '@/components/employee/calendar';
@@ -25,16 +26,15 @@ type Employee = {
   presence?: string; devices?: Device[];
 };
 
-const A: Role = 'company_admin', M: Role = 'manager', I: Role = 'it_admin';
 // Who sees which tab (view-reports, manage-employees specs). The API's refusal stays the control (rule 2).
-const TABS: { k: string; l: string; roles: Role[]; C: (p: TabProps) => React.ReactNode }[] = [
-  { k: 'report', l: 'Report', roles: [A, M], C: EmployeeActivity },
-  { k: 'calendar', l: 'Calendar', roles: [A, M], C: EmployeeCalendar },
-  { k: 'timesheet', l: 'Timesheet', roles: [A, M], C: EmployeeTimesheet },
-  { k: 'screenshots', l: 'Screenshots', roles: [A, M], C: EmployeeScreenshots },
-  { k: 'settings', l: 'What is collected', roles: [A, M, I], C: MonitoringSettingsTab },
-  { k: 'pauses', l: 'Pause monitoring', roles: [A, M, I], C: PausesTab },
-  { k: 'notice', l: 'Monitoring notice', roles: [A], C: NoticeTab },
+const TABS: { k: string; l: string; need: Need; C: (p: TabProps) => React.ReactNode }[] = [
+  { k: 'report', l: 'Report', need: 'reports', C: EmployeeActivity },
+  { k: 'calendar', l: 'Calendar', need: 'reports', C: EmployeeCalendar },
+  { k: 'timesheet', l: 'Timesheet', need: 'reports', C: EmployeeTimesheet },
+  { k: 'screenshots', l: 'Screenshots', need: 'reports', C: EmployeeScreenshots },
+  { k: 'settings', l: 'What is collected', need: 'employees.view', C: MonitoringSettingsTab },
+  { k: 'pauses', l: 'Pause monitoring', need: 'employees.view', C: PausesTab },
+  { k: 'notice', l: 'Monitoring notice', need: 'admin', C: NoticeTab },
 ];
 const PRES: Record<string, string> = { active: 'p-ok', idle: 'p-warn', paused: 'p-info' };
 const DEV: Record<string, string> = { online: 'p-ok', offline: 'p-warn' };
@@ -46,7 +46,7 @@ export default function EmployeePage() {
   const router = useRouter();
   const emp = useData<Employee>(`/v1/employees/${id}`);
   const [restoring, setRestoring] = useState(false);
-  const tabs = TABS.filter((t) => t.roles.includes(me.role));
+  const tabs = TABS.filter((t) => can(me, t.need));
   const tab = tabs.find((t) => t.k === sp.get('tab')) ?? tabs[0];
 
   const back = <Link href="/employees" className="small">← Employees</Link>;

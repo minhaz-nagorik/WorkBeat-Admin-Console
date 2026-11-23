@@ -1,4 +1,5 @@
 'use client';
+import { can } from '@/lib/nav';
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -8,7 +9,6 @@ import { useMe } from '@/lib/me';
 import { useData, useRefresh } from '@/lib/use-data';
 import { pct } from '@/lib/format';
 
-const CAN = ['company_admin', 'it_admin'];
 const SETUP_EVENT = 'workbeat:setup';
 const STEP_LINK: Record<string, string> = {
   download_downloader: '/deployment#downloads', copy_license_key: '/deployment#key',
@@ -74,10 +74,10 @@ export const ROLLOUT_ACTION: Record<string, string> = Object.fromEntries(ROWS.ma
 export function RolloutCard({ compact, head, refresh }: { compact?: boolean; head?: React.ReactNode; refresh?: number }) {
   const me = useMe();
   const router = useRouter();
-  const ok = CAN.includes(me.role);
+  const ok = can(me, 'deployment');
   const r = useData<Rollout>(ok ? '/v1/rollout' : null, { poll: refresh === undefined });
   useRefresh(refresh, r.reload);
-  const lic = useData<{ seat_limit: number | null }>(me.role === 'company_admin' ? '/v1/license' : null); // IT Admin has no licence access (A14)
+  const lic = useData<{ seat_limit: number | null }>(me.role === 'company_admin' ? '/v1/license' : null); // members have no licence access (A14)
   if (!ok) return null;
   const d = r.data;
   const enrolled = d ? Object.values(d.status).reduce((a, b) => a + b, 0) : 0;
