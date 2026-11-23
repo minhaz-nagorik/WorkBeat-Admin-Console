@@ -37,9 +37,9 @@ export default function ImportEmployees() {
   if (!can(me, 'employees.edit')) return <div className="card"><p>You don&apos;t have access to this page.</p></div>;
 
   async function check(next: string[][]) {
+    if (next.length > MAX_ROWS) { setRows(null); return setErr(`This file has ${next.length} people. Import at most ${MAX_ROWS} at a time; split it into smaller files.`); }
     setRows(next); setBad(null); setErr(null);
     if (!next.length) return setErr('Add at least one person.');
-    if (next.length > MAX_ROWS) return setErr(TOO_BIG);
     setBusy(true);
     const r = await send('/v1/employees/import/check', next);
     setBusy(false);
