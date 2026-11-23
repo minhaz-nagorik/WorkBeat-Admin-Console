@@ -29,4 +29,4 @@ backend `license-key` lets Admin and IT reveal it, so it sits under the licence 
 ## Risks / Trade-offs
 
 - [No silent install, local admins can remove the agent] → the page warns to make employees
-  standard users (Plan-v3.5 §5.1); offline and tamper alerts are the backstop.
+  standard users (Plan-v3.5 §5.1); a computer showing Offline and tamper alerts are the backstop.

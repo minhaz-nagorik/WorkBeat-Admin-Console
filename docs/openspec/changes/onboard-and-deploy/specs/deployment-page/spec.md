@@ -47,7 +47,7 @@ Step 2 SHALL give the WorkBeat Setup steps: download, run as an administrator, p
 
 ### Requirement: The page warns about local administrators
 <!-- source: D40 · Plan-v3.5 §5.1 -->
-Step 2 SHALL warn that someone with administrator rights on a computer can remove WorkBeat, that employees should be standard users, and that an offline or tamper alert is raised if a computer stops reporting.
+Step 2 SHALL warn that someone with administrator rights on a computer can remove WorkBeat, that employees should be standard users, and that a computer that stops reporting shows as Offline on the Devices page (backend B34).
 
 #### Scenario: Reading the warning
 - **WHEN** the admin reads step 2

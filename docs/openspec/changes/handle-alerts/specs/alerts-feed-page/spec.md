@@ -1,6 +1,6 @@
 ## Purpose
 
-The Alerts page: every tamper and offline event the user may see, in plain words, filterable by
+The Alerts page: every tamper event the user may see, in plain words, filterable by
 type and state, with a Resolve action for the people who fix them.
 
 ## ADDED Requirements
@@ -10,7 +10,7 @@ type and state, with a Resolve action for the people who fix them.
 The Alerts page SHALL call `GET /v1/alerts` and show one table row per event, newest first, with the columns When (`occurred_at`), Alert (the type label as a pill), Person (the employee `name`, linking to the employee page for roles that may open it), Computer (`hostname`) and What happened (a one-line description built from `event_type` and `detail`), plus a repeat count when `repeat_count` is above 1.
 
 #### Scenario: Two events
-- **WHEN** the feed returns a `hosts_modified` and an `offline` event
+- **WHEN** the feed returns a `hosts_modified` and a `clock_tampered` event
 - **THEN** each is one table row with time, label, person, computer and description, newest first
 
 #### Scenario: A manager sees another team's person
@@ -19,7 +19,7 @@ The Alerts page SHALL call `GET /v1/alerts` and show one table row per event, ne
 
 ### Requirement: Alert types read in plain language
 <!-- source: A4 · D24 · backend `tamper-ingestion` · Prototype "Alerts" -->
-The page SHALL label `process_restart` "WorkBeat was closed", `hosts_modified` "Website blocking changed", `config_changed` "WorkBeat settings edited", `clock_tampered` "Computer clock changed", `permission_revoked` "Permission turned off", `offline` "Computer offline" and `duplicate_device_id` "Possible duplicate computer". No technical term (hosts file, heartbeat, watchdog, enum value) MUST appear in a label or description.
+The page SHALL label `process_restart` "WorkBeat was closed", `hosts_modified` "Website blocking changed", `config_changed` "WorkBeat settings edited", `clock_tampered` "Computer clock changed", `permission_revoked` "Permission turned off" and `duplicate_device_id` "Possible duplicate computer". No technical term (hosts file, heartbeat, watchdog, enum value) MUST appear in a label or description.
 
 #### Scenario: A hosts file event
 - **WHEN** the feed returns `hosts_modified`
@@ -29,9 +29,9 @@ The page SHALL label `process_restart` "WorkBeat was closed", `hosts_modified` "
 <!-- source: backend `alerts-feed` (`counts`, `employee_id`) · A8 · Prototype "Alerts" -->
 The toolbar SHALL offer a search box sent as `q` (up to 100 characters; text matching a type label also selects that `type`), an alert-type dropdown ("All alerts" and each type with its count from the response's `counts`) and a state filter Open / Resolved / All defaulting to Open, sent as `type` and `state` to `GET /v1/alerts`. Opened from an employee page, it MUST also send `employee_id` and show a removable "Person" chip. Rows come from `items`; more load through `next_cursor`. A filter change MUST restart at page one.
 
-#### Scenario: Only offline alerts
-- **WHEN** the user picks "Computer offline (5)" in the type dropdown
-- **THEN** the page calls `GET /v1/alerts?type=offline&state=open` and shows only those rows
+#### Scenario: Only clock alerts
+- **WHEN** the user picks "Computer clock changed (5)" in the type dropdown
+- **THEN** the page calls `GET /v1/alerts?type=clock_tampered&state=open` and shows only those rows
 
 #### Scenario: Opened from an employee page
 - **WHEN** the user follows "All alerts" from Ana Silva's employee page
@@ -59,7 +59,7 @@ For `company_admin` and `it_admin` each open row SHALL offer Resolve, which call
 
 ### Requirement: The page explains each alert and refreshes itself
 <!-- source: A5 · A4 · Prototype "Alerts" -->
-Below the table a collapsed "What each alert means" section SHALL explain each type in one plain sentence, including that a Computer offline alert is often a computer switched off. The table MUST poll every 30 seconds while visible without losing the user's filters, search or page.
+Below the table a collapsed "What each alert means" section SHALL explain each type in one plain sentence. The table MUST poll every 30 seconds while visible without losing the user's filters, search or page.
 
 #### Scenario: A new alert while reading
 - **WHEN** a new event is stored while the page is open on the Open view
