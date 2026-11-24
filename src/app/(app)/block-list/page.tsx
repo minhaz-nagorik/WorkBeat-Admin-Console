@@ -17,8 +17,6 @@ type Note = { ok: boolean; text: string } | null;
 const BLOCKS = { domain: 'Whole site and its subdomains, in every browser and app', url: 'Only this part of the site, in most browsers' };
 const GAP = 'In Firefox on Mac and in Brave, Opera and Vivaldi on Windows only whole-website rules work.';
 const SYNC = 'Computers update within 30 minutes.';
-// A typed regular expression goes to the API as `regex`, which turns it into url rules.
-const looksRegex = (s: string) => /^\^|[\\()|[\]$]/.test(s);
 
 export default function BlockList() {
   const me = useMe();
@@ -26,7 +24,6 @@ export default function BlockList() {
   const rules = useData<Rule[]>('/v1/block-rules');
   const [note, setNote] = useState<Note>(null);
   const [editing, setEditing] = useState<Rule | 'new' | null>(null);
-  const [created, setCreated] = useState<Rule[] | null>(null);
   const L = useList(rules.data ?? [], (r) => [r.pattern, r.reason, r.created_by_name, BLOCKS[r.type]].join(' '));
 
   async function remove(r: Rule) {
@@ -39,11 +36,9 @@ export default function BlockList() {
     setNote({ ok: false, text: message(res.status, res.err.code) });
   }
 
-  function saved(r: Rule | Rule[], isNew: boolean) {
+  function saved(r: Rule, isNew: boolean) {
     setEditing(null);
-    const list = Array.isArray(r) ? r : [r];
-    rules.set((d) => d && (isNew ? [...list, ...d] : d.map((x) => (x.id === list[0].id ? list[0] : x))));
-    if (Array.isArray(r)) setCreated(r);
+    rules.set((d) => d && (isNew ? [r, ...d] : d.map((x) => (x.id === r.id ? r : x))));
     setNote({ ok: true, text: `${isNew ? 'Rule added' : 'Rule saved'}. ${SYNC}` });
   }
 
@@ -85,21 +80,13 @@ export default function BlockList() {
       <PrivateSites canEdit={canEdit} />
 
       <RuleDialog rule={editing} onClose={() => setEditing(null)} onSaved={saved} onSent={() => { setEditing(null); setNote({ ok: true, text: SENT }); }} />
-      <Modal title="Rules created" open={!!created} onClose={() => setCreated(null)}>
-        <div className="stack">
-          <p>The pattern was turned into {created?.length === 1 ? 'this website rule' : 'these website rules'}:</p>
-          <ul style={{ margin: 0, paddingLeft: 18 }}>{created?.map((r) => <li key={r.id} className="mono">{r.pattern}</li>)}</ul>
-          <p className="small muted">{GAP}</p>
-          <div className="mf"><button className="btn pri" onClick={() => setCreated(null)}>Done</button></div>
-        </div>
-      </Modal>
     </>
   );
 }
 
-function RuleDialog({ rule, onClose, onSaved, onSent }: { rule: Rule | 'new' | null; onClose: () => void; onSaved: (r: Rule | Rule[], isNew: boolean) => void; onSent: () => void }) {
+function RuleDialog({ rule, onClose, onSaved, onSent }: { rule: Rule | 'new' | null; onClose: () => void; onSaved: (r: Rule, isNew: boolean) => void; onSent: () => void }) {
   const isNew = rule === 'new';
-  const [type, setType] = useState<'domain' | 'url'>('domain');
+  const [type, setType] = useState<'domain' | 'url'>('domain'); // url only when editing an older rule
   const [pattern, setPattern] = useState('');
   const [reason, setReason] = useState('');
   const [err, setErr] = useState<{ pattern?: string; form?: string }>({});
@@ -114,18 +101,15 @@ function RuleDialog({ rule, onClose, onSaved, onSent }: { rule: Rule | 'new' | n
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const p = pattern.trim();
-    const regex = isNew && looksRegex(p);
     setBusy(true); setErr({});
     const r = isNew
-      ? await call<Rule | Rule[]>('POST', '/v1/block-rules', { type: regex ? 'regex' : type, pattern: p, reason: reason.trim() || undefined })
+      ? await call<Rule>('POST', '/v1/block-rules', { type: 'domain', pattern: p, reason: reason.trim() || undefined }) // whole websites only (A20)
       : await call<Rule>('PATCH', `/v1/block-rules/${(rule as Rule).id}`, { pattern: p, reason: reason.trim() });
     setBusy(false);
     if (isPending(r)) return onSent();
     if (r.ok) return onSaved(r.data, isNew);
     if (r.status === 409) return setErr({ pattern: 'This rule already exists.' });
-    if (r.status === 422 || r.status === 400) return setErr({ pattern: regex
-      ? 'This pattern can’t be turned into website rules. Type the site and path instead, like reddit.com/r/.'
-      : type === 'domain' ? 'Type just the website, like facebook.com.' : 'Type the site and path, like youtube.com/shorts.' });
+    if (r.status === 422 || r.status === 400) return setErr({ pattern: type === 'domain' ? 'Type just the website, like facebook.com.' : 'Type the site and path, like youtube.com/shorts.' });
     if (r.status === 404) return setErr({ form: 'This rule was already deleted.' });
     setErr({ form: message(r.status, r.err.code) });
   }
@@ -133,19 +117,8 @@ function RuleDialog({ rule, onClose, onSaved, onSent }: { rule: Rule | 'new' | n
   return (
     <Modal title={isNew ? 'Block a website' : 'Edit rule'} open={!!rule} onClose={onClose}>
       <form method="post" className="stack" onSubmit={submit}>
-        {isNew && (
-          <fieldset className="stack" style={{ border: 0, padding: 0, margin: 0, gap: 8 }}>
-            <legend className="small" style={{ fontWeight: 500, marginBottom: 6 }}>What do you want to block?</legend>
-            {([['domain', 'A whole website', 'Example: facebook.com. Also blocks m.facebook.com and other subdomains, in every browser and app.'],
-              ['url', 'One part of a website', `Example: youtube.com/shorts. Works in Chrome, Edge, Safari and most browsers. ${GAP}`]] as const).map(([k, l, d]) => (
-              <label key={k} className="radio-row">
-                <input type="radio" name="bl-type" value={k} checked={type === k} onChange={() => setType(k)} />
-                <span><b>{l}</b><br /><span className="small muted">{d}</span></span>
-              </label>
-            ))}
-          </fieldset>
-        )}
         <Field id="bl-pat" type="text" label="Website address" required maxLength={2048} autoFocus spellCheck={false} placeholder={type === 'url' ? 'youtube.com/shorts' : 'facebook.com'}
+          hint={type === 'domain' ? 'Blocks the whole website and its subdomains, like m.facebook.com, in every browser and app.' : undefined}
           value={pattern} error={err.pattern} onChange={(e) => setPattern(e.target.value)} />
         <Field id="bl-why" type="text" label="Reason (employees see this)" maxLength={120} placeholder="Not allowed on company computers"
           value={reason} onChange={(e) => setReason(e.target.value)} />
