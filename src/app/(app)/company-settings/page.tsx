@@ -13,7 +13,7 @@ import { label } from '@/lib/labels';
 import { Combo, Field } from '@/components/form';
 import { ConfirmButton } from '@/components/confirm';
 
-type Settings = { idle_threshold_seconds: number; timezone: string };
+type Settings = { idle_threshold_seconds: number; timezone: string; slack_webhook_set: boolean };
 
 export default function CompanySettings() {
   const me = useMe();
@@ -24,6 +24,7 @@ export default function CompanySettings() {
       <div className="grid g2">
         <Loaded s={settings} rows={3}>{(s) => <CompanyForm s={s} onSaved={(d) => settings.set(() => d)} />}</Loaded>
         <DomainCard />
+        <Loaded s={settings} rows={2}>{(s) => <SlackCard set={s.slack_webhook_set} onSaved={(d) => settings.set(() => d)} />}</Loaded>
       </div>
     </>
   );
@@ -146,6 +147,49 @@ function DomainCard() {
           hint={dom ? 'A new domain replaces the current one and needs WorkBeat approval again.' : 'Your team can open the dashboard at this address once WorkBeat approves it.'} />
         {err.form && <div className="err" role="alert">{err.form}</div>}
         <div className="row"><button className="btn pri" disabled={busy}>{busy ? 'Saving…' : dom ? 'Change domain' : 'Add domain'}</button></div>
+      </form>
+    </div>
+  );
+}
+
+// Tamper alerts also go to a Slack channel through its incoming-webhook URL (slack-alerts). The API never returns the URL.
+const SLACK_HINT = 'In Slack, add the Incoming Webhooks app to the channel and paste the URL it gives you. It starts with https://hooks.slack.com/services/.';
+
+function SlackCard({ set, onSaved }: { set: boolean; onSaved: (d: Settings) => void }) {
+  const [value, setValue] = useState('');
+  const [err, setErr] = useState<{ url?: string; form?: string }>({});
+  const [busy, setBusy] = useState(false);
+
+  async function save(url: string | null) {
+    setBusy(true); setErr({});
+    const r = await call<Settings>('PATCH', '/v1/company/settings', { slack_webhook_url: url });
+    setBusy(false);
+    if (isPending(r)) return setErr({ form: SENT });
+    if (r.ok) { setValue(''); return onSaved(r.data); }
+    setErr(r.status === 422 ? { url: SLACK_HINT } : { form: message(r.status, r.err.code) });
+  }
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!value.trim().startsWith('https://hooks.slack.com/services/')) return setErr({ url: SLACK_HINT });
+    void save(value.trim());
+  }
+
+  return (
+    <div className="card stack">
+      <h2>Slack alerts</h2>
+      <p className="small">Alerts are posted to a Slack channel as well as emailed, for the same alert types and at the same times.</p>
+      {set && (
+        <div className="row">
+          <span className="pill p-ok">Connected</span>
+          <ConfirmButton label="Disconnect" action="Disconnect"
+            question="Disconnect Slack? Alerts stop going to the channel. Emails are not affected." onConfirm={() => save(null)} />
+        </div>
+      )}
+      <form method="post" className="stack" onSubmit={submit} noValidate>
+        <Field id="co-slack" label={set ? 'Use a different webhook URL' : 'Webhook URL'} value={value} error={err.url} maxLength={500}
+          type="password" autoComplete="off" placeholder="https://hooks.slack.com/services/…" onChange={(e) => setValue(e.target.value)} hint={SLACK_HINT} />
+        {err.form && <div className="err" role="alert">{err.form}</div>}
+        <div className="row"><button className="btn pri" disabled={busy}>{busy ? 'Saving…' : set ? 'Change' : 'Connect'}</button></div>
       </form>
     </div>
   );
