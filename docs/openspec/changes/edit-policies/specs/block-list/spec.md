@@ -29,25 +29,21 @@ Add, edit and delete SHALL be shown to `company_admin` and `it_admin`; an `it_ad
 - **WHEN** an `it_admin` adds `facebook.com` and the API answers `202`
 - **THEN** the list does not show the rule and the page says it waits for approval
 
-### Requirement: A rule is added as a whole website or one part of a website
-<!-- source: D39 · Plan-v3.5 §4.3 · backend `block-rules` · Prototype "Block list" -->
-The Add rule dialog SHALL ask "What do you want to block?" with "A whole website" (`type` `domain`) and "One part of a website" (`type` `url`), an address and a reason employees see, and send `POST /v1/block-rules`. The url choice MUST say that in Firefox on Mac and in Brave, Opera and Vivaldi on Windows only whole-website rules work.
+### Requirement: A rule is added as a whole website
+<!-- source: D39 · A20 · Plan-v3.5 §4.3 · backend `block-rules` · Prototype "Block list" -->
+The Add rule dialog SHALL ask only for a website address and a reason employees see, and send `POST /v1/block-rules` with `type` `domain`. It MUST offer no choice to block one part of a website and MUST NOT send `type` `url` or `regex`. The address field MUST say the rule blocks the whole website and its subdomains in every browser and app.
 
-#### Scenario: Blocking YouTube Shorts
-- **WHEN** an admin picks "One part of a website", types `youtube.com/shorts` and a reason
-- **THEN** the page sends `type` `url` and the new rule appears at the top of the list
+#### Scenario: Blocking Facebook
+- **WHEN** an admin types `facebook.com` and a reason
+- **THEN** the page sends `type` `domain` and the new rule appears at the top of the list
 
 #### Scenario: A taken rule
 - **WHEN** the API answers `409 CONFLICT`
 - **THEN** the dialog says the rule already exists and stays open
 
-### Requirement: A pattern typed as a regular expression shows what was created
-<!-- source: D39 · backend `block-rules` -->
-When the address is a regular expression, the dialog SHALL send `type` `regex` and, on success, list the url rules the API created in a confirmation; on `422 VALIDATION_FAILED` it MUST say the pattern cannot be turned into website rules and suggest typing the site and path instead.
-
-#### Scenario: A prefix pattern
-- **WHEN** an admin enters `^https?://(www\.)?reddit\.com/r/.*`
-- **THEN** the confirmation lists the url rules created for `reddit.com/r/`
+#### Scenario: An older rule for one part of a website
+- **WHEN** an admin edits an existing `url` rule such as `youtube.com/shorts`
+- **THEN** the dialog keeps it a `url` rule and saves the changed address or reason
 
 ### Requirement: Rules are edited and deleted in place
 <!-- source: backend `block-rules` · A7 -->

@@ -8,6 +8,7 @@ import { message } from '@/lib/client';
 import { readCsv, writeCsv } from '@/lib/csv';
 import { SENT } from '@/components/pending';
 import { label } from '@/lib/labels';
+import { useList } from '@/components/list';
 
 const MAX_BYTES = 2 * 1024 * 1024, MAX_ROWS = 500;
 const TOO_BIG = 'This file is too large. Import at most 500 people at a time.';
@@ -31,13 +32,14 @@ export default function ImportEmployees() {
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState<string | null>(null);
+  const L = useList((rows ?? []).map((r, i) => ({ r, i })), () => '', [25, 50, 100]); // i = line - 1, kept across pages
 
   if (!can(me, 'employees.edit')) return <div className="card"><p>You don&apos;t have access to this page.</p></div>;
 
   async function check(next: string[][]) {
+    if (next.length > MAX_ROWS) { setRows(null); return setErr(`This file has ${next.length} people. Import at most ${MAX_ROWS} at a time; split it into smaller files.`); }
     setRows(next); setBad(null); setErr(null);
     if (!next.length) return setErr('Add at least one person.');
-    if (next.length > MAX_ROWS) return setErr(TOO_BIG);
     setBusy(true);
     const r = await send('/v1/employees/import/check', next);
     setBusy(false);
@@ -98,7 +100,7 @@ export default function ImportEmployees() {
               </p>
               <div className="tablewrap"><table>
                 <thead><tr><th>Line</th>{COLS.map((c) => <th key={c}>{c}</th>)}<th>Problem</th><th /></tr></thead>
-                <tbody>{rows.map((r, i) => {
+                <tbody>{L.rows.map(({ r, i }) => {
                   const why = bad?.get(i + 1);
                   const bg = !bad ? undefined : why ? 'var(--bad-soft)' : 'var(--ok-soft)';
                   return (
@@ -111,6 +113,7 @@ export default function ImportEmployees() {
                   );
                 })}</tbody>
               </table></div>
+              {L.pager}
             </>
           )}
           {err && <div className="err" role="alert">{err}</div>}

@@ -24,7 +24,6 @@ const HELP: Record<string, string> = {
   config_changed: 'WorkBeat’s settings on the computer were changed or deleted.',
   clock_tampered: 'The computer’s clock was set back, which can hide when work happened.',
   permission_revoked: 'A Mac permission WorkBeat needs (screen recording or accessibility) was turned off.',
-  offline: 'The computer has not connected for more than 15 minutes. Often it is just switched off or has no internet.',
   duplicate_device_id: 'Two installs reported the same computer. One may be a copied or restored computer.',
 };
 const SEV = (t: string) => (t === 'offline' ? 'p-warn' : t === 'permission_revoked' ? 'p-info' : 'p-bad');
@@ -181,7 +180,7 @@ export default function Alerts({ searchParams }: { searchParams: Promise<{ emplo
         <details className="small muted">
           <summary>What each alert means</summary>
           <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
-            {TYPES.map(([k, l]) => <li key={k}><b>{l}</b>: {HELP[k]}</li>)}
+            {TYPES.filter(([k]) => HELP[k]).map(([k, l]) => <li key={k}><b>{l}</b>: {HELP[k]}</li>)}
           </ul>
         </details>
       </div>
