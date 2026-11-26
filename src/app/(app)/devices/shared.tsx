@@ -4,12 +4,15 @@ import { label } from '@/lib/labels';
 export type Device = {
   id: string; hostname: string; os: 'macos' | 'windows'; os_version: string; arch: string; agent_version: string;
   employee: { id: string; name: string };
-  status: 'online' | 'offline' | 'released';
+  status: 'online' | 'offline' | 'released' | 'uninstalled';
   badges: ('outdated' | 'permission_pending' | 'browser_access_pending' | 'paused' | 'open_alert')[];
-  last_heartbeat_at: string | null; released_at: string | null;
+  last_heartbeat_at: string | null; released_at: string | null; uninstalled_at: string | null;
 };
 
-const STATUS_PILL: Record<string, string> = { online: 'p-ok', offline: '', released: '' };
+/** Released (still installed, dormant) or uninstalled: the binding is over and its seat is free. */
+export const ended = (d: Device) => d.status === 'released' || d.status === 'uninstalled';
+
+const STATUS_PILL: Record<string, string> = { online: 'p-ok', offline: '', released: '', uninstalled: '' };
 const BADGE_PILL: Record<string, string> = { outdated: 'p-warn', permission_pending: 'p-info', browser_access_pending: 'p-info', paused: 'p-acc', open_alert: 'p-bad' };
 
 export const StatusPill = ({ s }: { s: string }) => <span className={`pill ${STATUS_PILL[s] ?? ''}`}>{label('deviceStatus', s)}</span>;

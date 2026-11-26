@@ -11,7 +11,7 @@ import { hm } from '@/lib/format';
 import { Loaded, PageHead, useData } from '@/lib/use-data';
 import { ConfirmButton } from '@/components/confirm';
 import { ROLLOUT_ACTION } from '@/components/deploy';
-import { Badges, type Device, shortDate, StatusPill } from '../shared';
+import { Badges, type Device, ended, shortDate, StatusPill } from '../shared';
 
 type Counter = number | Record<string, number> | null;
 type Detail = Device & {
@@ -67,15 +67,16 @@ export default function DevicePage() {
           <div className="grid g2">
             <div className="card stack">
               <h2>Status</h2>
-              <div className="row"><StatusPill s={d.status} />{d.status !== 'released' && <Badges d={d} />}</div>
-              <p className="small">{d.status === 'released' && d.released_at ? `Released ${shortDate(d.released_at, me.tz)}.`
+              <div className="row"><StatusPill s={d.status} />{!ended(d) && <Badges d={d} />}</div>
+              <p className="small">{d.status === 'uninstalled' && d.uninstalled_at ? `Uninstalled ${shortDate(d.uninstalled_at, me.tz)} with the WorkBeat Uninstaller. WorkBeat is no longer on this computer and its seat is free.`
+                : d.status === 'released' && d.released_at ? `Released ${shortDate(d.released_at, me.tz)}. WorkBeat is still on this computer but switched off, and its seat is free.`
                 : d.last_heartbeat_at ? <>Last seen <span title={full(d.last_heartbeat_at, me.tz)}>{when(d.last_heartbeat_at, me.tz)}</span>.</>
                 : 'WorkBeat has not reported from this computer yet.'}</p>
               <ToDo d={d} />
             </div>
             <div className="card stack">
               <h2>Employee</h2>
-              {d.status === 'released' ? (
+              {ended(d) ? (
                 <>
                   <p>Was set up for <b><Link href={`/employees/${d.employee.id}`}>{d.employee.name}</Link></b>. {d.employee.name} is no longer monitored on this computer.</p>
                   <p className="small muted">The link is kept for history. To monitor someone on this computer again, run WorkBeat Setup on it and pick the employee. That uses a seat.</p>
@@ -89,15 +90,15 @@ export default function DevicePage() {
             </div>
           </div>
 
-          {d.status !== 'released' && <Access d={d} />}
+          {!ended(d) && <Access d={d} />}
           <Health d={d} tz={me.tz} />
 
-          {d.status !== 'released' && (
+          {!ended(d) && (
             <div className="card stack">
               <h2>Actions</h2>
               <div className="stack">
                 <div className="row between">
-                  <p className="small" style={{ maxWidth: 560 }}><b>Release</b> when the computer leaves monitoring or changes hands, or after WorkBeat was uninstalled from it. Uninstalling alone does not free the seat.</p>
+                  <p className="small" style={{ maxWidth: 560 }}><b>Release</b> when the computer leaves monitoring or changes hands: WorkBeat stays on it, switched off, and the seat is freed. To remove WorkBeat, run the WorkBeat Uninstaller on the computer instead, which frees the seat too. Release it here if WorkBeat was deleted without the Uninstaller.</p>
                   <ConfirmButton label="Release" onConfirm={() => release(d)}
                     question={`Release ${d.hostname} (${d.employee.name})? Its seat and ${d.employee.name} are freed, and collection and blocking stop. It uploads what it holds for up to 24 hours, then wipes itself. It comes back only through a new WorkBeat Setup.`} />
                 </div>
@@ -113,7 +114,7 @@ export default function DevicePage() {
 function ToDo({ d }: { d: Detail }) {
   const items = [
     ...(d.status !== 'online' ? [d.status] : []),
-    ...(d.status === 'released' ? [] : d.badges),
+    ...(ended(d) ? [] : d.badges),
   ];
   if (!items.length) return null;
   return (

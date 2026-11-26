@@ -20,6 +20,7 @@
 ## 3. device-actions
 
 - [x] 3.1 Release with D45 confirmation text; no Deactivate (B35), uninstall-frees-no-seat note
+- [x] 3.1a Uninstalled status (B36): label, pill, "Uninstalled {date}", no actions or access card, rollout row and count; Release and Uninstaller wording on list and detail
 - [x] 3.2 `409` refresh and message; `404` removal; `403` no-access
 - [x] 3.3 Release-then-Setup explanation in place of reassign
 - [ ] 3.4 Tests: release frees a seat; no Deactivate control or status; concurrent release `409`; no reassign control anywhere; manager sees no action

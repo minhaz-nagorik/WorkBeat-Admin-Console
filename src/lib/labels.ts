@@ -21,7 +21,7 @@ const MAPS = {
   blocking: { applied: 'Working', degraded: 'Partly working', off: 'Off' },
   dropReason: { store_full: 'Storage full', too_old: 'Too old to send', app_sessions: 'App use', url_visits: 'Website visits', activity: 'Activity', idle: 'Idle time', screenshots: 'Screenshots' },
   macPermission: { screen_recording: 'Screen Recording', accessibility: 'Accessibility', automation: 'Automation' },
-  deviceStatus: { online: 'Online', offline: 'Offline', released: 'Released' },
+  deviceStatus: { online: 'Online', offline: 'Offline', released: 'Released', uninstalled: 'Uninstalled' },
   badge: { outdated: 'Outdated', permission_pending: 'Permission pending', browser_access_pending: 'Browser access pending', paused: 'Paused', open_alert: 'Open alert' },
   os: { macos: 'macOS', windows: 'Windows' },
   // employees

@@ -31,7 +31,7 @@ export default function Deployment() {
               {l.seat_limit !== null && l.seats_used >= l.seat_limit && (
                 <div className="notice warn" role="status">All seats are used. No more computers can be installed until a seat is freed.</div>
               )}
-              <p className="small muted">Releasing a computer on the <Link href="/devices">Devices</Link> page frees its seat at once. Uninstalling WorkBeat does not, so release a computer after uninstalling it.</p>
+              <p className="small muted">Releasing a computer on the <Link href="/devices">Devices</Link> page frees its seat at once and leaves WorkBeat on it, switched off. The WorkBeat Uninstaller removes WorkBeat and frees the seat too. If WorkBeat was deleted another way, release the computer.</p>
             </div>
           </div>
         )}</Loaded>

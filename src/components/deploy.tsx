@@ -51,7 +51,7 @@ export function SetupChecklist({ refresh }: { refresh?: number } = {}) {
 }
 
 type Rollout = {
-  status: Record<'online' | 'offline' | 'released', number>;
+  status: Record<'online' | 'offline' | 'released' | 'uninstalled', number>;
   badges: Record<'outdated' | 'permission_pending' | 'browser_access_pending' | 'paused' | 'open_alert', number>;
   healthy: number;
 };
@@ -62,10 +62,11 @@ const ROWS: [string, string, string, string, (r: Rollout) => number][] = [
   [label('badge', 'permission_pending'), 'p-info', 'badge=permission_pending', 'Ask the employee to allow it in System Settings', (r) => r.badges.permission_pending],
   [label('badge', 'browser_access_pending'), 'p-info', 'badge=browser_access_pending', 'Ask the employee to allow WorkBeat for that browser, or update the browser', (r) => r.badges.browser_access_pending],
   [label('badge', 'outdated'), 'p-warn', 'badge=outdated', 'Check it can download the update, or run WorkBeat Setup again', (r) => r.badges.outdated],
-  [label('deviceStatus', 'offline'), '', 'status=offline', 'Check the computer is on and connected, or release it if WorkBeat was uninstalled', (r) => r.status.offline],
+  [label('deviceStatus', 'offline'), '', 'status=offline', 'Check the computer is on and connected, or release it if WorkBeat was deleted without the Uninstaller', (r) => r.status.offline],
   [label('badge', 'open_alert'), 'p-bad', 'badge=open_alert', 'Review the alert', (r) => r.badges.open_alert],
   [label('badge', 'paused'), 'p-acc', 'badge=paused', 'Nothing; it ends on schedule', (r) => r.badges.paused],
-  [label('deviceStatus', 'released'), '', 'status=released', 'Uninstall it, or run WorkBeat Setup to monitor it again', (r) => r.status.released],
+  [label('deviceStatus', 'released'), '', 'status=released', 'WorkBeat is still on it, switched off. Run the WorkBeat Uninstaller to remove it, or WorkBeat Setup to monitor it again', (r) => r.status.released],
+  [label('deviceStatus', 'uninstalled'), '', 'status=uninstalled', 'Nothing; WorkBeat was removed and its seat is free. Run WorkBeat Setup to monitor it again', (r) => r.status.uninstalled],
 ];
 /** What to do, by status or badge value (also used on device detail). */
 export const ROLLOUT_ACTION: Record<string, string> = Object.fromEntries(ROWS.map((r) => [r[2].split('=')[1], r[3]]));
@@ -79,7 +80,7 @@ export function RolloutCard({ compact, head, refresh }: { compact?: boolean; hea
   const lic = useData<{ seat_limit: number | null }>(me.role === 'company_admin' ? '/v1/license' : null); // members have no licence access (A14)
   if (!ok) return null;
   const d = r.data;
-  const enrolled = d ? Object.values(d.status).reduce((a, b) => a + b, 0) : 0;
+  const enrolled = d ? d.status.online + d.status.offline + d.status.released : 0; // uninstalled computers no longer have WorkBeat
   const active = d ? enrolled - d.status.released : 0;
   return (
     <div className="card">

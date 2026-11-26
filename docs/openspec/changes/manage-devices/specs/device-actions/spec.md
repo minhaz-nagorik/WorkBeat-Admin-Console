@@ -13,12 +13,16 @@ Release SHALL be offered to `company_admin` and `it_admin` on a device that is n
 - **THEN** the device shows Released and seats used drops by one
 
 ### Requirement: There is no deactivate
-<!-- source: backend B35 · A18 · product owner 23 Nov 2026 -->
-The portal SHALL offer Release as the only device action and MUST NOT show a Deactivate control or a Deactivated status anywhere. Device detail MUST say that uninstalling WorkBeat does not free the seat, so a computer is released after it is uninstalled.
+<!-- source: backend B35 · backend B36 · A18 · product owner 26 Nov 2026 -->
+The portal SHALL offer Release as the only device action and MUST NOT show a Deactivate control or a Deactivated status anywhere. Device detail MUST say that Release leaves WorkBeat on the computer, switched off, that the WorkBeat Uninstaller removes it and frees the seat, and that a computer from which WorkBeat was deleted another way is released.
 
 #### Scenario: The actions of a monitored device
-- **WHEN** a Company Admin opens a device that is not released
-- **THEN** the only action is Release, and it says uninstalling alone does not free the seat
+- **WHEN** a Company Admin opens a device that is not released or uninstalled
+- **THEN** the only action is Release, and it explains Release, the Uninstaller and a deletion without it
+
+#### Scenario: An uninstalled device
+- **WHEN** a Company Admin opens a device with status `uninstalled`
+- **THEN** no action is offered, and it says WorkBeat was removed with the Uninstaller and the seat is free
 
 ### Requirement: An IT Admin's release waits for approval
 <!-- source: A14 · product owner 17 Nov 2026 · backend round 6 `POST /v1/devices/:id/release` -->

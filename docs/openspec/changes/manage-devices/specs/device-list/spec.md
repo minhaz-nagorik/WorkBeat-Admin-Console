@@ -19,7 +19,7 @@ Devices SHALL be shown to `company_admin` and `it_admin` only, listing `GET /v1/
 
 ### Requirement: Status and badges read as plain words
 <!-- source: A4 · Plan-v3.5 §5.9 · backend `device-status` -->
-Status SHALL show as Online, Offline or Released, and badges as Outdated, Permission pending, Browser access pending, Paused and Open alert, each a pill with text. A device online with no badge MUST read "Installed and working".
+Status SHALL show as Online, Offline, Released or Uninstalled, and badges as Outdated, Permission pending, Browser access pending, Paused and Open alert, each a pill with text. A device online with no badge MUST read "Installed and working".
 
 #### Scenario: An outdated Mac waiting for permission
 - **WHEN** a device is `online` with badges `outdated` and `permission_pending`
@@ -33,6 +33,14 @@ A device with status Released SHALL show the date from `released_at` in its last
 - **WHEN** a device has `released_at` 12 November 2026 10:00
 - **THEN** the row reads Released with "Released 12 Nov 2026"
 
+### Requirement: Uninstalled devices show when
+<!-- source: backend B36 · backend `device-status` (`uninstalled_at`) -->
+A device with status Uninstalled SHALL show the date from `uninstalled_at` in its last-seen column ("Uninstalled 26 Nov 2026"), in the company's time zone.
+
+#### Scenario: A laptop removed with the Uninstaller
+- **WHEN** a device has `uninstalled_at` 26 November 2026 09:00
+- **THEN** the row reads Uninstalled with "Uninstalled 26 Nov 2026"
+
 ### Requirement: Devices are filtered by status, issue, OS and employee
 <!-- source: A8 · backend `device-status` -->
 The list SHALL offer search over hostname, employee and version, and dropdown filters for status (All, Needs attention, each status), issue (each badge), OS (Windows, Mac) and employee. Single status, badge, OS and employee filters MUST be passed to `GET /v1/devices`; "Needs attention" (any status other than online, or any badge) and "Installed and working" (online, no badge) MUST be applied in the browser over the full list. A filter opened from a rollout row MUST arrive applied.
@@ -42,8 +50,8 @@ The list SHALL offer search over hostname, employee and version, and dropdown fi
 - **THEN** only devices that are not online or carry a badge are listed
 
 ### Requirement: Released devices stay visible
-<!-- source: D38 · backend `device-lifecycle` -->
-Released devices SHALL stay in the list with their status and the time it happened, sorted after active devices, and MUST NOT count toward seats or show an offline issue.
+<!-- source: D38 · backend B36 · backend `device-lifecycle` -->
+Released and uninstalled devices SHALL stay in the list with their status and the time it happened, sorted after active devices, and MUST NOT count toward seats or show an offline issue.
 
 #### Scenario: A released laptop
 - **WHEN** a device was released yesterday

@@ -21,6 +21,10 @@ would mislead admins about data that will still arrive.
 Backend B35 removed deactivate (product owner, 23 Nov 2026). Release is for a device leaving
 monitoring, changing hands, or already uninstalled: uninstalling frees no seat, so the page says so.
 
+**Amended by backend B36 (26 Nov 2026):** the WorkBeat Uninstaller frees the seat and the device shows
+Uninstalled. Released now means WorkBeat is still on the computer, switched off. Release stays the
+action for a computer from which WorkBeat was deleted without the Uninstaller.
+
 ### Filters become dropdowns
 The prototype's status chips become status, issue (badge), OS and employee dropdowns (A8): the
 plan adds statuses and badges, and four filters as chips would not fit.
