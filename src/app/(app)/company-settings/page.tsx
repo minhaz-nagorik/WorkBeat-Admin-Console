@@ -98,7 +98,7 @@ function DomainCard() {
     const r = await call<Domain>('PUT', '/v1/company/custom-domain', { domain: value.trim() });
     setBusy(false);
     if (r.ok) { setValue(''); return d.set(() => r.data); }
-    if (r.status === 422) return setErr({ domain: 'Enter a domain you own, such as monitor.yourcompany.com. A workbeat.io address cannot be used.' });
+    if (r.status === 422) return setErr({ domain: 'Enter a domain you own, such as monitor.yourcompany.com. A tryworkbeat.com address cannot be used.' });
     if (r.status === 409) return setErr({ domain: 'Another company already uses this domain.' });
     setErr({ form: message(r.status, r.err.code) });
   }

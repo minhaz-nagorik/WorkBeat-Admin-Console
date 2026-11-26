@@ -35,7 +35,7 @@ export default function StaffCompanyAdmins() {
                     : L.rows.map((a) => (
                       <tr key={a.id}>
                         <td><div className="who"><span className="av" aria-hidden="true">{initials(a.name)}</span><div>{a.name}<div className="small muted">{a.email}</div></div></div></td>
-                        <td>{a.company.name}<div className="small muted mono">{a.company.slug}.workbeat.io</div></td>
+                        <td>{a.company.name}<div className="small muted mono">{a.company.slug}.tryworkbeat.com</div></td>
                         <td>{a.must_change_password ? <span className="pill p-warn">Temporary, not changed yet</span> : <span className="small muted">Since {dateOnly(a.created_at, 'UTC')}</span>}</td>
                         <td><button className="btn sm" onClick={() => setResetFor(a)}>Reset password</button></td>
                       </tr>

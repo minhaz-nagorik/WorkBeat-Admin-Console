@@ -37,7 +37,7 @@ export function DetailsDialog({ c, onClose, onSaved }: { c: Company | null; onCl
       {c && (
         <form method="post" className="stack" onSubmit={submit} noValidate>
           <Field id="co-name" label="Company name" required maxLength={100} value={name} error={err.name} onChange={(e) => setName(e.target.value)}
-            hint={`The dashboard address stays ${c.slug}.workbeat.io.`} />
+            hint={`The dashboard address stays ${c.slug}.tryworkbeat.com.`} />
           <div className="field">
             <label htmlFor="co-ret">Keep activity data for</label>
             <select id="co-ret" style={{ maxWidth: 200 }} value={days} onChange={(e) => setDays(e.target.value)} aria-describedby="co-ret-hint">

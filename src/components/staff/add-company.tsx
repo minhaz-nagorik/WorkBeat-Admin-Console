@@ -75,7 +75,7 @@ export function AddCompanyDialog({ open, onClose, onCreated }: {
         <div className="fgrid">
           <Field id="nc-name" label="Company name" required maxLength={100} autoFocus value={f.name} error={err.name} onChange={(e) => set('name', e.target.value)} />
           <Field id="nc-slug" label="Address" required maxLength={32} spellCheck={false} value={f.slug} error={err.slug}
-            hint={`${f.slug || 'name'}.workbeat.io`} onChange={(e) => { setSlugTouched(true); set('slug', e.target.value.toLowerCase()); }} />
+            hint={`${f.slug || 'name'}.tryworkbeat.com`} onChange={(e) => { setSlugTouched(true); set('slug', e.target.value.toLowerCase()); }} />
 
           <div className="field"><label htmlFor="nc-plan">Plan</label>
             <select id="nc-plan" value={f.plan} onChange={(e) => set('plan', e.target.value)}>
