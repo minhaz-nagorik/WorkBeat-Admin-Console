@@ -19,3 +19,7 @@ Company settings SHALL show a Slack alerts card with a masked webhook URL field.
 #### Scenario: Disconnect
 - **WHEN** an admin presses Disconnect
 - **THEN** a confirm says alerts stop going to the channel and emails are not affected
+
+#### Scenario: Help
+- **WHEN** an admin presses the `?` button on the Slack alerts card
+- **THEN** a dialog lists, step by step, how to make a Slack incoming webhook and copy its URL

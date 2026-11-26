@@ -11,7 +11,7 @@ import { Loaded, PageHead, useData } from '@/lib/use-data';
 import { useMe } from '@/lib/me';
 import { label } from '@/lib/labels';
 import { Combo, Field } from '@/components/form';
-import { ConfirmButton } from '@/components/confirm';
+import { ConfirmButton, Modal } from '@/components/confirm';
 
 type Settings = { idle_threshold_seconds: number; timezone: string; slack_webhook_set: boolean };
 
@@ -159,6 +159,7 @@ function SlackCard({ set, onSaved }: { set: boolean; onSaved: (d: Settings) => v
   const [value, setValue] = useState('');
   const [err, setErr] = useState<{ url?: string; form?: string }>({});
   const [busy, setBusy] = useState(false);
+  const [help, setHelp] = useState(false);
 
   async function save(url: string | null) {
     setBusy(true); setErr({});
@@ -176,7 +177,22 @@ function SlackCard({ set, onSaved }: { set: boolean; onSaved: (d: Settings) => v
 
   return (
     <div className="card stack">
-      <h2>Slack alerts</h2>
+      <div className="row" style={{ justifyContent: 'space-between' }}>
+        <h2>Slack alerts</h2>
+        <button type="button" className="iconbtn" aria-label="How to get a webhook URL" title="How to get a webhook URL" onClick={() => setHelp(true)}>?</button>
+      </div>
+      <Modal title="How to get a Slack webhook URL" open={help} onClose={() => setHelp(false)}>
+        <ol className="stack" style={{ paddingLeft: 20, margin: 0 }}>
+          <li>Open <a href="https://api.slack.com/apps" target="_blank" rel="noopener noreferrer">api.slack.com/apps</a> and sign in to your Slack workspace.</li>
+          <li>Pick an app you already have, or press <b>Create New App</b>, choose <b>From scratch</b>, name it (for example WorkBeat) and pick your workspace.</li>
+          <li>In the menu on the left, under <b>Features</b>, open <b>Incoming Webhooks</b> and switch <b>Activate Incoming Webhooks</b> on.</li>
+          <li>Press <b>Add New Webhook</b>, pick the channel for alerts and press <b>Allow</b>. For a private channel you must be a member. If Slack asks for approval, a workspace admin approves it first.</li>
+          <li>Back on the Incoming Webhooks page, find the channel under <b>Webhook URLs for Your Workspace</b> and press <b>Copy</b>.</li>
+          <li>Paste the URL here and press <b>Connect</b>.</li>
+        </ol>
+        <p className="small muted">Keep the URL private: anyone who has it can post to the channel. Alerts show in Slack under the app&apos;s name.</p>
+        <div className="mf"><button type="button" className="btn pri" onClick={() => setHelp(false)}>Got it</button></div>
+      </Modal>
       <p className="small">Alerts are posted to a Slack channel as well as emailed, for the same alert types and at the same times.</p>
       {set && (
         <div className="row">
