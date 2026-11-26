@@ -4,7 +4,7 @@ export { toCsv };
 import Link from 'next/link';
 import { useData } from '@/lib/use-data';
 import { hm } from '@/lib/format';
-import { label } from '@/lib/labels';
+import { alertLabel, alertReason, label } from '@/lib/labels';
 import { dayKey, when, full } from '@/lib/time';
 
 // Company days are YYYY-MM-DD keys (A9). Arithmetic on them runs in UTC so no browser zone leaks in.
@@ -85,9 +85,32 @@ export function SplitBar({ s }: { s: Split }) {
   const w = (v: number) => `${tot ? (v / tot) * 100 : 0}%`;
   return (
     <div className="split" role="img" aria-label={tot ? `Productive ${share(s.productive_seconds, tot)}, neutral ${share(s.neutral_seconds, tot)}, unproductive ${share(s.unproductive_seconds, tot)}` : 'No tracked time'}>
-      <span style={{ width: w(s.productive_seconds), background: 'var(--prod)' }} />
-      <span style={{ width: w(s.neutral_seconds), background: 'var(--neu)' }} />
-      <span style={{ width: w(s.unproductive_seconds), background: 'var(--unprod)' }} />
+      <span style={{ width: w(s.productive_seconds), minWidth: s.productive_seconds ? 4 : 0, background: 'var(--prod)' }} />
+      <span style={{ width: w(s.neutral_seconds), minWidth: s.neutral_seconds ? 4 : 0, background: 'var(--neu)' }} />
+      <span style={{ width: w(s.unproductive_seconds), minWidth: s.unproductive_seconds ? 4 : 0, background: 'var(--unprod)' }} />
+    </div>
+  );
+}
+/** The same split as SplitBar, drawn as a donut next to its legend. */
+export function SplitDonut({ s, empty }: { s: Split; empty?: React.ReactNode }) {
+  const tot = s.productive_seconds + s.neutral_seconds + s.unproductive_seconds;
+  const parts = [[s.productive_seconds, 'var(--prod)'], [s.neutral_seconds, 'url(#donut-empty)'], [s.unproductive_seconds, 'var(--unprod)']] as const;
+  // Seamless ring: no gaps; a tiny share still gets 1.5% so its colour shows, then all are scaled to 100.
+  const lens = parts.map(([v]) => (tot && v ? Math.max((v / tot) * 100, 1.5) : 0));
+  const k = 100 / (lens.reduce((a, b) => a + b, 0) || 1);
+  let at = 0; // the base ring takes the last slice's colour, so the seam at the top where the path starts never shows the card
+  return (
+    <div className={`donut${tot ? '' : ' empty'}`}>
+      <svg viewBox="0 0 42 42" role="img" aria-label={tot ? `Productive ${share(s.productive_seconds, tot)}, neutral ${share(s.neutral_seconds, tot)}, unproductive ${share(s.unproductive_seconds, tot)}` : 'No tracked time'}>
+        <defs><linearGradient id="donut-empty" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="color-mix(in srgb, var(--accent) 55%, var(--surface))" /><stop offset=".5" stopColor="color-mix(in srgb, var(--accent-3) 55%, var(--surface))" /><stop offset="1" stopColor="color-mix(in srgb, var(--accent-2) 55%, var(--surface))" /></linearGradient></defs>
+        <circle cx="21" cy="21" r="15.9" pathLength={100} stroke={tot ? parts[lens.findLastIndex((x) => x > 0)][1] : 'url(#donut-empty)'} style={{ animation: 'none' }} />
+        {parts.map(([, c], i) => {
+          const len = lens[i] * k, off = at; // drawn 0.4 longer: the overlap hides the anti-aliased seam between slices
+          at += len;
+          return len > 0 && <circle key={i} cx="21" cy="21" r="15.9" pathLength={100} stroke={c} strokeDasharray={`${len + 0.4} 100`} strokeDashoffset={-off} />;
+        })}
+      </svg>
+      {tot ? <SplitLegend s={s} /> : empty}
     </div>
   );
 }
@@ -143,7 +166,10 @@ export function HourChart({ hours }: { hours: Hour[] }) {
 }
 
 // ---- alerts (same labels and columns as the Alerts page) ----
-export type Alert = { id: string; event_type: string; hostname: string; employee: { id: string; name: string } | null; repeat_count: number; occurred_at: string; resolved_at: string | null };
+export type Alert = { id: string; event_type: string; hostname: string; employee: { id: string; name: string } | null; detail?: Record<string, unknown> | null; repeat_count: number; occurred_at: string; resolved_at: string | null };
+/** Pill colour of an alert; an uninstall with the token is allowed, not tampering. */
+export const alertSev = (a: Pick<Alert, 'event_type' | 'detail'>) => (a.event_type === 'offline' ? 'p-warn'
+  : a.event_type === 'permission_revoked' || alertReason(a) === 'uninstalled' ? 'p-info' : 'p-bad');
 export function AlertTable({ items, tz, empty, linkPeople }: { items: Alert[]; tz: string; empty: string; linkPeople: boolean }) {
   if (!items.length) return <p className="muted small">{empty}</p>;
   return (
@@ -152,7 +178,7 @@ export function AlertTable({ items, tz, empty, linkPeople }: { items: Alert[]; t
       <tbody>{items.map((a) => (
         <tr key={a.id}>
           <td className="small" title={full(a.occurred_at, tz)}>{when(a.occurred_at, tz)}</td>
-          <td><span className={`pill ${a.event_type === 'offline' ? 'p-warn' : a.event_type === 'permission_revoked' ? 'p-info' : 'p-bad'}`}>{label('alert', a.event_type)}</span>
+          <td><span className={`pill ${alertSev(a)}`}>{alertLabel(a)}</span>
             {a.repeat_count > 1 && <span className="small muted"> ×{a.repeat_count}</span>}{a.resolved_at && <span className="small muted"> · Resolved</span>}</td>
           <td>{!a.employee ? <span className="muted">—</span> : linkPeople ? <Link href={`/employees/${a.employee.id}`}>{a.employee.name}</Link> : a.employee.name}</td>
           <td className="mono small">{a.hostname}</td>

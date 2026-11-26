@@ -6,7 +6,7 @@ import { useMe } from '@/lib/me';
 import { Loaded, PageHead, useData, useRefresh } from '@/lib/use-data';
 import { hm } from '@/lib/format';
 import { SetupChecklist, RolloutCard } from '@/components/deploy';
-import { AlertTable, ap, clock, presetRange, RangePicker, rangeLabel, SplitBar, SplitLegend, type Alert, type Range } from '@/components/reports/kit';
+import { AlertTable, ap, clock, presetRange, RangePicker, rangeLabel, SplitDonut, type Alert, type Range } from '@/components/reports/kit';
 
 type Dash = {
   devices: { online: number; offline: number; open_alert: number };
@@ -96,7 +96,7 @@ function SplitCard({ tz, admin, refresh }: { tz: string; admin: boolean; refresh
       <Loaded s={prod} rows={2}>{(p) => (
         <>
           <p className="small muted">{rangeLabel(p.from, p.to)}</p>
-          {p.tracked_seconds ? <><SplitBar s={p} /><SplitLegend s={p} /></> : <p className="muted">No tracked time in this range yet. Time shows here once computers with WorkBeat report activity.</p>}
+          <SplitDonut s={p} empty={<p className="muted">No tracked time in this range yet. Time shows here once computers with WorkBeat report activity.</p>} />
         </>
       )}</Loaded>
     </div>

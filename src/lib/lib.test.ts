@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { when, dayKey, startOfToday } from './time.ts';
-import { label } from './labels.ts';
+import { alertLabel, label } from './labels.ts';
 import { allowed, can, landing } from './nav.ts';
 import type { Perm } from './types.ts';
 
@@ -19,6 +19,14 @@ test('times are in the company zone, not the browser zone', () => {
 test('unknown enum shows Other', () => {
   assert.equal(label('alert', 'hosts_modified'), 'Website blocking changed');
   assert.equal(label('alert', 'brand_new_type'), 'Other');
+});
+
+test('a config_changed alert reads by its reason, else as settings edited', () => {
+  assert.equal(alertLabel({ event_type: 'config_changed', detail: { reason: 'uninstall_attempt' } }), 'Attempted to uninstall');
+  assert.equal(alertLabel({ event_type: 'config_changed', detail: { reason: 'something_new' } }), 'WorkBeat settings edited');
+  assert.equal(alertLabel({ event_type: 'config_changed', detail: {} }), 'WorkBeat settings edited');
+  assert.equal(alertLabel({ event_type: 'config_changed', detail: { reason: 'toString' } }), 'WorkBeat settings edited');
+  assert.equal(alertLabel({ event_type: 'hosts_modified', detail: { reason: 'uninstall_attempt' } }), 'Website blocking changed');
 });
 
 test('navigation follows the role and its permissions', () => {

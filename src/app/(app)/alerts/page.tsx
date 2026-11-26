@@ -4,7 +4,8 @@ import { isPending, PendingList, SENT } from '@/components/pending';
 import { use, useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { call, message, usePoll } from '@/lib/client';
-import { label, options } from '@/lib/labels';
+import { alertLabel, alertReason, options } from '@/lib/labels';
+import { alertSev } from '@/components/reports/kit';
 import { useMe } from '@/lib/me';
 import { when, full } from '@/lib/time';
 import { PageHead } from '@/lib/use-data';
@@ -26,12 +27,26 @@ const HELP: Record<string, string> = {
   permission_revoked: 'A Mac permission WorkBeat needs (screen recording or accessibility) was turned off.',
   duplicate_device_id: 'Two installs reported the same computer. One may be a copied or restored computer.',
 };
-const SEV = (t: string) => (t === 'offline' ? 'p-warn' : t === 'permission_revoked' ? 'p-info' : 'p-bad');
+// config_changed by detail.reason; an unknown or missing reason keeps HELP.config_changed.
+const REASON_HELP: Record<string, string> = {
+  uninstall_attempt: 'Someone tried to remove WorkBeat without the right uninstall token. Nothing was removed.',
+  uninstalled: 'WorkBeat was removed with the company’s uninstall token. The device now shows as Uninstalled.',
+  service_stopped: 'An administrator stopped the WorkBeat service on this computer.',
+  service_deleted: 'The WorkBeat service was deleted from Windows while it was running.',
+  service_key_changed: 'The WorkBeat service was changed to start a different program.',
+  service_disabled: 'The WorkBeat service was set not to start. WorkBeat switched it back on.',
+  app_removed: 'A WorkBeat program file was deleted from the computer.',
+  config_file: 'WorkBeat’s settings file was changed or deleted.',
+  store_reset: 'WorkBeat’s local data on the computer was deleted or reset.',
+  browser_policy_changed: 'A browser’s website-blocking settings were changed. WorkBeat put them back.',
+  firewall_filters_removed: 'WorkBeat’s network filters for website blocking were removed. WorkBeat put them back.',
+  sip_disabled: 'System Integrity Protection is off on this Mac.',
+};
 
 function describe(a: Alert, tz: string) {
   const last = a.detail.last_heartbeat_at;
   const base = a.event_type === 'offline' && typeof last === 'string'
-    ? `Not connected since ${when(last, tz)}.` : HELP[a.event_type] ?? 'Something unusual happened on this computer.';
+    ? `Not connected since ${when(last, tz)}.` : REASON_HELP[alertReason(a) ?? ''] ?? HELP[a.event_type] ?? 'Something unusual happened on this computer.';
   return a.repeat_count > 1 ? `${base} Happened ${a.repeat_count} times.` : base;
 }
 
@@ -44,7 +59,8 @@ function feedQuery(f: { type: string; state: State; q: string; employee?: string
   if (types.length) p.set('type', types.join(','));
   else {
     if (f.type !== 'all') p.set('type', f.type);
-    if (q) p.set('q', q.slice(0, 100));
+    const reason = q ? options('configReason').find(([, l]) => l.toLowerCase().includes(q.toLowerCase()))?.[0] : undefined;
+    if (q) p.set('q', (reason ?? q).slice(0, 100)); // a reason label searches detail for the reason
   }
   if (f.state !== 'all') p.set('state', f.state);
   if (f.device) p.set('device_id', f.device);
@@ -159,7 +175,7 @@ export default function Alerts({ searchParams }: { searchParams: Promise<{ emplo
                   : rows.map((a) => (
                     <tr key={a.id}>
                       <td className="small muted" style={{ whiteSpace: 'nowrap' }} title={full(a.occurred_at, me.tz)}>{when(a.occurred_at, me.tz)}</td>
-                      <td><span className={`pill ${SEV(a.event_type)}`}>{label('alert', a.event_type)}</span></td>
+                      <td><span className={`pill ${alertSev(a)}`}>{alertLabel(a)}</span></td>
                       <td>{!a.employee ? <span className="muted">—</span>
                         : <Link href={`/employees/${a.employee.id}`}>{a.employee.name}</Link>}</td>
                       <td className="small mono">{a.hostname}</td>

@@ -13,6 +13,13 @@ const MAPS = {
     permission_revoked: 'Permission turned off', clock_tampered: 'Computer clock changed',
     config_changed: 'WorkBeat settings edited', duplicate_device_id: 'Possible duplicate computer',
   },
+  // config_changed alerts by detail.reason (the agents send many kinds as one type)
+  configReason: {
+    uninstall_attempt: 'Attempted to uninstall', uninstalled: 'Uninstalled with the token', service_stopped: 'WorkBeat service stopped',
+    service_deleted: 'WorkBeat service removed', service_key_changed: 'WorkBeat service changed', service_disabled: 'WorkBeat service disabled',
+    app_removed: 'WorkBeat file deleted', config_file: 'WorkBeat settings edited', store_reset: 'WorkBeat data deleted',
+    browser_policy_changed: 'Browser blocking changed', firewall_filters_removed: 'Website blocking removed', sip_disabled: 'Mac protection turned off',
+  },
   // devices
   setupStep: { download_downloader: 'Download WorkBeat Setup', copy_license_key: 'Copy the licence key', install_first_device: 'Install the first device', first_device_seen: 'First device seen' },
   grant: { granted: 'Allowed', pending: 'Waiting for the employee', denied: 'Not allowed', unreadable: "Can't read" },
@@ -58,3 +65,15 @@ export function label(kind: LabelKind, value: string | null | undefined): string
 
 /** [value, label] pairs of a map, for selects and filters. */
 export const options = (kind: LabelKind) => Object.entries(MAPS[kind]) as [string, string][];
+
+/** The known detail.reason of a config_changed alert, else null (no reason, unknown reason or another type). */
+export function alertReason(a: { event_type: string; detail?: Record<string, unknown> | null }): string | null {
+  const r = a.event_type === 'config_changed' ? a.detail?.reason : null;
+  return typeof r === 'string' && Object.hasOwn(MAPS.configReason, r) ? r : null;
+}
+
+/** An alert's name: its reason for config_changed when known, else its type. */
+export const alertLabel = (a: { event_type: string; detail?: Record<string, unknown> | null }) => {
+  const r = alertReason(a);
+  return r ? label('configReason', r) : label('alert', a.event_type);
+};

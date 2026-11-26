@@ -25,6 +25,18 @@ The page SHALL label `process_restart` "WorkBeat was closed", `hosts_modified` "
 - **WHEN** the feed returns `hosts_modified`
 - **THEN** the row reads "Website blocking changed" and "Another program tried to undo website blocking. WorkBeat put it back."
 
+### Requirement: A settings alert reads by its reason
+<!-- source: A21 · backend `tamper-ingestion` · Windows and Mac agents -->
+For a `config_changed` alert the page SHALL show the label, help text and colour of its `detail.reason` (uninstall attempt, uninstall with the token, service stopped, removed, changed or disabled, file deleted, settings file, data deleted, browser blocking, website blocking, Mac protection). A missing or unknown reason MUST keep "WorkBeat settings edited". `uninstalled` MUST show as information, not tampering.
+
+#### Scenario: A wrong-token uninstall
+- **WHEN** the feed returns `config_changed` with `detail.reason` `uninstall_attempt`
+- **THEN** the row reads "Attempted to uninstall" and "Someone tried to remove WorkBeat without the right uninstall token. Nothing was removed."
+
+#### Scenario: No reason
+- **WHEN** the feed returns `config_changed` with no known `detail.reason`
+- **THEN** the row reads "WorkBeat settings edited"
+
 ### Requirement: Alerts are filtered by type, state and search
 <!-- source: backend `alerts-feed` (`counts`, `employee_id`) · A8 · Prototype "Alerts" -->
 The toolbar SHALL offer a search box sent as `q` (up to 100 characters; text matching a type label also selects that `type`), an alert-type dropdown ("All alerts" and each type with its count from the response's `counts`) and a state filter Open / Resolved / All defaulting to Open, sent as `type` and `state` to `GET /v1/alerts`. Opened from an employee page, it MUST also send `employee_id` and show a removable "Person" chip. Rows come from `items`; more load through `next_cursor`. A filter change MUST restart at page one.
